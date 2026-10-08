@@ -1,0 +1,10 @@
+MAP_PROJECTION_TYPE          = "POLAR STEREOGRAPHIC"
+A_AXIS_RADIUS                = 1737.4 <km>
+B_AXIS_RADIUS                = 1737.4 <km>
+C_AXIS_RADIUS                = 1737.4 <km>
+CENTER_LATITUDE              = -90 <deg>
+CENTER_LONGITUDE             = 0 <deg>
+MAP_SCALE                    = 120 <m/pix>
+COORDINATE_SYSTEM_NAME       = "MEAN EARTH/POLAR AXIS OF DE421"
+SCALING_FACTOR               = 0.00004
+OFFSET                       = 0.0

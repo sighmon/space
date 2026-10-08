@@ -1,0 +1,12 @@
+.DS_Store
+**/.DS_Store
+
+# Downloaded archives and intermediate rasters. The manifest is tracked.
+**/data/raw/**
+!**/data/raw/.gitkeep
+**/data/cache/
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

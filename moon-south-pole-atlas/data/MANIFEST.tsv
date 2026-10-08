@@ -1,0 +1,8 @@
+filename	url	fetched_utc	sha256	bytes
+Site06_final_adj_5mpp_slp.tif	https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_slp.tif	2026-10-08T11:41:33Z	47db26dc18aa8f253a7d281ccf86189bb8dfd2b33b8a5b7c20586e4877c24e0c	64025573
+Site06_final_adj_5mpp_slperr.tif	https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_slperr.tif	2026-10-08T11:41:32Z	fd7fe86186013df32a60130ffadff2b8b49a4b2730dd6a1e53b06a058610d382	64025605
+Site06_final_adj_5mpp_ldec.tif	https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_ldec.tif	2026-10-08T11:41:38Z	f7a42c93209bcfe7991632ee569bbb597a3c8a22e1521c7697e13be1cf5a2562	64025541
+AVGVISIB_75S_120M_201608.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/AVGVISIB_75S_120M_201608.JP2	2026-10-08T11:39:35Z	5c4b3e9458dcbcf3c3cd8d0ca9ef9cdac8e667548e93e577b9511d50af16f743	67449137
+AVGVISIB_75S_120M_201608_EARTH.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/AVGVISIB_75S_120M_201608_EARTH.JP2	2026-10-08T11:39:32Z	e2767e0d8c69451e56da657afa53f0122b4b2345b75a6ab8ef931b9ed5b30bab	37997440
+LPSR_75S_120M_201608.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/LPSR_75S_120M_201608.JP2	2026-10-08T11:39:29Z	61455b9f3f3b60196beec38800fcb2dab351a24bf901eab99afb959777f180fd	6991935
+polar_south_80_summer_max-float.tif	http://luna1.diviner.ucla.edu/~jpierre/diviner/level4_polar/additional_maps/polar_south_80_summer_max-float.tif	2026-10-08T11:39:37Z	ba4a1b6275402d6b0c1000ceb0208ad63d37665afaeb902ab6f108c67c0a0c67	25686193
