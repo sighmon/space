@@ -59,8 +59,10 @@ body.sheet-open .hero-copy,body.layer-open .hero-copy{opacity:0;transform:transl
 .hint{margin-top:30px;font-size:12px;color:var(--faint);letter-spacing:.04em}
 
 .foot{position:fixed;left:36px;right:36px;bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;z-index:3;pointer-events:none;transition:opacity .5s}
-body.sheet-open .foot{opacity:0}
-.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,200,120,.35);color:#ffd9a6;background:rgba(40,28,10,.45);backdrop-filter:blur(10px)}
+body.sheet-open .foot .chip{display:none}
+body.sheet-open .foot{left:30px;right:auto;bottom:auto;top:88px;max-width:100px}
+body.sheet-open .compass{flex-direction:column;align-items:flex-start;gap:8px}body.sheet-open .compass span{max-width:96px;font-size:11px;line-height:1.4}
+.chip{max-width:58vw;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,200,120,.35);color:#ffd9a6;background:rgba(40,28,10,.45);backdrop-filter:blur(10px)}
 .chip i{width:6px;height:6px;border-radius:50%;background:#ffc27a;display:block}
 .compass{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mute);pointer-events:auto}
 .compass svg{width:44px;height:44px}
@@ -128,9 +130,24 @@ td .conv{display:block;font-size:12px;white-space:nowrap}
 .seg button{position:relative;z-index:1;padding:5px 14px;font-size:12px;color:var(--mute);border-radius:999px;transition:color .3s}
 .seg button.on{color:#061018}
 .seg .thumb{position:absolute;top:3px;bottom:3px;border-radius:999px;background:var(--ice);transition:left .45s var(--spring),width .45s var(--spring)}
-.play{width:30px;height:30px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center}
-.play:hover{border-color:var(--ice)}
-.tl-read{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
+.play{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;flex:none;transition:border-color .25s,background .25s}
+.play:hover{border-color:var(--ice);background:rgba(169,220,255,.06)}
+.play:focus-visible,.seg button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.tl-ctl{display:flex;gap:12px 14px;align-items:center;flex-wrap:wrap}
+.rate{font-size:11.5px;color:var(--mute);min-width:92px;font-variant-numeric:tabular-nums}
+.eye{display:flex;gap:10px;align-items:center}
+.zoom{margin-top:16px;border:1px solid var(--line);border-radius:18px;padding:16px 18px;background:rgba(255,255,255,.015);display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:8px 26px;align-items:start}
+.zview{position:relative;width:100%;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.zview canvas{width:100%;height:100%;display:block}
+.zbadge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:rgba(5,6,7,.72);border:1px solid;font-weight:500;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.zbadge.real{color:#8fe3b0;border-color:rgba(143,227,176,.45)}.zbadge.map{color:#ffc27a;border-color:rgba(255,194,122,.45)}
+.zread{display:flex;gap:30px;margin-top:10px;flex-wrap:wrap}
+.zread .n{font-size:30px}.zread .k{display:block;font-size:10.5px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase;margin-top:2px}
+.zinfo h3{font-size:17px;font-weight:400;margin-top:8px;letter-spacing:-.01em}
+.zinfo p{margin-top:10px}
+.zinfo p b{font-weight:500;color:var(--ink)}
+.zinfo code{font-family:ui-monospace,monospace;font-size:11.5px;color:#a9dcff}
+.tl-read{display:flex;gap:10px 28px;align-items:baseline;flex-wrap:wrap}
 .tl-read .n{font-size:22px}
 .tl-read .k{font-size:11px;color:var(--mute);letter-spacing:.06em;margin-left:6px}
 #tlwrap{position:relative;margin-top:14px;cursor:ew-resize;touch-action:none;user-select:none}
@@ -197,6 +214,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .layer .panel{padding:16px 20px 40px}
   .grid2{grid-template-columns:1fr}
   .foot{left:18px;right:18px;bottom:18px}
+  body.sheet-open .foot{opacity:0;visibility:hidden}
+  .zoom{grid-template-columns:1fr}
   .compass span{display:none}
   .mk .tag{font-size:12.5px;padding:5px 8px}
   .sl{grid-template-columns:1fr 70px}.sl label{grid-column:1/-1}
@@ -204,7 +223,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .nav .long{display:none}
   .brand .label{max-width:150px;line-height:1.4}
 }
-@media (max-width:520px){.mk .tag .l{display:none}.mk .tag .s{display:inline}.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
+@media (max-width:520px){.chip .xl{display:none}.chip{font-size:11.5px}.mk .tag .l{display:none}.mk .tag .s{display:inline}.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
 </style>
 </head>
@@ -229,8 +248,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 </section>
 
 <footer class="foot">
-  <div class="chip"><i></i>Computed values for all nine points · slope missing for 3 regions (no 5 m DEM) · hourly timeline for NR101 only</div>
-  <div class="compass"><span id="sunlbl">Illustrative lighting · Sun azimuth —</span>
+  <div class="chip"><i></i>All nine computed · slope missing for 3 (no 5 m DEM) · DE421 Sun path for all nine<span class="xl"> · terrain-lit zoom and hourly visibility for NR101 only</span></div>
+  <div class="compass"><span id="sunlbl">Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011</span>
     <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="rgba(235,242,247,.18)"/><text x="22" y="9" fill="rgba(235,242,247,.5)" font-size="6" text-anchor="middle" font-family="sans-serif">0°</text><g id="sunneedle"><line x1="22" y1="22" x2="22" y2="6" stroke="#a9dcff" stroke-width="1.2"/><circle cx="22" cy="6" r="2.2" fill="#fff"/></g><circle cx="22" cy="22" r="1.5" fill="#fff"/></svg>
   </div>
 </footer>
@@ -262,19 +281,34 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
           <div class="label" id="tl-label">Hourly Sun &amp; Earth visibility</div>
           <div class="tl-read" style="margin-top:8px">
             <div><span class="num n" id="t-time">—</span></div>
-            <div><span class="num n" id="t-sun">—</span><span class="k">SUN DISC VISIBLE</span></div>
-            <div><span class="num n" id="t-earth">—</span><span class="k">EARTH</span></div>
+            <div><span class="num n" id="t-sun">—</span><span class="k" id="k-sun">SUN DISC VISIBLE</span></div>
+            <div id="w-earth"><span class="num n" id="t-earth">—</span><span class="k">EARTH</span></div>
           </div>
         </div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <span class="small">Eye height</span>
-          <div class="seg" id="hseg"><span class="thumb"></span><button data-h="1" class="on">1 m</button><button data-h="5">5 m</button></div>
-          <button class="play" id="play" aria-label="Play"><svg width="10" height="12" viewBox="0 0 10 12"><path id="playp" d="M0 0L10 6L0 12Z" fill="#fff"/></svg></button>
+        <div class="tl-ctl">
+          <button class="play" id="play" aria-label="Pause Sun movement" aria-pressed="true"><svg width="12" height="14" viewBox="0 0 10 12" aria-hidden="true"><path id="playp" d="M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z" fill="#fff"/></svg></button>
+          <span class="rate" id="rate" aria-live="off">—</span>
+          <div class="seg" id="sseg" role="group" aria-label="Playback speed"><span class="thumb"></span><button data-s="1" aria-label="Speed 1x">1×</button><button data-s="4" class="on" aria-label="Speed 4x">4×</button><button data-s="16" aria-label="Speed 16x">16×</button></div>
+          <div class="eye" id="eyectl"><span class="small">Eye height</span><div class="seg" id="hseg"><span class="thumb"></span><button data-h="1" class="on">1 m</button><button data-h="5">5 m</button></div></div>
         </div>
       </div>
       <div id="tlwrap"><canvas id="tlc"></canvas><div id="head"></div></div>
     </div>
-    <p class="disclaim" id="tl-none" style="display:none;margin-top:16px"></p>
+    <p class="disclaim" id="tl-none" style="display:none;margin-top:12px"></p>
+
+    <div class="zoom" id="zoom" style="display:none">
+      <div>
+        <div class="zview"><canvas id="zc" width="512" height="512" role="img" aria-label="Zoomed view of the site under the simulated Sun"></canvas><span class="zbadge" id="zbadge"></span></div>
+      </div>
+      <div class="zinfo">
+        <div class="label" id="z-title">Site zoom</div>
+        <h3 id="z-head">—</h3>
+        <div class="zread"><div><span class="num n" id="z-az">—</span><span class="k">Sun azimuth</span></div><div><span class="num n" id="z-el">—</span><span class="k">Sun elevation</span></div></div>
+        <p class="small" id="z-what"></p>
+        <p class="small" id="z-sun"></p>
+        <p class="small" id="z-caveat"></p>
+      </div>
+    </div>
     <p class="disclaim">Not a safety assessment, and no site is declared safe. No combined score and no ice-volume estimate. Screening cuts are shown with their source for reference; they are not flight rules. “Earth in view” counts any part of Earth’s disc above the local horizon, which is slightly optimistic compared with a DSN link budget.</p>
   </div>
 </section>
@@ -296,7 +330,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
     </div>
 
     <h3>What is computed in this build</h3>
-    <div class="box"><p>All nine points (first Wueller et al. 2026 Table A1 point per region) are read by the repository’s <code>python -m atlas.regions</code> and exported by <code>python -m atlas.export_web</code> to <code>web/data/regions.json</code>. Every row uses the same measures: slope and RMS error at the point, 18.6-year sunlight and Earth averages, Diviner summer-maximum temperature, permanent-shadow flag, distance to cold shadow, and LOLA return count. Slope, slope error and return count are <b>not computed</b> for Peak near Cabeus B, Mons Mouton Plateau and Slater Plain because product 78 has no 5&nbsp;m site DEM containing those points. The hourly Sun/Earth series (2025-01-01, 14 and 30 Earth days, 1&nbsp;m and 5&nbsp;m) exists for Nobile Rim 1 only, because it needs the Site 06 elevation raster; the other eight cards say so. The 3D-looking Moon and its Sun-azimuth lighting are procedural art, not terrain.</p></div>
+    <div class="box"><p>All nine points (first Wueller et al. 2026 Table A1 point per region) are read by the repository’s <code>python -m atlas.regions</code> and exported by <code>python -m atlas.export_web</code> to <code>web/data/regions.json</code>. Every row uses the same measures: slope and RMS error at the point, 18.6-year sunlight and Earth averages, Diviner summer-maximum temperature, permanent-shadow flag, distance to cold shadow, and LOLA return count. Slope, slope error and return count are <b>not computed</b> for Peak near Cabeus B, Mons Mouton Plateau and Slater Plain because product 78 has no 5&nbsp;m site DEM containing those points. The hourly Sun/Earth series (2025-01-01, 14 and 30 Earth days, 1&nbsp;m and 5&nbsp;m) exists for Nobile Rim 1 only, because it needs the Site 06 elevation raster; the other eight cards say so. The home Moon is the LOLA average-sunlight map; its moving light wash only marks the real DE421 Sun azimuth of the open region and is not re-rendered terrain. On each card the Sun azimuth and elevation come from the DE421 ephemeris for all nine points; the site zoom is a real hillshade of the 5&nbsp;m Site 06 elevation raster for Nobile Rim 1 only, and a static LOLA average-sunlight crop for the other eight (no elevation raster has been processed for them).</p></div>
 
     <h3>Screening cut presets</h3>
     <div class="presets" id="presets">
@@ -342,6 +376,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <script src="units.js"></script>
 <script src="data/regions.js"></script>
 <script src="data/nr101.js"></script>
+<script src="data/sun.js"></script>
+<script src="data/zoom.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -367,12 +403,13 @@ let H0=new Date(Date.UTC(2025,0,1,0)); // real NR101 timeline window start
 const REAL=window.NR101_DATA||null;       // hourly timeline, NR101 only (atlas/export_web.py)
 const DATA=window.REGIONS_DATA||null;     // nine-region comparison (atlas/export_web.py)
 const HOURS=336;
+const SUN=window.SUN_DATA||null;      // DE421 Sun azimuth/elevation, nine points, 336 hourly steps (atlas/export_zoom.py)
+const ZOOM=window.ZOOM_DATA||null;    // NR101 real DEM chip + LOLA sunlight-map crops (atlas/export_zoom.py)
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 REGIONS.forEach(r=>{r.d=DATA?DATA.regions.find(x=>x.point_id===r.site)||null:null;});
 
 // ---------- readouts: every number comes from regions.json; nothing is generated here ----------
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
-// Illustrative Sun azimuth for the hero lighting only (not a computed value).
-function illumAz(){const az=new Float32Array(HOURS);for(let t=0;t<HOURS;t++)az[t]=(70+360*t/708.7)*D2R;return az;}
 function stats(r,height){
   const q=r.d; if(!q)return {missing:true,r};
   const px=q.temperature_resolution_m/1000, km=q.distance_to_cold_shadow_m==null?null:q.distance_to_cold_shadow_m/1000;
@@ -382,13 +419,13 @@ function stats(r,height){
     sun:q.solar_fraction==null?null:{v:q.solar_fraction,lo:q.solar_fraction,hi:q.solar_fraction,unc:'no uncertainty published for this average'},
     earth:q.earth_fraction==null?null:{v:q.earth_fraction*100,lo:q.earth_fraction*100,hi:q.earth_fraction*100,unc:'no uncertainty published for this average'},
     cold:km==null?null:{v:km,lo:Math.max(0,km-px),hi:km+px,unc:'± one Diviner pixel ('+(px*1000).toFixed(0)+' m)'},
-    series:null};
+    series:null, sunp:SUN&&r.site?(SUN.points[r.site]||null):null};
   if(r.id==='NR1'&&REAL){
     const w=REAL.timeline.windows.fourteen_earth_days.series, sunS=w['sun_'+height+'m'], earS=w['earth_'+height+'m'];
     const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS);
     for(let t=0;t<HOURS;t++){sun[t]=sunS[t]==='1'?1:0;earth[t]=earS[t]==='1'?1:0;}
     const win=k=>{const a=w[k+'_'+height+'m'];return 100*[...a].filter(c=>c==='1').length/a.length;};
-    out.series={sun,earth,az:illumAz()}; out.winSun=win('sun'); out.winEarth=win('earth');
+    out.series={sun,earth}; out.winSun=win('sun'); out.winEarth=win('earth');
   }
   return out;
 }
@@ -433,7 +470,7 @@ function buildProc(){
 // The procedural terrain above is only a fallback if the image cannot load.
 let realBd=null;
 {const im=new Image();im.decoding='async';im.onload=()=>{realBd=im;layout();};im.onerror=()=>{buildProc();shade();draw();};im.src='data/backdrop.webp';}
-let sunAz=200*D2R, autoLight=true;
+let sunAz=200*D2R, sunNow=null;
 function shade(){
   if(realBd||!procBuilt)return;
   const elev=9*D2R, lz=Math.sin(elev), ce=Math.cos(elev), lx=Math.sin(sunAz)*ce, ly=-Math.cos(sunAz)*ce;
@@ -477,18 +514,31 @@ function draw(){
   vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.85)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,Hh);
   const lg=ctx.createLinearGradient(0,0,W*.55,0);lg.addColorStop(0,'rgba(5,6,7,.75)');lg.addColorStop(1,'rgba(5,6,7,0)');
   if(W>900){ctx.fillStyle=lg;ctx.fillRect(0,0,W*.55,Hh);}
-  const az=(((sunAz/D2R)%360)+360)%360|0, tl=!autoLight;
-  $('#sunneedle').setAttribute('transform',`rotate(${az} 22 22)`);
-  if(realBd){$('#sunneedle').style.opacity=tl?1:0;
-    $('#sunlbl').textContent=tl?`Sun azimuth ${az}° · NR101 timeline hour (backdrop lighting is not re-rendered)`:'Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011';}
-  else $('#sunlbl').textContent=`Illustrative lighting · Sun azimuth ${az}°`;
+  // Sun direction over the backdrop: a soft wash from the real Sun azimuth of the open region, mapped into this layout.
+  // The backdrop itself is the static LOLA average-sunlight map; this wash only shows where the Sun is.
+  if(sunNow&&sel){
+    const rg=REGIONS.find(x=>x.id===sel), L=rg.lon*D2R, a=sunNow.az*D2R;
+    const nx=Math.sin(L), ny=-Math.cos(L), ex=Math.cos(L), ey=Math.sin(L);   // local north / east on the map
+    const dx=Math.sin(a)*ex+Math.cos(a)*nx, dy=Math.sin(a)*ey+Math.cos(a)*ny;
+    const S=EXT*ppd, up=Math.max(0,Math.min(1,(sunNow.el+1)/6)), k=0.04+0.2*up;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,S*.96,0,Math.PI*2); ctx.clip(); ctx.globalCompositeOperation='screen';
+    const g=ctx.createLinearGradient(cx+dx*S,cy+dy*S,cx-dx*S,cy-dy*S);
+    g.addColorStop(0,`rgba(255,244,225,${k})`);g.addColorStop(.55,'rgba(255,244,225,0)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(cx-S,cy-S,2*S,2*S);ctx.restore();
+    const gx=cx+dx*S*.9, gy=cy+dy*S*.9, rg2=ctx.createRadialGradient(gx,gy,0,gx,gy,26);
+    rg2.addColorStop(0,`rgba(255,246,230,${0.35+0.5*up})`);rg2.addColorStop(1,'rgba(255,246,230,0)');ctx.fillStyle=rg2;ctx.fillRect(gx-26,gy-26,52,52);
+  }
+  if(sunNow&&sel){const az=Math.round(sunNow.az)%360;
+    $('#sunneedle').setAttribute('transform',`rotate(${az} 22 22)`);$('#sunneedle').style.opacity=1;
+    $('#sunlbl').textContent=(innerWidth>900&&document.body.classList.contains('sheet-open')?`Sun az ${az}° · el ${sunNow.el.toFixed(1)}°`:`Sun azimuth ${az}° · elevation ${sunNow.el.toFixed(1)}° · DE421 · ${sunStamp}`);}
+  else{$('#sunneedle').style.opacity=0;$('#sunlbl').textContent='Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011';}
 }
-let last=0;
+let last=0, lastZ=0, sunStamp='';
 function loop(t){
-  if(!realBd && procBuilt && autoLight && t-last>45){sunAz+= (t-last)/1000*D2R*3; last=t; shade(); draw();}
-  else if(!autoLight && needRedraw){needRedraw=false;shade();draw();}
-  else if(realBd && needRedraw){needRedraw=false;draw();}
-  if(autoLight===false) last=t;
+  const dt=Math.min(0.1,Math.max(0,(t-last)/1000)); last=t;
+  if(playing&&sel&&cur&&cur.sunp&&!dragging){let h=simH+dt*RATE[speed]; if(h>=HOURS-1)h-=HOURS-1; setHour(h);}
+  if(zDirty&&t-lastZ>45)renderZoom(t);
+  if(needRedraw){needRedraw=false;if(!realBd&&procBuilt)shade();draw();}
   requestAnimationFrame(loop);
 }
 let needRedraw=false;
@@ -523,7 +573,8 @@ function placeMarkers(){
 }
 
 // ---------- region card ----------
-let sel=null, height=1, cur=null, hour=0;
+let sel=null, height=1, cur=null;
+let initQ=new URLSearchParams('');
 const REALNOTE='<b style="color:#8fe3b0">Real data</b><span>Values on this card come from the repository code (<code>python -m atlas.export_web</code>) at Wueller et al. 2026 point NR101: slope, sunlight and Earth averages, Diviner temperature, and the hourly Sun/Earth series for 2025-01-01 + 14 days. '+(REAL&&REAL.query.interpolated_gap?'<b>Caution:</b> the LOLA return count at this 5 m pixel is 0, so slope here is interpolated, not measured. ':'')+'No combined score; screening cuts are not flight rules.</span>';
 const fmtLat=v=>v.toFixed(3)+'°', fmtLon=v=>(v>=0?'+':'')+v.toFixed(3)+'°';
 const fmtDate=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
@@ -599,7 +650,7 @@ function openRegion(id){
   const en=$('#example-note');
   if(cur.missing){ // regions.js absent: no numbers are invented
     en.className='example-note'; en.innerHTML='<b>No data</b><span>web/data/regions.js did not load. Run <code>python -m atlas.export_web</code>. No placeholder values are shown.</span>';
-    $('#dials').style.display='none';$('#extras').style.display='none';$('#tlbox').style.display='none';
+    $('#dials').style.display='none';$('#extras').style.display='none';$('#tlbox').style.display='none';$('#zoom').style.display='none';
   }else{
     $('#dials').style.display='';$('#extras').style.display='';
     $('#c-kicker').textContent='Candidate region · computed values at '+r.site;
@@ -608,57 +659,172 @@ function openRegion(id){
     en.innerHTML=missing?'<b>Slope not computed</b><span>'+cur.q.slope_source+' Sunlight, Earth view, temperature and cold-ground distance below are computed.</span>'
       :'<b style="color:#8fe3b0">Computed</b><span>Values come from the repository code (<code>python -m atlas.regions</code>, exported by <code>python -m atlas.export_web</code>) at Wueller et al. 2026 point '+r.site+', nearest pixel of each map. '+(cur.q.interpolated_gap?'<b>Caution:</b> the LOLA return count at this 5 m pixel is 0, so slope here is interpolated, not measured. ':'')+'No combined score; screening cuts are not flight rules.</span>';
   }
-  const hasTL=!!(cur.series);
-  $('#c-win').textContent='18.6-yr avg (readouts)'+(hasTL?' · timeline '+fmtDate(H0)+' – '+fmtDate(new Date(H0.getTime()+13*864e5))+' '+H0.getUTCFullYear():'');
-  $('#tlbox').style.display=hasTL?'':'none';
-  const nt=$('#tl-none'); nt.style.display=hasTL||cur.missing?'none':'';
-  nt.textContent='No hourly Sun/Earth timeline for '+r.name+': it needs the 5 m elevation raster of that site to build the terrain horizon, and only Site 06 (Nobile Rim 1) has been downloaded and processed. The 18.6-year averages above are the comparable measure for all nine regions.';
-  $('#tl-label').textContent='Hourly Sun & Earth visibility · 14 days from 2025-01-01 · DE421 + Site 06 terrain horizon · NR101 only';
+  const hasSun=!!cur.sunp, hasTL=!!cur.series;
+  $('#c-win').textContent='18.6-yr avg (readouts)'+(hasSun?' · Sun path '+fmtDate(H0)+' – '+fmtDate(new Date(H0.getTime()+13*864e5))+' '+H0.getUTCFullYear():'');
+  $('#tlbox').style.display=hasSun?'':'none'; $('#zoom').style.display=hasSun?'':'none';
+  $('#eyectl').style.display=hasTL?'':'none'; $('#w-earth').style.display=hasTL?'':'none';
+  const nt=$('#tl-none'); nt.style.display=hasSun&&!hasTL?'':'none';
+  nt.textContent='Sun position for '+r.name+' is the real DE421 ephemeris at this point, drawn as the elevation of the Sun’s disc centre above a smooth local horizontal. There is no hourly terrain-aware Sun/Earth visibility for it: that needs the 5 m elevation raster of the site to build the terrain horizon, and only Site 06 (Nobile Rim 1) has been downloaded and processed. The 18.6-year averages above are the comparable measure for all nine regions.';
+  $('#tl-label').textContent=hasTL?'Hourly Sun & Earth visibility · 14 days from 2025-01-01 · DE421 + Site 06 terrain horizon · NR101 only':'Sun elevation · 14 days from 2025-01-01 · DE421 · no terrain horizon for this region';
   if(!cur.missing)renderDials();
   $('#sheet').classList.add('open'); $('#sheet').setAttribute('aria-hidden','false'); document.body.classList.add('sheet-open');
   closeLayers(true); setNav('atlas');
-  if(hasTL)requestAnimationFrame(()=>{sizeTL();setHour(hour);}); else {autoLight=true;needRedraw=true;stopPlay();}
+  if(hasSun){
+    if(initQ.has('h'))simH=Math.max(0,Math.min(HOURS-1,+initQ.get('h')||0));
+    const startPaused=REDUCED||initQ.has('paused'), toZoom=initQ.has('zoom'); initQ=new URLSearchParams('');
+    setupZoom(); setPlaying(!startPaused);   // autoplay by default; reduced motion starts paused
+    requestAnimationFrame(()=>{sizeTL();segThumb();setHour(simH,true);if(toZoom)$('#zoom').scrollIntoView({block:'start'});});
+  }else{sunNow=null;needRedraw=true;setPlaying(false);}
   history.replaceState(null,'','#region/'+id);
 }
-function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');autoLight=true;needRedraw=true;stopPlay();history.replaceState(null,'','#');}
+function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');sunNow=null;needRedraw=true;setPlaying(false);history.replaceState(null,'','#');}
 $('#close').onclick=closeRegion;
 
-// ---------- timeline ----------
+// ---------- timeline & playback ----------
 const tlc=$('#tlc'),tctx=tlc.getContext('2d'),headEl=$('#head'),wrap=$('#tlwrap');
-let TW=0;
+const RATE={1:6,4:24,16:96};  // simulated hours per real second; 1x = a quarter of a day each second
+let TW=0, simH=0, playing=false, speed=4, dragging=false, lastQ=-1, zDirty=false;
+const PAD=56;
 function sizeTL(){const r=tlc.getBoundingClientRect();TW=r.width;tlc.width=r.width*DPR;tlc.height=96*DPR;drawTL();}
 function drawTL(){
-  if(!cur)return; const s=cur.series; tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,96);
-  const pad=56, w=TW-pad, bw=w/HOURS, font=getComputedStyle(document.body).fontFamily;
+  if(!cur||!cur.sunp)return; const s=cur.series; tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,96);
+  const w=TW-PAD, bw=w/HOURS, font=getComputedStyle(document.body).fontFamily;
   tctx.font='10px '+font; tctx.fillStyle='rgba(235,242,247,.5)'; tctx.textAlign='left';
-  tctx.fillText('SUN',0,22); tctx.fillText('EARTH',0,58);
-  for(let t=0;t<HOURS;t++){const x=pad+t*bw;
-    const v=s.sun[t]; tctx.fillStyle=v>0?`rgba(255,255,255,${0.12+0.78*v})`:'rgba(235,242,247,.05)'; tctx.fillRect(x,8,bw+0.6,22);
-    tctx.fillStyle=s.earth[t]?'rgba(169,220,255,.75)':'rgba(235,242,247,.05)'; tctx.fillRect(x,44,bw+0.6,22);}
+  if(s){
+    tctx.fillText('SUN',0,22); tctx.fillText('EARTH',0,58);
+    for(let t=0;t<HOURS;t++){const x=PAD+t*bw;
+      const v=s.sun[t]; tctx.fillStyle=v>0?`rgba(255,255,255,${0.12+0.78*v})`:'rgba(235,242,247,.05)'; tctx.fillRect(x,8,bw+0.6,22);
+      tctx.fillStyle=s.earth[t]?'rgba(169,220,255,.75)':'rgba(235,242,247,.05)'; tctx.fillRect(x,44,bw+0.6,22);}
+  }else{
+    const el=cur.sunp.elevation_deg_x10, lim=Math.max(3,Math.ceil(Math.max(...el.map(Math.abs))/10)), y0=8,y1=66, yz=(y0+y1)/2, sc=(y1-y0)/2/lim;
+    tctx.fillText('SUN ELEV',0,yz-4); tctx.fillStyle='rgba(235,242,247,.28)'; tctx.fillText('0° = horizontal',0,yz+9);
+    tctx.fillStyle='rgba(235,242,247,.05)'; tctx.fillRect(PAD,y0,w,y1-y0);
+    tctx.fillStyle='rgba(255,255,255,.14)'; tctx.beginPath(); tctx.moveTo(PAD,yz);
+    for(let t=0;t<HOURS;t++)tctx.lineTo(PAD+(t+.5)*bw,yz-Math.max(0,el[t]/10)*sc); tctx.lineTo(PAD+w,yz); tctx.fill();
+    tctx.strokeStyle='rgba(235,242,247,.28)'; tctx.setLineDash([3,3]); tctx.beginPath(); tctx.moveTo(PAD,yz); tctx.lineTo(PAD+w,yz); tctx.stroke(); tctx.setLineDash([]);
+    tctx.strokeStyle='rgba(255,255,255,.9)'; tctx.lineWidth=1.2; tctx.beginPath();
+    for(let t=0;t<HOURS;t++){const x=PAD+(t+.5)*bw,y=yz-el[t]/10*sc; t?tctx.lineTo(x,y):tctx.moveTo(x,y);} tctx.stroke(); tctx.lineWidth=1;
+  }
   tctx.fillStyle='rgba(235,242,247,.35)'; tctx.textAlign='center';
-  for(let d=0;d<=14;d+=1){const x=pad+d*24*bw; tctx.fillRect(x,72,1,d%7===0?8:4); if(d%2===0&&d<14) tctx.fillText('D'+(d+1),x+12*bw,92);}
+  for(let d=0;d<=14;d+=1){const x=PAD+d*24*bw; tctx.fillRect(x,72,1,d%7===0?8:4); if(d%2===0&&d<14) tctx.fillText('D'+(d+1),x+12*bw,92);}
 }
-function setHour(h){hour=Math.max(0,Math.min(HOURS-1,Math.round(h))); if(!cur)return; const s=cur.series;
-  const pad=56,bw=(TW-pad)/HOURS; headEl.style.transform=`translateX(${pad+(hour+0.5)*bw}px)`;
-  const d=new Date(H0.getTime()+hour*36e5);
-  $('#t-time').textContent=`D${Math.floor(hour/24)+1} · ${String(d.getUTCHours()).padStart(2,'0')}:00 UTC`;
-  $('#t-sun').textContent=Math.round(s.sun[hour]*100)+'%';
-  $('#t-earth').textContent=s.earth[hour]?'In view':'Below horizon';
-  $('#t-earth').style.color=s.earth[hour]?'var(--ice)':'var(--mute)';
-  autoLight=false; sunAz=s.az[hour]; needRedraw=true;
+function sunAt(h){
+  const p=cur&&cur.sunp; if(!p)return null;
+  const i=Math.max(0,Math.min(HOURS-2,Math.floor(h))), f=Math.max(0,Math.min(1,h-i));
+  const a0=p.azimuth_deg_x10[i]/10, a1=p.azimuth_deg_x10[i+1]/10, d=((a1-a0+540)%360)-180;
+  return {az:(a0+d*f+360)%360, el:(p.elevation_deg_x10[i]*(1-f)+p.elevation_deg_x10[i+1]*f)/10};
 }
-let dragging=false;
-const hx=e=>{const r=wrap.getBoundingClientRect();const pad=56;return (e.clientX-r.left-pad)/((r.width-pad)/HOURS);};
-wrap.addEventListener('pointerdown',e=>{dragging=true;wrap.setPointerCapture(e.pointerId);stopPlay();setHour(hx(e));});
-wrap.addEventListener('pointermove',e=>{if(dragging)setHour(hx(e));});
+const p2=n=>String(n).padStart(2,'0');
+function setHour(h,force){
+  simH=Math.max(0,Math.min(HOURS-1,h)); if(!cur||!cur.sunp)return;
+  headEl.style.transform=`translateX(${PAD+(simH+0.5)*(TW-PAD)/HOURS}px)`;
+  const q=Math.floor(simH*8); if(q===lastQ&&!force)return; lastQ=q;
+  const hi=Math.min(HOURS-1,Math.floor(simH)), d=new Date(H0.getTime()+Math.floor(simH*4)*9e5), s=cur.series;
+  sunStamp=`${d.getUTCFullYear()}-${p2(d.getUTCMonth()+1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
+  $('#t-time').textContent=`D${Math.floor(simH/24)+1} · ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
+  sunNow=sunAt(simH); sunAz=sunNow.az*D2R;
+  if(s){$('#k-sun').textContent='SUN DISC VISIBLE';$('#t-sun').textContent=Math.round(s.sun[hi]*100)+'%';
+    $('#t-earth').textContent=s.earth[hi]?'In view':'Below horizon'; $('#t-earth').style.color=s.earth[hi]?'var(--ice)':'var(--mute)';}
+  else{$('#k-sun').textContent='SUN ELEVATION';$('#t-sun').textContent=(sunNow.el<0?'−':'+')+Math.abs(sunNow.el).toFixed(1)+'°';}
+  needRedraw=true; zDirty=true; if(force||!playing)renderZoom();
+}
+const hx=e=>{const r=wrap.getBoundingClientRect();return (e.clientX-r.left-PAD)/((r.width-PAD)/HOURS)-0.5;};
+wrap.addEventListener('pointerdown',e=>{dragging=true;wrap.setPointerCapture(e.pointerId);setPlaying(false);setHour(hx(e),true);});  // scrubbing pauses
+wrap.addEventListener('pointermove',e=>{if(dragging)setHour(hx(e),true);});
 wrap.addEventListener('pointerup',()=>dragging=false);
-let playT=null;
-function stopPlay(){if(playT){cancelAnimationFrame(playT);playT=null;$('#playp').setAttribute('d','M0 0L10 6L0 12Z');}}
-$('#play').onclick=()=>{if(playT){stopPlay();return;}$('#playp').setAttribute('d','M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z');let h=hour>=HOURS-1?0:hour,lt=performance.now();
-  const step=t=>{h+=(t-lt)/1000*24;lt=t;if(h>=HOURS-1){setHour(HOURS-1);stopPlay();return;}setHour(h);playT=requestAnimationFrame(step);};playT=requestAnimationFrame(step);};
-function segThumb(){const on=$('#hseg .on'),th=$('#hseg .thumb');th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}
+wrap.addEventListener('pointercancel',()=>dragging=false);
+function setPlaying(on){
+  playing=!!on; $('#playp').setAttribute('d',playing?'M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z':'M0 0L10 6L0 12Z');
+  const b=$('#play'); b.setAttribute('aria-label',playing?'Pause Sun movement':'Play Sun movement'); b.setAttribute('aria-pressed',String(playing));
+  $('#rate').textContent=playing?`Playing · ${RATE[speed]} h per second`:'Paused';
+}
+$('#play').onclick=()=>{if(playing){setPlaying(false);return;}if(simH>=HOURS-1)setHour(0,true);setPlaying(true);};
+$$('#sseg button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;$$('#sseg button').forEach(x=>x.classList.toggle('on',x===b));segThumb();setPlaying(playing);});
+function segThumb(){$$('.seg').forEach(g=>{const on=g.querySelector('.on'),th=g.querySelector('.thumb');if(on&&on.offsetWidth){th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}});}
 $$('#hseg button').forEach(b=>b.onclick=()=>{$$('#hseg button').forEach(x=>x.classList.toggle('on',x===b));segThumb();height=+b.dataset.h;
-  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);if(cur.missing)return;renderDials();if(cur.series){drawTL();setHour(hour);}}});
+  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);if(cur.missing)return;renderDials();drawTL();setHour(simH,true);}});
+
+// ---------- site zoom ----------
+// NR101: real LOLA 5 m elevation chip, hillshaded and shadow-cast under the DE421 Sun direction.
+// Every other region: the LOLA average-sunlight map cropped to the point (static, not terrain) plus the real Sun direction.
+const zc=$('#zc'),zx=zc.getContext('2d'),ZS=512;
+let zdem=null, zmap=null, zmode=null;
+const demCache={}, mapCache={};
+function prepDem(rec){
+  const n=rec.n, bin=atob(rec.u16le_b64), H=new Float32Array(n*n);
+  for(let i=0;i<n*n;i++)H[i]=rec.min_m+(bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8))*rec.step_m;
+  const nE=new Float32Array(n*n),nN=new Float32Array(n*n),nZ=new Float32Array(n*n); let hmax=-1e9;
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){const i=r*n+c,c0=Math.max(0,c-1),c1=Math.min(n-1,c+1),r0=Math.max(0,r-1),r1=Math.min(n-1,r+1);
+    const dE=(H[r*n+c1]-H[r*n+c0])/((c1-c0)*rec.pixel_m), dN=-(H[r1*n+c]-H[r0*n+c])/((r1-r0)*rec.pixel_m), k=1/Math.sqrt(1+dE*dE+dN*dN);
+    nE[i]=-dE*k;nN[i]=-dN*k;nZ[i]=k;if(H[i]>hmax)hmax=H[i];}
+  const off=document.createElement('canvas');off.width=off.height=n;const octx2=off.getContext('2d');
+  return {rec,n,px:rec.pixel_m,H,nE,nN,nZ,hmax,off,octx:octx2,img:octx2.createImageData(n,n)};
+}
+function setupZoom(){
+  const r=REGIONS.find(x=>x.id===sel), site=r.site; zdem=null; zmap=null; zmode=null;
+  const rec=ZOOM&&ZOOM.dem&&ZOOM.dem[site];
+  const hasSlopeTile=cur.q&&cur.q.slope_deg!=null;
+  let head,what,caveat,badge,bcls;
+  if(rec){zmode='dem'; zdem=demCache[site]||(demCache[site]=prepDem(rec)); badge='Real terrain'; bcls='real';
+    head=r.name+' · '+(rec.extent_m/1000).toFixed(2)+' km across, hillshade under the simulated Sun';
+    what='<b>Real elevation data.</b> Hillshade of the LOLA product 78 Site 06 5 m elevation raster (Barker et al. 2021), resampled to 10 m, north up. It is lit from the Sun direction below, with shadows cast by terrain inside this chip. Brightness is exposure-stretched for legibility; it is not a photograph or a photometric model, and the Sun is treated as a point.';
+    caveat='Shadows from terrain outside the chip are not included, so the sun-facing edge can be too bright at low Sun. The Site 06 raster is the only elevation raster in the repository.';}
+  else{zmode='map'; badge='Sunlight map · static'; bcls='map';
+    const c=ZOOM&&ZOOM.map&&ZOOM.map.crops[site]; zmap=mapCache[site]||(mapCache[site]={im:null});
+    if(c&&!zmap.im&&!zmap.loading){zmap.loading=true;const im=new Image();im.onload=()=>{zmap.im=im;renderZoom(0,true);};im.src=c.file;}
+    head=r.name+' · '+(c?(c.span_m/1000).toFixed(1):'15.4')+' km across, LOLA average-sunlight map';
+    what='<b>Not terrain, and it does not change with the Sun.</b> This is the LOLA average-sunlight-visibility map (Mazarico et al. 2011, 120 m pixels) cropped around the point, the same raster as the home backdrop: brighter ground is in sunlight more often over 18.6 years. '+(hasSlopeTile?'A 5 m slope raster exists for this site, but slope alone has no height or aspect, so it cannot be hillshaded; ':'No 5 m site tile contains this point, and ')+'no elevation raster has been processed for it, so no hillshade or shadows are drawn.';
+    caveat='Only the arrow and the numbers change over time: they are the real Sun direction at this point.';}
+  $('#z-title').textContent='Site zoom · below the timeline'; $('#z-head').textContent=head;
+  $('#z-what').innerHTML=what;
+  $('#z-sun').innerHTML='<b>Sun position:</b> JPL DE421 ephemeris through the repository’s <code>atlas.ephemeris</code>, centre of the Sun’s disc against a smooth local horizontal'+(zmode==='dem'?'. The Sun/Earth visibility strips above also use the terrain horizon; this picture uses the elevation chip directly.':'; terrain is not included.');
+  $('#z-caveat').textContent=caveat;
+  const b=$('#zbadge'); b.textContent=badge; b.className='zbadge '+bcls;
+  zDirty=true;
+}
+function shadeDem(az,el){
+  const D=zdem,n=D.n,H=D.H,out=D.img.data,a=az*D2R,e=el*D2R,ce=Math.cos(e),se=Math.sin(e),lE=Math.sin(a)*ce,lN=Math.cos(a)*ce;
+  let dc=Math.sin(a),dr=-Math.cos(a);const m=Math.max(Math.abs(dc),Math.abs(dr));dc/=m;dr/=m;
+  const rise=D.px*Math.hypot(dc,dr)*Math.tan(e),hmax=D.hmax;
+  for(let row=0;row<n;row++)for(let col=0;col<n;col++){
+    const i=row*n+col, I=D.nE[i]*lE+D.nN[i]*lN+D.nZ[i]*se; let v=0;
+    if(I>0){let c=col+.5,r=row+.5,z=H[i]+.4,lit=true;
+      for(;;){c+=dc;r+=dr;z+=rise;if(c<0||r<0||c>=n||r>=n||z>hmax)break;if(H[(r|0)*n+(c|0)]>z){lit=false;break;}}
+      if(lit)v=I;}
+    v=Math.pow(Math.min(1,v/0.2),0.85);
+    const k=i*4;out[k]=v*226+3;out[k+1]=v*231+4;out[k+2]=v*238+6;out[k+3]=255;}
+  D.octx.putImageData(D.img,0,0);
+}
+function zoomOverlay(sun,scaleM,mpp,label){
+  const fnt=getComputedStyle(document.body).fontFamily;
+  const rx=46,ry=46,R=28,a=sun.az*D2R,tx=rx+Math.sin(a)*(R-4),ty=ry-Math.cos(a)*(R-4);
+  zx.save();zx.fillStyle='rgba(5,6,7,.55)';zx.beginPath();zx.arc(rx,ry,R+8,0,7);zx.fill();
+  zx.strokeStyle='rgba(235,242,247,.35)';zx.lineWidth=1;zx.beginPath();zx.arc(rx,ry,R,0,7);zx.stroke();
+  zx.fillStyle='rgba(235,242,247,.7)';zx.font='500 11px '+fnt;zx.textAlign='center';zx.fillText('N',rx,ry-R-1);
+  zx.strokeStyle='#a9dcff';zx.lineWidth=1.6;zx.beginPath();zx.moveTo(rx,ry);zx.lineTo(tx,ty);zx.stroke();
+  zx.fillStyle='#fff';zx.shadowColor='#a9dcff';zx.shadowBlur=8;zx.beginPath();zx.arc(tx,ty,3.6,0,7);zx.fill();zx.shadowBlur=0;
+  zx.strokeStyle='rgba(255,255,255,.85)';zx.lineWidth=1.4;zx.beginPath();zx.arc(ZS/2,ZS/2,9,0,7);zx.stroke();
+  zx.strokeStyle='rgba(255,255,255,.55)';zx.beginPath();zx.moveTo(ZS/2-16,ZS/2);zx.lineTo(ZS/2-9,ZS/2);zx.moveTo(ZS/2+9,ZS/2);zx.lineTo(ZS/2+16,ZS/2);zx.moveTo(ZS/2,ZS/2-16);zx.lineTo(ZS/2,ZS/2-9);zx.moveTo(ZS/2,ZS/2+9);zx.lineTo(ZS/2,ZS/2+16);zx.stroke();
+  zx.fillStyle='rgba(255,255,255,.9)';zx.font='500 11px '+fnt;zx.textAlign='left';zx.fillText(label,ZS/2+14,ZS/2-12);
+  const w=scaleM/mpp;zx.fillStyle='rgba(5,6,7,.55)';zx.fillRect(14,ZS-40,w+20,28);
+  zx.fillStyle='#fff';zx.fillRect(24,ZS-24,w,2);zx.fillRect(24,ZS-28,1.5,10);zx.fillRect(24+w-1.5,ZS-28,1.5,10);
+  zx.font='500 11px '+fnt;zx.fillText(scaleM>=1000?(scaleM/1000)+' km':scaleM+' m',24,ZS-30);
+  if(sun.el<0){zx.textAlign='center';zx.fillStyle='rgba(5,6,7,.7)';zx.fillRect(ZS-14-210,ZS-40,210,28);zx.fillStyle='#ffc27a';zx.fillText('Sun below the local horizontal',ZS-14-105,ZS-22);}
+  zx.restore();
+}
+function renderZoom(t,force){
+  zDirty=false; lastZ=t||performance.now();
+  if(!zmode||!sunNow||(!$('#zoom').offsetParent&&!force))return;
+  const sun=sunNow, rg=REGIONS.find(x=>x.id===sel);
+  zx.setTransform(1,0,0,1,0,0);zx.fillStyle='#000';zx.fillRect(0,0,ZS,ZS);
+  zx.imageSmoothingEnabled=true;zx.imageSmoothingQuality='high';
+  if(zmode==='dem'){shadeDem(sun.az,sun.el);zx.drawImage(zdem.off,0,0,ZS,ZS);zoomOverlay(sun,500,zdem.rec.extent_m/ZS,rg.site);}
+  else{if(zmap&&zmap.im)zx.drawImage(zmap.im,0,0,ZS,ZS);
+    else{zx.fillStyle='rgba(235,242,247,.4)';zx.font='13px sans-serif';zx.textAlign='center';zx.fillText('Loading sunlight map…',ZS/2,ZS/2);}
+    zoomOverlay(sun,5000,(ZOOM&&ZOOM.map&&ZOOM.map.crops[rg.site]?ZOOM.map.crops[rg.site].span_m:15360)/ZS,rg.site);}
+  $('#z-az').textContent=Math.round(sun.az)%360+'°';
+  $('#z-el').textContent=(sun.el<0?'−':'+')+Math.abs(sun.el).toFixed(1)+'°';
+}
 
 // ---------- layers ----------
 function setNav(v){$$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
@@ -703,10 +869,10 @@ function renderTable(){
 function stripConvDots(root){(root||document).querySelectorAll('.extra b .conv, td .conv').forEach(e=>{e.innerHTML=e.innerHTML.replace(/^\s*\u00b7\s*/,'');});}
 // ---------- init ----------
 $$("[data-kelvin]").forEach(e=>e.innerHTML=Units.kHTML(+e.dataset.kelvin));stripConvDots(document);
-addEventListener('resize',()=>{layout();if(sel&&cur&&cur.series){sizeTL();setHour(hour);}segThumb();});
+addEventListener('resize',()=>{layout();if(sel&&cur&&cur.sunp){sizeTL();setHour(simH,true);}segThumb();});
 layout(); shade(); draw(); segThumb(); syncCuts(); requestAnimationFrame(loop);
 const h=location.hash.slice(1);
-if(h.startsWith('region/'))openRegion(h.split('/')[1]);
+if(h.startsWith('region/')){const [pth,qs]=h.split('?');initQ=new URLSearchParams(qs||'');openRegion(pth.split('/')[1]);}  // e.g. #region/NR1?h=120&paused&zoom opens at a fixed Sun time, scrolled to the zoom
 else if(h==='compare'||h==='method'){ if(h==='method'&&false){} openLayer(h);}
 else if(h==='nr1+method'){openRegion('NR1');openLayer('method');}
 })();
