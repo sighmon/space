@@ -393,6 +393,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <script src="data/regions.js"></script>
 <script src="data/nr101.js"></script>
 <script src="data/sun.js"></script>
+<script src="sunmarker.js"></script>
 <script src="data/zoom.js"></script>
 <script>
 (()=>{
@@ -548,13 +549,14 @@ function draw(){
     const g=ctx.createLinearGradient(cx+dx*S,cy+dy*S,cx-dx*S,cy-dy*S);
     g.addColorStop(0,`rgba(255,244,225,${k})`);g.addColorStop(.55,'rgba(255,244,225,0)');g.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=g;ctx.fillRect(cx-S,cy-S,2*S,2*S);ctx.restore();
-    let dm=Math.min(S*.9,8*ppd);const mg=Math.max(30,Math.min(W,Hh)*.04);while(dm>ppd&&(cx+dx*dm<mg||cx+dx*dm>W-mg||cy+dy*dm<mg+(W>900?0:90)||cy+dy*dm>Hh-mg-(W>900?30:70)))dm-=ppd*.2;   // keep the Sun marker on screen, on the map's rim side
-    const gx=cx+dx*dm, gy=cy+dy*dm, rg2=ctx.createRadialGradient(gx,gy,0,gx,gy,26);
+    const mk=SunMarker.sunMarker({cx,cy,ppd,S,W,H:Hh},homeSun), gx=mk.x, gy=mk.y, fa=mk.alpha;   // true projected position: not clamped, clipped by the canvas edge
+    if(fa>0&&gx>-30&&gx<W+30&&gy>-30&&gy<Hh+30){ctx.save();ctx.globalAlpha=fa;
+    const rg2=ctx.createRadialGradient(gx,gy,0,gx,gy,26);
     rg2.addColorStop(0,`rgba(255,246,230,${0.35+0.5*up})`);rg2.addColorStop(1,'rgba(255,246,230,0)');ctx.fillStyle=rg2;ctx.fillRect(gx-26,gy-26,52,52);
-    ctx.fillStyle=`rgba(255,250,240,${0.55+0.4*up})`;ctx.beginPath();ctx.arc(gx,gy,4.5,0,7);ctx.fill();   // Sun marker
+    ctx.fillStyle=`rgba(255,250,240,${0.55+0.4*up})`;ctx.beginPath();ctx.arc(gx,gy,4.5,0,7);ctx.fill();ctx.restore();}   // Sun marker
   }
   if(homeSun){const lo=Math.round(homeSun.lon)%360;
-    $('#sunneedle').setAttribute('transform',`rotate(${lo} 22 22)`);$('#sunneedle').style.opacity=1;
+    $('#sunneedle').setAttribute('transform',`rotate(${lo} 22 22)`);$('#sunneedle').style.opacity=Math.max(.35,Math.min(1,(homeSun.el+6)/6));
     $('#sunlbl').textContent=(innerWidth>900&&document.body.classList.contains('sheet-open')?`Sun toward ${lo}° E · el ${homeSun.el.toFixed(1)}° at pole`:`Sun toward map longitude ${lo}° · elevation at the pole ${homeSun.el.toFixed(1)}° · DE421 · ${sunStamp}`);}
   else{$('#sunneedle').style.opacity=0;$('#sunlbl').textContent='Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011';}
 }
@@ -840,7 +842,7 @@ function zoomOverlay(sun,scaleM,mpp,label){
   zx.strokeStyle='rgba(235,242,247,.35)';zx.lineWidth=1;zx.beginPath();zx.arc(rx,ry,R,0,7);zx.stroke();
   zx.fillStyle='rgba(235,242,247,.7)';zx.font='500 11px '+fnt;zx.textAlign='center';zx.fillText('N',rx,ry-R-1);
   zx.strokeStyle='#a9dcff';zx.lineWidth=1.6;zx.beginPath();zx.moveTo(rx,ry);zx.lineTo(tx,ty);zx.stroke();
-  zx.fillStyle='#fff';zx.shadowColor='#a9dcff';zx.shadowBlur=8;zx.beginPath();zx.arc(tx,ty,3.6,0,7);zx.fill();zx.shadowBlur=0;
+  zx.globalAlpha=sun.el<0?Math.max(.35,1+sun.el/6):1;zx.fillStyle='#fff';zx.shadowColor='#a9dcff';zx.shadowBlur=8;zx.beginPath();zx.arc(tx,ty,3.6,0,7);zx.fill();zx.shadowBlur=0;zx.globalAlpha=1;
   zx.strokeStyle='rgba(255,255,255,.85)';zx.lineWidth=1.4;zx.beginPath();zx.arc(ZS/2,ZS/2,9,0,7);zx.stroke();
   zx.strokeStyle='rgba(255,255,255,.55)';zx.beginPath();zx.moveTo(ZS/2-16,ZS/2);zx.lineTo(ZS/2-9,ZS/2);zx.moveTo(ZS/2+9,ZS/2);zx.lineTo(ZS/2+16,ZS/2);zx.moveTo(ZS/2,ZS/2-16);zx.lineTo(ZS/2,ZS/2-9);zx.moveTo(ZS/2,ZS/2+9);zx.lineTo(ZS/2,ZS/2+16);zx.stroke();
   zx.fillStyle='rgba(255,255,255,.9)';zx.font='500 11px '+fnt;zx.textAlign='left';zx.fillText(label,ZS/2+14,ZS/2-12);
