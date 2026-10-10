@@ -1,6 +1,6 @@
 # Data sources
 
-All layers for the first map are already public. Months 1–2 use gridded products only. Hourly Sun and Earth geometry waits until the static map is honest.
+All layers for the first map are already public. Months 1–2 use gridded products only. The hourly Sun and Earth series at NR101 uses the Site 06 elevation grid plus JPL DE421.
 
 Projection shared by the LOLA products below: south-polar stereographic, reference radius 1737.4 km, true scale at the pole, MOON_ME frame of JPL ephemeris DE421. Pixel registration is the Generic Mapping Tools convention (coordinates are pixel centers). Reprojecting any layer off this frame is a bug, not a convenience.
 
@@ -20,11 +20,15 @@ This is the landing layer, and the confidence mask.
 
 Cite the site DEMs as Barker et al. 2021, Planetary and Space Science 203, 105119, [10.1016/j.pss.2020.105119](https://doi.org/10.1016/j.pss.2020.105119). Reported typical errors inside the regions of interest: median RMS height about 0.3–0.5 m, median RMS slope about 1.5–2.5°. Error grows with the gap between LOLA tracks. The return-count map is the confidence mask. A smooth patch with a low count is interpolated, not measured.
 
+The horizon timeline reads [Site06_final_adj_5mpp_surf.tif](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif), the elevation grid from that same 5 m product. It uses that file's own georeferencing. It does not rebuild height from the slope grid, and it does not use the illumination label origin.
+
+Sun and Earth directions are JPL DE421 in the MOON_ME frame: `de421.bsp` (NAIF now serves it under `generic_kernels/spk/planets/a_old_versions/`), `moon_pa_de421_1900-2050.bpc`, and `moon_080317.tf`. `naif0012.tls` is archived beside them. The solar disc uses a radius of 695700 km. The Earth disc uses the IAU equatorial radius, 6378.137 km. That is still disc visibility, not a link budget.
+
 Shape-from-shading DEMs at 5 m/pixel exist for the original thirteen 2022 regions ([PGDA product 104](https://pgda.gsfc.nasa.gov/products/104), Zenodo [10.5281/zenodo.17954508](https://doi.org/10.5281/zenodo.17954508)). They fill illuminated gaps in LOLA and are masked in permanent shadow, where they fall back to a smoothed LOLA surface. Use them as a second terrain opinion after the LOLA slope map is in place, not as the first one.
 
 ### 2. Average sunlight
 
-Fraction of hourly steps, over an 18.6-year lunar nodal cycle, when the Sun is visible. This is a long-term average. It is not the sunlight during a particular mission week. That calculation is months 3–4.
+Fraction of hourly steps, over an 18.6-year lunar nodal cycle, when the Sun is visible. This is a long-term average. It is not the sunlight during a particular mission week. The NR101 timeline is that week-scale and month-scale series, kept separate from this average.
 
 | Extent | Pixel | File that answered on 8 October 2026 |
 | --- | --- | --- |

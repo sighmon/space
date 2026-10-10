@@ -6,3 +6,8 @@ AVGVISIB_75S_120M_201608.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/AVGV
 AVGVISIB_75S_120M_201608_EARTH.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/AVGVISIB_75S_120M_201608_EARTH.JP2	2026-10-08T11:39:32Z	e2767e0d8c69451e56da657afa53f0122b4b2345b75a6ab8ef931b9ed5b30bab	37997440
 LPSR_75S_120M_201608.JP2	http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/LPSR_75S_120M_201608.JP2	2026-10-08T11:39:29Z	61455b9f3f3b60196beec38800fcb2dab351a24bf901eab99afb959777f180fd	6991935
 polar_south_80_summer_max-float.tif	http://luna1.diviner.ucla.edu/~jpierre/diviner/level4_polar/additional_maps/polar_south_80_summer_max-float.tif	2026-10-08T11:39:37Z	ba4a1b6275402d6b0c1000ceb0208ad63d37665afaeb902ab6f108c67c0a0c67	25686193
+Site06_final_adj_5mpp_surf.tif	https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif	2026-10-09T10:20:51Z	cca17e8067601dd659b583f889204db6bce685bc30c60a9e62427a8bce36b03d	64025603
+kernels/de421.bsp	https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp	2026-10-09T10:21:43Z	08b20db2ae22488650641c5a9033e5bfda4b1c4b440cfeaf20f621cfa18ecdb3	16790528
+kernels/moon_pa_de421_1900-2050.bpc	https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de421_1900-2050.bpc	2026-10-09T10:21:45Z	656f90616403d75a75f0cd6c8830fc5b44f8cb4facb5ccb8915e752b397520cf	1770496
+kernels/moon_080317.tf	https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_080317.tf	2026-10-09T10:21:46Z	78732477b96f9863e7b0d65bcee3c22b8707ca5ed0db56d1173319cb2e8c7993	21437
+kernels/naif0012.tls	https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls	2026-10-09T10:21:45Z	678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b	5257

@@ -47,6 +47,22 @@ def xy_to_lonlat(x_m: float, y_m: float) -> tuple[float, float]:
     return float(lon), float(lat)
 
 
+def xy_to_lonlat_array(x_m, y_m):
+    """Vector inverse of the south-polar stereographic frame.
+
+    Same sphere and origin as ``xy_to_lonlat``. Rho = 2 R tan(pi/4 + lat/2)
+    with x = rho sin(lon) and y = rho cos(lon).
+    """
+    import numpy as np
+
+    x = np.asarray(x_m, dtype=np.float64)
+    y = np.asarray(y_m, dtype=np.float64)
+    rho = np.hypot(x, y)
+    longitude = np.degrees(np.arctan2(x, y))
+    latitude = np.degrees(2.0 * np.arctan2(rho, 2.0 * RADIUS_M) - 0.5 * np.pi)
+    return longitude, latitude
+
+
 def illumination_transform() -> tuple[float, float, float, float, float, float]:
     """Rasterio-style affine for the 75°S illumination grids.
 

@@ -49,6 +49,7 @@ ILLUM_FILES = {
     "shadow": ("LPSR_75S_120M_201608.JP2", "LPSR_75S_120M_201608.LBL", PSR_DN_SCALE, PSR_DN_OFFSET, "Permanent shadow flag, 1 inside, 0 outside."),
 }
 DIVINER_NAME = "polar_south_80_summer_max-float.tif"
+ELEVATION_NAME = "Site06_final_adj_5mpp_surf.tif"
 
 EXTENT = (
     "LOLA Site 06 raster (Nobile Rim 1). The USGS candidate-region outline was not applied. "
@@ -92,6 +93,11 @@ def load_bundle(raw_dir: Path) -> Bundle:
         extent=EXTENT,
         site_bounds=bounds,
     )
+
+
+def load_elevation(raw_dir: Path) -> Grid:
+    """Site 06 height grid. Not part of the static five-field bundle."""
+    return _load_site(raw_dir / ELEVATION_NAME, "elevation", "meters", 5.0)
 
 
 def _load_site(path: Path, name: str, unit: str, expected_pixel_m: float) -> Grid:

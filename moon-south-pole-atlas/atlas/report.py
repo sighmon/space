@@ -50,13 +50,40 @@ RASTERS = [
         "http://luna1.diviner.ucla.edu/~jpierre/diviner/level4_polar/additional_maps/polar_south_80_summer_max-float.tif",
         240.0,
     ),
+    (
+        "Site06_final_adj_5mpp_surf.tif",
+        "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+        5.0,
+    ),
+]
+
+# SPICE kernels are not rasters. They are hashed into the manifest and never opened by rasterio.
+KERNELS = [
+    (
+        "kernels/de421.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp",
+    ),
+    (
+        "kernels/moon_pa_de421_1900-2050.bpc",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de421_1900-2050.bpc",
+    ),
+    (
+        "kernels/moon_080317.tf",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_080317.tf",
+    ),
+    (
+        "kernels/naif0012.tls",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+    ),
 ]
 
 
 def write_manifest(path: Path | None = None) -> Path:
     path = path or (ROOT / "data" / "MANIFEST.tsv")
     lines = ["filename\turl\tfetched_utc\tsha256\tbytes"]
-    for name, url, _expected in RASTERS:
+    entries = [(name, url) for name, url, _expected in RASTERS]
+    entries.extend(KERNELS)
+    for name, url in entries:
         file_path = RAW / name
         digest = hashlib.sha256(file_path.read_bytes()).hexdigest()
         fetched = datetime.fromtimestamp(file_path.stat().st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -121,6 +148,9 @@ def write_georef(path: Path | None = None) -> Path:
             "Site 06's datum is named `unknown` inside the GeoTIFF. The spheroid radius is 1737400 m and the "
             "projection is polar stereographic with latitude of origin −90. That matches the frame. "
             "The product README at the same archive states the MOON_ME / DE421 axes for these files.",
+            "",
+            "Horizon masks for the timed Sun and Earth series use Site06_final_adj_5mpp_surf.tif. "
+            "That grid's own georeferencing is the one above. The illumination label origin is not used.",
             "",
         ]
     )

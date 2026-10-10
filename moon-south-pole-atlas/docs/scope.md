@@ -30,9 +30,13 @@ A pixel can pass the landing cuts and fail the ice cuts. That is a normal south-
 - Diviner is 240 m. Do not paint it at 5 m.
 - Shape-from-shading is a later cross-check. Where it and LOLA disagree by more than the LOLA height error, show the disagreement instead of picking a winner.
 
-## Months 3–4, only after the static sheet
+## Months 3–4, the first timed point
 
-Time dependence needs the horizon at each pixel, then the Sun and Earth from an ephemeris (SPICE kernels, or JPL Horizons for a handful of sites). The LOLA team has said they will generate a specific interval on request; that is a backstop, not the method. The first timed product is one published representative site inside Nobile Rim 1 (a Wueller NR1 point), for fourteen Earth days, at 1 m and at 5 m above the surface. Height above the surface changes the horizon. Barker et al. 2021 showed illumination statistics moving between 1 m and 5 m. A lander and a kneeling astronaut are not the same observer.
+The static sheet stays the 18.6-year averages. The timed product is one published representative site inside Nobile Rim 1, Wueller NR101, not a map of every Site 06 pixel.
+
+From 2025-01-01T00:00:00Z, the timeline samples every hour for 14 Earth days and for 30 Earth days. At each hour it asks whether any part of the solar disc is above the local horizon, and whether any part of the Earth disc is. The horizon comes from the Site 06 elevation grid in the MOON_ME frame. The Sun and Earth come from JPL DE421. The observer is placed at 1 m and at 5 m above the surface elevation. Those heights stay separate series. Barker et al. 2021 showed illumination statistics moving between 1 m and 5 m. A lander and a kneeling astronaut are not the same observer.
+
+A disc whose center is above a flat horizon can still be hidden by the terrain. Earth remains disc visibility, not a radio link budget. The hourly series is not folded back into the 18.6-year average, and it is not a flight rule.
 
 ## Open problems
 
