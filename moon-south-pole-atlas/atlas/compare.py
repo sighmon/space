@@ -9,6 +9,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+import numpy as np
+
 from atlas.sample import (
     BARKER_2021,
     EARTH_LABEL,
@@ -19,6 +21,7 @@ from atlas.sample import (
     Grid,
     _reject_fused_score,
     cuts_for,
+    distance_to_cold_shadow,
     sample_grid,
 )
 
@@ -107,6 +110,7 @@ def region_record(
     earth: Grid | None,
     shadow: Grid | None,
     temperature: Grid | None,
+    cold_centers: np.ndarray | None = None,
 ) -> dict:
     """One region. None grids and nodata samples stay None, including the cuts that need them."""
     slope_deg = _sample(slope, x, y)
@@ -119,6 +123,7 @@ def region_record(
     permanent_shadow = None if shadow_value is None else bool(shadow_value >= 0.5)
     interpolated_gap = None if count is None else bool(count <= 0.0)
     slope_resolution = _resolution(slope)
+    cold_distance = None if cold_centers is None else distance_to_cold_shadow(x, y, cold_centers)
     record = {
         "region": spec.region,
         "point_id": spec.point_id,
@@ -158,6 +163,7 @@ def region_record(
         "permanent_shadow_pixel_label": pixel_label(_resolution(shadow)),
         "permanent_shadow_map": _map_note(shadow),
         "permanent_shadow_citation": None if shadow is None or not shadow.usable else MAZARICO_2011,
+        "distance_to_cold_shadow_m": cold_distance,
         "lola_return_count": count,
         "interpolated_gap": interpolated_gap,
         "return_resolution_m": _resolution(returns),

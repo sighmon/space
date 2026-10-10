@@ -60,7 +60,7 @@ The ephemeris is JPL DE421 in the MOON_ME frame. Earth visibility is still disc 
 
 ## Run the nine-region comparison
 
-Months 5–6 apply the same five fields at one published point in each of the nine October 2024 regions. The points are the first Wueller et al. 2026 Table A1 site in each region (NR101 stays 36.917°E, 85.295°S). The rows are not a ranking. Sunlight and Earth are the 18.6-year averages, not the NR101 hourly timeline. Where product 78 has no 5 m tile that contains the point, slope, slope RMS, and the LOLA return count are missing.
+Months 5–6 apply the same five fields at one published point in each of the nine October 2024 regions. The points are the first Wueller et al. 2026 Table A1 site in each region (NR101 stays 36.917°E, 85.295°S). The rows are not a ranking. Sunlight and Earth are the 18.6-year averages, not the NR101 hourly timeline. Where product 78 has no 5 m tile that contains the point, slope, slope RMS, and the LOLA return count are missing. Each row also carries the distance to the nearest permanent-shadow pixel with Diviner summer maximum below 110 K, searched within 40 km beyond the nine points.
 
 ```
 python -m atlas.regions --png output/nine-regions.png
@@ -69,5 +69,18 @@ python -m atlas.regions --png output/nine-regions.png
 The figure's method note states the south-polar frame, the sources, the nine coordinates, and four caveats: cuts are not flight rules, Earth visibility is not a radio link budget, ice is not a volume, and there is no single score.
 
 ```
-python -m unittest tests.test_query tests.test_horizon tests.test_regions
+python -m unittest tests.test_query tests.test_horizon tests.test_regions tests.test_export_web tests.test_export_zoom
 ```
+
+The web prototype has its own tests under `web/` (plain Node, no dependencies). `test_units.js` and `test_contrast.js` run with plain `node`; the others drive headless Chrome over the DevTools protocol and need `google-chrome` on `PATH` and `node --experimental-websocket`:
+
+```
+node web/test_units.js && node web/test_contrast.js
+for t in test_sunmarker test_play_button test_no_overflow test_playback_restart test_findings test_review2 test_close_github test_review3; do
+  node --experimental-websocket web/$t.js || break
+done
+```
+
+## Web prototype
+
+A static, dependency-free frontend prototype is in [web/](web/README.md). All nine regions show values computed by `python -m atlas.regions` and exported by `python -m atlas.export_web` (18.6-year averages in every row). Slope is missing, and labelled so, for the three regions without a 5 m tile. Every region's zoom is real LOLA terrain: 5 m LOLA elevation for seven regions (product-78 site DEMs; Slater Plain from the product-81 87–90°S mosaic) and the 20 m polar DEM (product 90) for Peak near Cabeus B and Mons Mouton Plateau, each labelled with its source and pixel size. Each card has an hourly terrain-aware Sun/Earth strip from the same raster, and the Sun simulation (Play/Pause, 1×/4×/16×) runs on the home map and the cards from one shared clock.

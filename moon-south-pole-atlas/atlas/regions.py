@@ -16,15 +16,16 @@ from pathlib import Path
 from atlas.compare import FRAME_NOTE, WUELLER_2026, RegionSpec, package_comparison, region_record
 from atlas.frame import lonlat_to_xy
 from atlas.load import _load_diviner, _load_illumination, _load_site
-from atlas.sample import rowcol_of_point
+from atlas.sample import cold_shadow_centers, rowcol_of_point
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW = PACKAGE_ROOT / "data" / "raw"
 DEFAULT_PNG = PACKAGE_ROOT / "output" / "nine-regions.png"
 
 # Cap-wide illumination and Diviner are windowed to the nine points plus this pad.
-# This is not the Site 06 ±40 km window used by the Nobile Rim 1 sheet.
-CAP_PAD_M = 1_000.0
+# The pad is the same 40 km margin the Nobile Rim 1 sheet uses, so the search for the
+# nearest cold permanent-shadow pixel reaches at least 40 km past any of the nine points.
+CAP_PAD_M = 40_000.0
 
 # NASA's 28 October 2024 order. One Wueller Table A1 point each, the *01 row.
 REGIONS: tuple[RegionSpec, ...] = (
@@ -175,6 +176,7 @@ def build_comparison(raw_dir: Path) -> dict:
     earth = _load_illumination(raw_dir, "earth", bounds)
     shadow = _load_illumination(raw_dir, "shadow", bounds)
     temperature = _load_diviner(raw_dir / "polar_south_80_summer_max-float.tif", bounds)
+    cold_centers = cold_shadow_centers(shadow, temperature)
     records = []
     for spec, (x, y) in zip(REGIONS, coordinates, strict=True):
         slope, slope_rms, returns, source = _slope_for(raw_dir, spec, x, y)
@@ -189,6 +191,7 @@ def build_comparison(raw_dir: Path) -> dict:
             earth=earth,
             shadow=shadow,
             temperature=temperature,
+            cold_centers=cold_centers,
         )
         records.append(record)
         del slope, slope_rms, returns
@@ -197,7 +200,7 @@ def build_comparison(raw_dir: Path) -> dict:
         f"{document['extent']} Cap-wide layers were read inside "
         f"({bounds[0]:.1f}, {bounds[1]:.1f}) to ({bounds[2]:.1f}, {bounds[3]:.1f}) m, "
         f"the nine points expanded by {CAP_PAD_M:.0f} m. "
-        "That window is not the Site 06 box used by the Nobile Rim 1 sheet."
+        "The distance to cold permanent shadow is searched inside that window only."
     )
     document["frame"] = FRAME_NOTE
     return document
