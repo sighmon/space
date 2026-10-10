@@ -76,8 +76,20 @@ body.sheet-open .compass{flex-direction:column;align-items:flex-start;gap:8px}bo
 /* ---------- sheet (region card) ---------- */
 .sheet{position:fixed;left:50%;bottom:0;width:min(1180px,100%);max-width:100%;transform:translate(-50%,104%);z-index:10;transition:transform .75s var(--spring);max-height:calc(100vh - 84px);display:flex;flex-direction:column}
 .sheet.open{transform:translate(-50%,0)}
-.sheet .panel{background:var(--glass);backdrop-filter:blur(28px) saturate(1.2);-webkit-backdrop-filter:blur(28px) saturate(1.2);border:1px solid var(--line);border-bottom:0;border-radius:var(--r) var(--r) 0 0;overflow:auto;padding:22px 32px 26px;box-shadow:0 -30px 80px rgba(0,0,0,.55)}
-.grab{width:38px;height:4px;border-radius:4px;background:var(--line2);margin:0 auto 16px}
+.sheet .panel{background:var(--glass);backdrop-filter:blur(28px) saturate(1.2);-webkit-backdrop-filter:blur(28px) saturate(1.2);border:1px solid var(--line);border-bottom:0;border-radius:var(--r) var(--r) 0 0;overflow:auto;padding:8px 32px 26px;box-shadow:0 -30px 80px rgba(0,0,0,.55)}
+.grab{display:block;position:relative;width:100%;height:44px;margin:0 0 4px;cursor:pointer;border-radius:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.grab:before{content:"";position:absolute;left:50%;top:50%;width:38px;height:4px;margin:-2px 0 0 -19px;border-radius:4px;background:var(--line2);transition:background .2s,width .2s,margin .2s}
+.grab:hover:before,.grab:focus-visible:before{background:var(--mute)}
+.grab:focus{outline:none}.grab:focus-visible{outline:2px solid var(--ice);outline-offset:-2px}
+/* Close button: always top right of the panel, same size/position in every card and layer; sticky so it never scrolls away */
+.xwrap{position:sticky;top:0;height:0;z-index:6;pointer-events:none}
+.xwrap .x{position:absolute;top:0;right:calc(10px - var(--px,32px));pointer-events:auto}
+.sheet .panel,.layer .panel{--px:32px;padding-top:8px}
+.ghlink{display:inline-flex;align-items:center;gap:7px;min-height:44px;margin:0 0 -10px;font-size:12px;color:var(--mute);text-decoration:none;letter-spacing:.02em;transition:color .25s}
+.ghlink:hover,.ghlink:focus-visible{color:var(--ice)}
+.ghlink svg{width:16px;height:16px;flex:none;fill:currentColor}
+.cites a.ghlink span{display:inline;margin:0;font-size:inherit;color:inherit;line-height:inherit}
+.cites a.ghlink{display:inline-flex;min-height:0;margin:0;color:var(--ice);font-size:12.5px}
 .card-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
 .card-head h2{font-size:34px;font-weight:300;letter-spacing:-.02em}
 .meta{display:flex;gap:22px;margin-top:8px;flex-wrap:wrap}
@@ -85,7 +97,8 @@ body.sheet-open .compass{flex-direction:column;align-items:flex-start;gap:8px}bo
 .head-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .btn{padding:9px 15px;border-radius:999px;font-size:13px;border:1px solid var(--line2);color:var(--ink);transition:all .25s var(--ease)}
 .btn:hover{border-color:var(--ice);color:var(--ice)}
-.x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:16px;color:var(--mute)}
+.x{width:44px;height:44px;min-width:44px;flex:none;border-radius:50%;border:1px solid var(--line2);background:rgba(20,24,28,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;font-size:16px;color:var(--mute);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.x:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .x:hover{color:var(--ink);border-color:var(--ink)}
 .example-note{margin-top:16px;display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:12px;background:rgba(255,190,110,.07);border:1px solid rgba(255,190,110,.25);font-size:12.5px;color:#f3d3a8;line-height:1.5}
 .example-note b{font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:#ffc27a;white-space:nowrap;padding-top:1px}
@@ -175,7 +188,7 @@ body.sheet-open .homectl,body.layer-open .homectl{opacity:0;visibility:hidden;po
 /* ---------- layers (method / compare) ---------- */
 .layer{position:fixed;left:50%;bottom:0;width:min(1180px,100%);max-width:100%;height:calc(100vh - 70px);transform:translate(-50%,102%);z-index:20;transition:transform .8s var(--spring)}
 .layer.open{transform:translate(-50%,0)}
-.layer .panel{height:100%;background:var(--glass2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;overflow:auto;padding:20px 40px 50px;box-shadow:0 -40px 120px rgba(0,0,0,.7)}
+.layer .panel{height:100%;background:var(--glass2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;overflow:auto;padding:8px 40px 50px;box-shadow:0 -40px 120px rgba(0,0,0,.7)}
 .layer h2{font-size:30px;font-weight:300;letter-spacing:-.02em}
 .layer h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500;margin:34px 0 14px}
 .lh{display:flex;justify-content:space-between;align-items:center}
@@ -225,8 +238,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .hero-copy h1{font-size:34px}
   .qs,.hero-copy p{display:none}
   .dials,.extras{grid-template-columns:1fr 1fr}
-  .sheet .panel{padding:16px 18px 22px}
-  .layer .panel{padding:16px 20px 40px}
+  .sheet .panel{--px:18px;padding:8px 18px 22px}
+  .layer .panel{--px:20px;padding:8px 20px 40px}
   .grid2{grid-template-columns:1fr}
   .foot{left:18px;right:18px;bottom:18px}
   body.sheet-open .foot{opacity:0;visibility:hidden}
@@ -239,7 +252,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .brand .label{max-width:150px;line-height:1.4}
 }
 @media (max-width:900px){.homectl{top:74px;right:18px}.homectl .stamp{width:auto;min-width:0;display:none}}
-@media (max-width:520px){.cites li{grid-template-columns:30px minmax(0,1fr)}.cites li a{grid-column:2;white-space:normal;overflow-wrap:anywhere}.cites a{white-space:normal;overflow-wrap:anywhere}.tl-ctl{width:100%}.rate{width:auto;flex:1 1 60px;min-width:0}.eye{flex-wrap:wrap}.zread{gap:12px 24px}.card-head h2{font-size:28px}.layer h2{font-size:26px}.sl{grid-template-columns:minmax(0,1fr) 60px;gap:10px}.sheet .panel{padding:16px 14px 22px}.layer .panel{padding:16px 14px 40px}.ring{width:min(172px,100%);height:auto;aspect-ratio:1}.zread .n{font-size:26px}.ring .val{padding:0 14px}.seg button{padding:5px 11px}.tl,.zoom{padding:14px}.chip .xl{display:none}.chip{font-size:11.5px}.mk .tag .l{display:none}.mk .tag .s{display:inline}.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
+@media (max-width:520px){.cites li{grid-template-columns:30px minmax(0,1fr)}.cites li a{grid-column:2;white-space:normal;overflow-wrap:anywhere}.cites a{white-space:normal;overflow-wrap:anywhere}.tl-ctl{width:100%}.rate{width:auto;flex:1 1 60px;min-width:0}.eye{flex-wrap:wrap}.zread{gap:12px 24px}.card-head h2{font-size:28px}.layer h2{font-size:26px}.sl{grid-template-columns:minmax(0,1fr) 60px;gap:10px}.sheet .panel{--px:14px;padding:8px 14px 22px}.layer .panel{--px:14px;padding:8px 14px 40px}.ring{width:min(172px,100%);height:auto;aspect-ratio:1}.zread .n{font-size:26px}.ring .val{padding:0 14px}.seg button{padding:5px 11px}.tl,.zoom{padding:14px}.chip .xl{display:none}.chip{font-size:11.5px}.mk .tag .l{display:none}.mk .tag .s{display:inline}.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
 </style>
 </head>
@@ -248,7 +261,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <div id="markers"></div>
 
 <header class="top">
-  <div class="brand"><div class="label">Lunar South Pole Operations Atlas</div><div class="small t2" style="margin-top:4px">Artemis III candidate regions · prototype v0.1</div></div>
+  <div class="brand"><div class="label">Lunar South Pole Operations Atlas</div><div class="small t2" style="margin-top:4px">Artemis III candidate regions · prototype v0.1</div>
+  <div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></div></div>
   <nav class="nav" aria-label="Views">
     <button data-v="atlas" class="on">Atlas</button>
     <button data-v="compare">Compare</button>
@@ -279,7 +293,8 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <!-- Region card -->
 <section class="sheet" id="sheet" aria-hidden="true">
   <div class="panel">
-    <div class="grab"></div>
+<div class="xwrap"><button class="x" id="close" aria-label="Close card">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close card" data-grab="sheet"></div>
     <div class="card-head">
       <div>
         <div class="label" id="c-kicker">Candidate region</div>
@@ -289,7 +304,6 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
       <div class="head-r">
         <button class="btn" data-open="method">Method &amp; sources ↑</button>
         <button class="btn" data-open="compare">Compare all nine</button>
-        <button class="x" id="close" aria-label="Close card">✕</button>
       </div>
     </div>
     <div class="example-note real-note" id="example-note"></div>
@@ -340,8 +354,9 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <!-- Method & sources layer -->
 <section class="layer" id="method" aria-hidden="true">
   <div class="panel">
-    <div class="grab"></div>
-    <div class="lh"><div><div class="label">Pull-up layer</div><h2>Method and sources</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
+<div class="xwrap"><button class="x" data-close aria-label="Close method and sources">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close method and sources" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Pull-up layer</div><h2>Method and sources</h2></div></div>
 
     <h3>What each readout means</h3>
     <div class="grid2">
@@ -372,6 +387,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
       <li><div>LRO Diviner Lunar Radiometer<span>Paige et al. (2010). Polar surface temperature products, PDS Geosciences Node.</span></div><a href="https://pds-geosciences.wustl.edu/missions/lro/diviner.htm" target="_blank" rel="noopener">pds-geosciences.wustl.edu ↗</a></li>
       <li><div>LRO Lunar Orbiter Laser Altimeter (LOLA)<span>Smith et al. (2010). Polar gridded DEMs (5 m/px south pole), PDS Geosciences Node.</span></div><a href="https://pds-geosciences.wustl.edu/missions/lro/lola.htm" target="_blank" rel="noopener">pds-geosciences.wustl.edu ↗</a></li>
       <li><div>Wueller et al. (2026)<span>JGR Planets. Source of the NR101 point and the other eight region points (Table A1).</span></div><a href="https://doi.org/10.1029/2025JE009434" target="_blank" rel="noopener">10.1029/2025JE009434 ↗</a></li>
+      <li><div>This atlas on GitHub<span>Source code, data export and tests for this prototype (sighmon/space).</span></div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></li>
       <li><div>NASA (Oct 2024) Artemis III candidate landing regions<span>Source of the nine-region list. Region names only; this atlas adds no endorsement.</span></div><a href="https://www.nasa.gov/" target="_blank" rel="noopener">nasa.gov ↗</a></li>
     </ul>
 
@@ -383,8 +399,9 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <!-- Compare layer -->
 <section class="layer" id="compare" aria-hidden="true">
   <div class="panel">
-    <div class="grab"></div>
-    <div class="lh"><div><div class="label">All nine regions · same measures in every row</div><h2>Side by side, unranked</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
+<div class="xwrap"><button class="x" data-close aria-label="Close comparison">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close comparison" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">All nine regions · same measures in every row</div><h2>Side by side, unranked</h2></div></div>
     <div class="example-note real-note"><b style="color:#8fe3b0">Computed</b><span>Every row is read from the same maps at one published point. Sunlight and Earth are 18.6-year averages in all rows. Rows are listed by longitude, west to east. This is not a ranking and there is no combined score. “n/a” means the input map does not cover the point.</span></div>
     <div class="swipe" aria-hidden="true">Swipe the table sideways for all seven columns →</div>
     <div class="tablewrap"><table>
@@ -735,6 +752,9 @@ function openRegion(id){
 }
 function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');sunNow=null;needRedraw=true;history.replaceState(null,'','#');}
 $('#close').onclick=closeRegion;
+$$('[data-grab]').forEach(g=>{const act=()=>g.dataset.grab==='sheet'?closeRegion():closeLayers();
+  g.addEventListener('click',act);
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){e.preventDefault();act();}});});
 
 // ---------- timeline & playback ----------
 const tlc=$('#tlc'),tctx=tlc.getContext('2d'),headEl=$('#head'),wrap=$('#tlwrap');
