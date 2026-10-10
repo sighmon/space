@@ -270,7 +270,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 </div>
 
 <footer class="foot">
-  <div class="chip"><i></i>All nine computed · slope missing for 3 (no 5 m slope tile) · real terrain zoom for all nine<span class="xl"> (5 m for six, 20 m for three) · DE421 Sun</span></div>
+  <div class="chip"><i></i>All nine computed · slope missing for 3 (no 5 m slope tile) · real terrain zoom for all nine<span class="xl"> (<span id="chip-zoom">5 m for seven, 20 m for two</span>) · DE421 Sun</span></div>
   <div class="compass"><span id="sunlbl">Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011</span>
     <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="rgba(235,242,247,.18)"/><text x="22" y="9" fill="rgba(235,242,247,.5)" font-size="6" text-anchor="middle" font-family="sans-serif">0°</text><g id="sunneedle"><line x1="22" y1="22" x2="22" y2="6" stroke="#a9dcff" stroke-width="1.2"/><circle cx="22" cy="6" r="2.2" fill="#fff"/></g><circle cx="22" cy="22" r="1.5" fill="#fff"/></svg>
   </div>
@@ -430,19 +430,26 @@ const SUN=window.SUN_DATA||null;      // DE421 Sun azimuth/elevation, nine point
 const ZOOM=window.ZOOM_DATA||null;    // NR101 real DEM chip + LOLA sunlight-map crops (atlas/export_zoom.py)
 const HSUN=SUN&&SUN.home||null;     // Sun direction seen from the pole (home map), same DE421 hours
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function(){ // zoom-source counts come from the exported DEM records, not hardcoded
+  const dm=ZOOM&&ZOOM.dem; if(!dm)return;
+  const c={}; Object.values(dm).forEach(d=>{c[d.source_pixel_m]=(c[d.source_pixel_m]||0)+1;});
+  const W=['zero','one','two','three','four','five','six','seven','eight','nine'];
+  const parts=Object.keys(c).map(Number).sort((a,b)=>a-b).map(m=>m+' m for '+(W[c[m]]||c[m]));
+  const e=document.getElementById('chip-zoom'); if(e)e.textContent=parts.join(', ');
+})();
 REGIONS.forEach(r=>{r.d=DATA?DATA.regions.find(x=>x.point_id===r.site)||null:null;});
 
 // ---------- readouts: every number comes from regions.json; nothing is generated here ----------
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
 function stats(r,height){
   const q=r.d; if(!q)return {missing:true,r};
-  const px=q.temperature_resolution_m/1000, km=q.distance_to_cold_shadow_m==null?null:q.distance_to_cold_shadow_m/1000;
+  const px=q.temperature_resolution_m==null?null:q.temperature_resolution_m/1000, km=q.distance_to_cold_shadow_m==null?null:q.distance_to_cold_shadow_m/1000;
   const rms=q.slope_rms_deg;
   const out={real:true,q,r,
-    slope:q.slope_deg==null?null:{v:q.slope_deg,lo:Math.max(0,q.slope_deg-rms),hi:q.slope_deg+rms,unc:'±1 RMS slope error'},
+    slope:q.slope_deg==null?null:{v:q.slope_deg,lo:Math.max(0,q.slope_deg-rms),hi:q.slope_deg+rms,unc:'±1 RMS slope error',pm:rms},
     sun:q.solar_fraction==null?null:{v:q.solar_fraction,lo:q.solar_fraction,hi:q.solar_fraction,unc:'no uncertainty published for this average'},
     earth:q.earth_fraction==null?null:{v:q.earth_fraction*100,lo:q.earth_fraction*100,hi:q.earth_fraction*100,unc:'no uncertainty published for this average'},
-    cold:km==null?null:{v:km,lo:Math.max(0,km-px),hi:km+px,unc:'± one Diviner pixel ('+(px*1000).toFixed(0)+' m)'},
+    cold:km==null||px==null?null:{v:km,lo:Math.max(0,km-px),hi:km+px,pm:px,unc:'± one Diviner pixel ('+(px*1000).toFixed(0)+' m)'},
     series:null, sunp:SUN&&r.site?(SUN.points[r.site]||null):null};
   const zs=r.id!=='NR1'&&ZOOM&&ZOOM.strips&&ZOOM.strips[r.site];
   if(zs){
@@ -467,7 +474,7 @@ const cuts={slope:8,ill:0.5,on:true};
 
 // ---------- procedural moon ----------
 const cv=$('#moon'), ctx=cv.getContext('2d');
-const N=640, EXT=8.5; // map covers +/-12 deg colatitude
+const N=640, EXT=8.5; // map covers +/-8.5 deg of colatitude
 const off=document.createElement('canvas'); off.width=off.height=N;
 const octx=off.getContext('2d'); const img=octx.createImageData(N,N);
 const hgt=new Float32Array(N*N), gx=new Float32Array(N*N), gy=new Float32Array(N*N), alb=new Float32Array(N*N);
@@ -546,7 +553,7 @@ function draw(){
   vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.85)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,Hh);
   const lg=ctx.createLinearGradient(0,0,W*.55,0);lg.addColorStop(0,'rgba(5,6,7,.75)');lg.addColorStop(1,'rgba(5,6,7,0)');
   if(W>900){ctx.fillStyle=lg;ctx.fillRect(0,0,W*.55,Hh);}
-  // Sun direction over the backdrop: a soft wash from the real Sun azimuth of the open region, mapped into this layout.
+  // Sun direction over the backdrop: a soft wash toward the Sun's map longitude (its longitude as seen from the pole, DE421), mapped into this layout.
   // The backdrop itself is the static LOLA average-sunlight map; this wash only shows where the Sun is.
   if(homeSun){
     const a=homeSun.lon*D2R, dx=Math.sin(a), dy=-Math.cos(a);   // map direction toward the Sun (map up = longitude 0)
@@ -664,7 +671,7 @@ function renderDials(){
     const c=d.cut(); if(c){ce.style.display='';ce.style.left=f(c.v)*100+'%';ce.querySelector('span').textContent=c.t;}else ce.style.display='none';
     const ends=el.querySelectorAll('.ends span'); ends[0].textContent=d.min+d.suf; ends[1].textContent=d.max+d.suf;
     let rt=v.unc;
-    if(k==='slope')rt+=` (${lo.toFixed(1)}–${hi.toFixed(1)}°)`+(s.q.interpolated_gap?' · return count 0: interpolated, not measured':'');
+    if(k==='slope')rt+=` (${(v.v-v.pm).toFixed(1)}–${(v.v+v.pm).toFixed(1)}°)`+(s.q.interpolated_gap?' · return count 0: interpolated, not measured':'');
     if(k==='cold')rt+=` · summer max ${Units.kHTML(s.q.summer_max_temperature_k)} here`;
     if(s.series&&k==='sun')rt+=` · ${s.q.point_id} 14-day window, ${height} m: ${s.winSun.toFixed(0)}% of hours (separate product)`;
     if(s.series&&k==='earth')rt+=` · ${s.q.point_id} 14-day window, ${height} m: ${s.winEarth.toFixed(0)}% of hours (separate product)`;
@@ -676,11 +683,18 @@ function renderDials(){
 const pl=x=>x?x.replace(/\.0+ m/,' m'):x;
 function renderExtras(){
   const q=cur.q, ex=[];
-  ex.push(['Summer max temperature',q.summer_max_temperature_k==null?'n/a':Units.kHTML(q.summer_max_temperature_k),'Diviner, own '+(q.temperature_resolution_m||0).toFixed(0)+' m pixel; not a 5 m measurement']);
-  ex.push(['Permanent shadow',q.permanent_shadow==null?'n/a':q.permanent_shadow?'Inside':'Outside','75°S illumination map, '+pl(q.permanent_shadow_pixel_label)+' pixel']);
+  ex.push(['Summer max temperature',q.summer_max_temperature_k==null?'n/a':Units.kHTML(q.summer_max_temperature_k),(q.temperature_resolution_m==null?'Diviner pixel size n/a':'Diviner, own '+q.temperature_resolution_m.toFixed(0)+' m pixel')+'; not a 5 m measurement']);
+  ex.push(['Permanent shadow',q.permanent_shadow==null?'n/a':q.permanent_shadow?'Inside':'Outside','75°S illumination map'+(q.permanent_shadow_pixel_label==null?', pixel size n/a':', '+pl(q.permanent_shadow_pixel_label)+' pixel')]);
   ex.push(['LOLA returns in pixel',q.lola_return_count==null?'n/a':String(Math.round(q.lola_return_count)),q.lola_return_count==null?'Not computed: no 5 m tile contains this point':q.interpolated_gap?'0 = slope here is interpolated':'Measured returns at the 5 m pixel']);
   ex.push(['Slope DEM',pl(q.slope_dem_label)||'none','LOLA product 78; the 20 m mosaic is not substituted']);
   $('#extras').innerHTML=ex.map(e=>`<div class="extra"><span class="label">${e[0]}</span><b class="${e[1]==='n/a'||e[1]==='none'?'na':''}">${e[1]}</b>${e[2]}</div>`).join('');stripConvDots($('#extras'));
+}
+function renderTlNote(r){
+  const nt=$('#tl-none'), stp=cur&&cur.strip, zr=ZOOM&&ZOOM.dem&&ZOOM.dem[r.site];
+  if(!cur||!cur.series||!zr)return;   // regions without strips keep the static note set in openRegion
+  const reach=stp&&stp.reach_m!=null?' ('+(stp.reach_m/1000).toFixed(1)+' km from the point on the nearest side)':'';
+  nt.style.display='';
+  nt.innerHTML='<b>Terrain-aware strips.</b> The Sun and Earth strips use the repository’s horizon code on the '+zr.source_short+' raster (<code>'+zr.file+'</code>, '+zr.source_pixel_m+' m pixels): the horizon is the highest terrain angle in each 0.5° azimuth bin seen from an eye '+height+' m above the surface at '+r.site+', and a disc counts as visible when any part of it clears that horizon. Terrain outside the elevation raster'+reach+' is not in the mask'+(zr.source_pixel_m>5?', and '+zr.source_pixel_m+' m pixels do not resolve small craters or boulders, so a near horizon can be too low':'')+'. Not a radio link budget, and not the 18.6-year average.';
 }
 function openRegion(id){
   const r=REGIONS.find(x=>x.id===id); if(!r)return; sel=id;
@@ -706,9 +720,7 @@ function openRegion(id){
   $('#eyectl').style.display=hasTL?'':'none'; $('#w-earth').style.display=hasTL?'':'none';
   const nt=$('#tl-none');
   const stp=cur.strip, zr=ZOOM&&ZOOM.dem&&ZOOM.dem[r.site];
-  if(hasTL&&stp){
-    nt.style.display=''; nt.innerHTML='<b>Terrain-aware strips.</b> The Sun and Earth strips use the repository’s horizon code on the '+zr.source_short+' raster (<code>'+zr.file+'</code>, '+zr.source_pixel_m+' m pixels): the horizon is the highest terrain angle in each 0.5° azimuth bin seen from an eye '+height+' m above the surface at '+r.site+', and a disc counts as visible when any part of it clears that horizon. Terrain beyond the raster ('+(stp.reach_m/1000).toFixed(1)+' km from the point on the nearest side) is not in the mask'+(zr.source_pixel_m>5?', and '+zr.source_pixel_m+' m pixels do not resolve small craters or boulders, so a near horizon can be too low':'')+'. Not a radio link budget, and not the 18.6-year average.';
-  }else if(hasTL){nt.style.display='none';}
+  if(hasTL){renderTlNote(r);}
   else{nt.style.display=hasSun?'':'none';nt.textContent='Sun position for '+r.name+' is the real DE421 ephemeris at this point, drawn as the elevation of the Sun’s disc centre above a smooth local horizontal. There is no hourly terrain-aware Sun/Earth visibility for it because no elevation raster was available to build a horizon. The 18.6-year averages above are the comparable measure.';}
   $('#tl-label').textContent=hasTL?'Hourly Sun & Earth visibility · 14 days from 2025-01-01 · DE421 + terrain horizon from '+(r.id==='NR1'?'the Site 06 5 m':'the '+(zr?zr.source_pixel_m:'')+' m')+' DEM · '+r.site:'Sun elevation · 14 days from 2025-01-01 · DE421 · no terrain horizon for this region';
   if(!cur.missing)renderDials();
@@ -796,7 +808,7 @@ $$('.js-play').forEach(b=>{b.onclick=()=>{if(playing){setPlaying(false);return;}
 $$('.js-seg button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;$$('.js-seg button').forEach(x=>x.classList.toggle('on',x.dataset.s===b.dataset.s));segThumb();setPlaying(playing);});
 function segThumb(){$$('.seg').forEach(g=>{const on=g.querySelector('.on'),th=g.querySelector('.thumb');if(on&&on.offsetWidth){th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}});}
 $$('#hseg button').forEach(b=>b.onclick=()=>{$$('#hseg button').forEach(x=>x.classList.toggle('on',x===b));segThumb();height=+b.dataset.h;
-  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);if(cur.missing)return;renderDials();drawTL();setHour(simH,true);}});
+  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);if(cur.missing)return;renderDials();renderTlNote(REGIONS.find(x=>x.id===sel));drawTL();setHour(simH,true);}});
 
 // ---------- site zoom ----------
 // NR101: real LOLA 5 m elevation chip, hillshaded and shadow-cast under the DE421 Sun direction.
@@ -903,7 +915,7 @@ function renderTable(){
   const na='<span class="na">n/a</span>';
   const rows=[...ALL].sort((a,b)=>a.r.lon-b.r.lon).map(({r,s})=>{
     if(s.missing)return `<tr data-id="${r.id}"><td><span class="nm">${r.name}</span><span class="sid">${r.site} · no data loaded</span></td><td colspan="6">${na}</td></tr>`;
-    const hs=x=>((Math.abs(x.hi-x.lo))/2);
+    const hs=x=>x.pm; // true published uncertainty; the bar in the card is clamped at 0, this number is not
     let cut='—';
     if(cuts.on){const a=s.slope?s.slope.v<cuts.slope:null,b=s.sun?s.sun.v>cuts.ill:null;
       const part=(n,x,w)=>x===null?`<span class="cutno">${n} n/a</span>`:`<span class="${x?'cutok':'cutno'}">${n} ${x?'inside':'outside'}</span>`;
