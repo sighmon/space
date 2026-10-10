@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lunar South Pole Operations Atlas — Prototype</title>
+<style>
+:root{
+  --bg:#050607; --ink:#f2f5f7; --mute:rgba(235,242,247,.56); --faint:rgba(235,242,247,.32);
+  --line:rgba(235,242,247,.10); --line2:rgba(235,242,247,.18);
+  --ice:#a9dcff; --ice-dim:rgba(169,220,255,.22); --ice-glow:rgba(169,220,255,.55);
+  --glass:rgba(14,17,20,.72); --glass2:rgba(20,24,28,.86);
+  --r:22px; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.16,1.08,.3,1);
+  --font:"SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Inter","Inter var","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+.num{font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.small{font-size:12px;color:var(--mute);line-height:1.5}
+
+/* ---------- hero ---------- */
+#moon{position:fixed;inset:0;width:100%;height:100%;display:block;transition:filter .9s var(--ease),transform 1.2s var(--ease)}
+body.sheet-open #moon{filter:brightness(.62) saturate(.9);transform:scale(1.04) translateY(-3%)}
+body.layer-open #moon{filter:brightness(.35) blur(2px)}
+#markers{position:fixed;inset:0;pointer-events:none;transition:opacity .6s var(--ease),transform 1.2s var(--ease)}
+body.sheet-open #markers{transform:scale(1.04) translateY(-3%)}
+body.layer-open #markers{opacity:.15}
+.mk{position:absolute;width:0;height:0;pointer-events:auto}
+.mk .hit{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%}
+.mk .dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#eaf7ff;box-shadow:0 0 0 1px rgba(169,220,255,.55),0 0 14px 3px var(--ice-glow);transition:transform .4s var(--spring)}
+.mk .halo{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(169,220,255,.35);animation:pulse 3.6s var(--ease) infinite;animation-delay:var(--d,0s)}
+@keyframes pulse{0%{transform:scale(.4);opacity:0}30%{opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.mk .tag{position:absolute;white-space:nowrap;font-size:12px;color:var(--mute);transform:translate(var(--tx,12px),-50%);transition:color .3s, opacity .3s;letter-spacing:.01em;text-shadow:0 1px 8px #000}
+.mk.left .tag{--tx:calc(-100% - 12px)}
+.mk:hover .dot,.mk.sel .dot{transform:scale(1.6)}
+.mk:hover .tag,.mk.sel .tag{color:var(--ink)}
+.mk.sel .halo{animation:none;opacity:1;transform:scale(1.05);border-color:var(--ice)}
+.mk:focus-visible{outline:none}.mk:focus-visible .halo{border-color:#fff;opacity:1;animation:none}
+
+.top{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:28px 36px;z-index:5;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand .label{color:var(--ice)}
+.nav{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(18,22,26,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line)}
+.nav button{white-space:nowrap;padding:8px 16px;border-radius:999px;font-size:13px;color:var(--mute);transition:all .3s var(--ease)}
+.nav button:hover{color:var(--ink)}
+.nav button.on{background:rgba(235,242,247,.1);color:var(--ink)}
+
+.hero-copy{position:fixed;left:36px;top:22vh;max-width:430px;z-index:3;transition:opacity .6s var(--ease),transform .8s var(--ease)}
+body.sheet-open .hero-copy,body.layer-open .hero-copy{opacity:0;transform:translateY(-16px);pointer-events:none}
+.hero-copy h1{font-size:clamp(34px,4.2vw,58px);font-weight:200;letter-spacing:-.03em;line-height:1.03}
+.hero-copy h1 em{font-style:normal;color:var(--ice)}
+.hero-copy p{margin-top:20px;font-size:15px;line-height:1.6;color:var(--mute);max-width:380px}
+.qs{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;max-width:380px}
+.qs div{font-size:13px;color:var(--mute);padding-left:14px;position:relative}
+.qs div:before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--ice);box-shadow:0 0 8px var(--ice)}
+.hint{margin-top:30px;font-size:12px;color:var(--faint);letter-spacing:.04em}
+
+.foot{position:fixed;left:36px;right:36px;bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;z-index:3;pointer-events:none;transition:opacity .5s}
+body.sheet-open .foot{opacity:0}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,200,120,.35);color:#ffd9a6;background:rgba(40,28,10,.45);backdrop-filter:blur(10px)}
+.chip i{width:6px;height:6px;border-radius:50%;background:#ffc27a;display:block}
+.compass{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mute);pointer-events:auto}
+.compass svg{width:44px;height:44px}
+
+/* ---------- sheet (region card) ---------- */
+.sheet{position:fixed;left:50%;bottom:0;width:min(1180px,100vw);transform:translate(-50%,104%);z-index:10;transition:transform .75s var(--spring);max-height:calc(100vh - 84px);display:flex;flex-direction:column}
+.sheet.open{transform:translate(-50%,0)}
+.sheet .panel{background:var(--glass);backdrop-filter:blur(28px) saturate(1.2);-webkit-backdrop-filter:blur(28px) saturate(1.2);border:1px solid var(--line);border-bottom:0;border-radius:var(--r) var(--r) 0 0;overflow:auto;padding:22px 32px 26px;box-shadow:0 -30px 80px rgba(0,0,0,.55)}
+.grab{width:38px;height:4px;border-radius:4px;background:var(--line2);margin:0 auto 16px}
+.card-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.card-head h2{font-size:34px;font-weight:300;letter-spacing:-.02em}
+.meta{display:flex;gap:22px;margin-top:8px;flex-wrap:wrap}
+.meta span{font-size:13px;color:var(--mute)} .meta b{font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+.head-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{padding:9px 15px;border-radius:999px;font-size:13px;border:1px solid var(--line2);color:var(--ink);transition:all .25s var(--ease)}
+.btn:hover{border-color:var(--ice);color:var(--ice)}
+.x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:16px;color:var(--mute)}
+.x:hover{color:var(--ink);border-color:var(--ink)}
+.example-note{margin-top:16px;display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:12px;background:rgba(255,190,110,.07);border:1px solid rgba(255,190,110,.25);font-size:12.5px;color:#f3d3a8;line-height:1.5}
+.example-note b{font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:#ffc27a;white-space:nowrap;padding-top:1px}
+.example-note.real-note{background:rgba(143,227,176,.07);border-color:rgba(143,227,176,.28);color:#cfeedd}
+.real-note code,.box code{font-family:ui-monospace,monospace;font-size:11.5px;color:#a9dcff}
+
+.dials{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.dial{border:1px solid var(--line);border-radius:18px;padding:14px 16px 12px;background:rgba(255,255,255,.015);opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .7s var(--spring),border-color .3s}
+.sheet.open .dial{opacity:1;transform:none}
+.sheet.open .dial:nth-child(2){transition-delay:.06s}.sheet.open .dial:nth-child(3){transition-delay:.12s}.sheet.open .dial:nth-child(4){transition-delay:.18s}
+.dial:hover{border-color:var(--line2)}
+.dial .q{font-size:13px;color:var(--ink);margin-top:4px;font-weight:400}
+.ring{position:relative;width:116px;height:116px;margin:10px auto 4px}
+.ring svg{width:100%;height:100%;transform:rotate(135deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val .n{font-size:34px;line-height:1}
+.ring .val .u{font-size:11px;color:var(--mute);margin-top:4px;letter-spacing:.06em}
+.ring circle{fill:none;stroke-linecap:round;transition:stroke-dasharray 1.1s var(--ease),stroke-dashoffset 1.1s var(--ease)}
+.def{font-size:11.5px;color:var(--mute);text-align:center;line-height:1.45;min-height:34px}
+.mk.up .tag{transform:translate(-50%,-26px)}.mk.down .tag{transform:translate(-50%,12px)}
+.rb{margin-top:14px}
+.rb .track{position:relative;height:18px}
+.rb .base{position:absolute;left:0;right:0;top:8px;height:2px;background:var(--line2);border-radius:2px}
+.rb .span{position:absolute;top:7px;height:4px;border-radius:4px;background:var(--ice-dim);box-shadow:0 0 10px rgba(169,220,255,.25);transition:left .9s var(--ease),width .9s var(--ease)}
+.rb .pt{position:absolute;top:3px;width:2px;height:12px;background:var(--ice);border-radius:2px;transform:translateX(-1px);transition:left .9s var(--ease);box-shadow:0 0 8px var(--ice)}
+.rb .cut{position:absolute;top:0;height:18px;border-left:1px dashed rgba(255,194,122,.7);transition:left .6s var(--ease)}
+.rb .cut span{position:absolute;top:-14px;left:3px;font-size:9.5px;color:#ffc27a;white-space:nowrap;letter-spacing:.04em}
+.rb .ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;margin-top:2px}
+.rb .rng{font-size:11.5px;color:var(--mute);margin-top:6px;font-variant-numeric:tabular-nums}
+.src{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px}
+.src a{color:var(--ice);text-decoration:none;opacity:.9}
+.src a:hover{opacity:1;text-decoration:underline}
+.src .tagx{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ffc27a}
+
+/* timeline */
+.tl{margin-top:16px;border:1px solid var(--line);border-radius:18px;padding:16px 18px 14px;background:rgba(255,255,255,.015)}
+.tl-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.seg{display:inline-flex;padding:3px;border-radius:999px;border:1px solid var(--line2);position:relative}
+.seg button{position:relative;z-index:1;padding:5px 14px;font-size:12px;color:var(--mute);border-radius:999px;transition:color .3s}
+.seg button.on{color:#061018}
+.seg .thumb{position:absolute;top:3px;bottom:3px;border-radius:999px;background:var(--ice);transition:left .45s var(--spring),width .45s var(--spring)}
+.play{width:30px;height:30px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center}
+.play:hover{border-color:var(--ice)}
+.tl-read{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
+.tl-read .n{font-size:22px}
+.tl-read .k{font-size:11px;color:var(--mute);letter-spacing:.06em;margin-left:6px}
+#tlwrap{position:relative;margin-top:14px;cursor:ew-resize;touch-action:none;user-select:none}
+#tlc{width:100%;height:96px;display:block}
+.q{min-height:34px}
+#head{position:absolute;top:-4px;bottom:16px;width:1px;background:#fff;box-shadow:0 0 10px var(--ice);pointer-events:none;will-change:transform}
+#head:after{content:"";position:absolute;top:-3px;left:-5px;width:11px;height:11px;border-radius:50%;background:#fff;box-shadow:0 0 12px var(--ice)}
+.disclaim{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.55}
+
+/* ---------- layers (method / compare) ---------- */
+.layer{position:fixed;left:50%;bottom:0;width:min(1060px,100vw);height:calc(100vh - 70px);transform:translate(-50%,102%);z-index:20;transition:transform .8s var(--spring)}
+.layer.open{transform:translate(-50%,0)}
+.layer .panel{height:100%;background:var(--glass2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;overflow:auto;padding:20px 40px 50px;box-shadow:0 -40px 120px rgba(0,0,0,.7)}
+.layer h2{font-size:30px;font-weight:300;letter-spacing:-.02em}
+.layer h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500;margin:34px 0 14px}
+.lh{display:flex;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.box{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:rgba(255,255,255,.015)}
+.box h4{font-size:15px;font-weight:400;margin-bottom:6px}
+.box p{font-size:13px;color:var(--mute);line-height:1.55}
+.cites{list-style:none;counter-reset:c}
+.cites li{counter-increment:c;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:baseline;padding:14px 0;border-top:1px solid var(--line);font-size:14px}
+.cites li:before{content:counter(c,decimal-leading-zero);color:var(--faint);font-variant-numeric:tabular-nums;font-size:12px}
+.cites li span{display:block;font-size:12.5px;color:var(--mute);margin-top:3px;line-height:1.5}
+.cites a{color:var(--ice);font-size:12.5px;text-decoration:none;white-space:nowrap}
+.cites a:hover{text-decoration:underline}
+.presets{display:flex;gap:10px;flex-wrap:wrap}
+.preset{padding:12px 16px;border-radius:14px;border:1px solid var(--line2);text-align:left;min-width:200px;transition:all .3s var(--ease)}
+.preset b{display:block;font-weight:400;font-size:14px}
+.preset span{font-size:12px;color:var(--mute)}
+.preset.on{border-color:var(--ice);background:rgba(169,220,255,.06)}
+.sl{display:grid;grid-template-columns:180px 1fr 70px;gap:16px;align-items:center;margin-top:14px;font-size:13px;color:var(--mute)}
+.sl output{color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line2);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--ice);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
+.nots{display:flex;flex-wrap:wrap;gap:8px}
+.nots span{font-size:12.5px;padding:7px 12px;border-radius:999px;border:1px solid var(--line2);color:var(--mute)}
+
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500;text-align:right;padding:10px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:14px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:300;white-space:nowrap}
+td small{color:var(--faint);font-size:11.5px;margin-left:4px}
+tbody tr{cursor:pointer;transition:background .25s}
+tbody tr:hover{background:rgba(169,220,255,.04)}
+td .nm{font-weight:400}
+td .sid{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+.cutok{color:var(--ice)}.cutno{color:var(--faint)}
+.tablewrap{overflow-x:auto}
+
+.scrim{position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .5s}
+body.layer-open .scrim{opacity:1;pointer-events:auto}
+
+@media (max-width:900px){
+  .top{padding:18px 18px}
+  .hero-copy{left:18px;right:18px;top:auto;bottom:90px;max-width:none}
+  .hero-copy h1{font-size:34px}
+  .qs,.hero-copy p{display:none}
+  .dials{grid-template-columns:1fr 1fr}
+  .sheet .panel{padding:16px 18px 22px}
+  .layer .panel{padding:16px 20px 40px}
+  .grid2{grid-template-columns:1fr}
+  .foot{left:18px;right:18px;bottom:18px}
+  .compass span{display:none}
+  .mk .tag{display:none}.mk.sel .tag{display:block}
+  .sl{grid-template-columns:1fr 70px}.sl label{grid-column:1/-1}
+  .brand .t2{display:none}
+  .nav .long{display:none}
+  .brand .label{max-width:150px;line-height:1.4}
+}
+@media (max-width:520px){.dials{grid-template-columns:1fr}.ring{width:116px;height:116px}.nav button{padding:7px 11px}}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+</head>
+<body>
+<canvas id="moon" aria-label="Procedural illustration of the lunar south polar region with nine candidate regions"></canvas>
+<div id="markers"></div>
+
+<header class="top">
+  <div class="brand"><div class="label">Lunar South Pole Operations Atlas</div><div class="small t2" style="margin-top:4px">Artemis III candidate regions · prototype v0.1</div></div>
+  <nav class="nav" aria-label="Views">
+    <button data-v="atlas" class="on">Atlas</button>
+    <button data-v="compare">Compare</button>
+    <button data-v="method">Method<span class="long"> &amp; sources</span></button>
+  </nav>
+</header>
+
+<section class="hero-copy">
+  <h1>Nine regions.<br>One stated week.<br><em>Every number sourced.</em></h1>
+  <p>A public, cited comparison of the nine Artemis&nbsp;III candidate regions named by NASA in October 2024. For a patch of ground in a given week, four questions, each answered with an uncertainty range and a link to its archive.</p>
+  <div class="qs"><div>Flat enough to land?</div><div>Lit enough to stay powered?</div><div>In view of Earth?</div><div>Near ground cold enough to hold ice?</div></div>
+  <div class="hint">Select a region marker to open its card</div>
+</section>
+
+<footer class="foot">
+  <div class="chip"><i></i>Nobile Rim 1 (NR101): real values · other eight regions: example placeholders</div>
+  <div class="compass"><span id="sunlbl">Illustrative lighting · Sun azimuth —</span>
+    <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="rgba(235,242,247,.18)"/><text x="22" y="9" fill="rgba(235,242,247,.5)" font-size="6" text-anchor="middle" font-family="sans-serif">0°</text><g id="sunneedle"><line x1="22" y1="22" x2="22" y2="6" stroke="#a9dcff" stroke-width="1.2"/><circle cx="22" cy="6" r="2.2" fill="#fff"/></g><circle cx="22" cy="22" r="1.5" fill="#fff"/></svg>
+  </div>
+</footer>
+
+<!-- Region card -->
+<section class="sheet" id="sheet" aria-hidden="true">
+  <div class="panel">
+    <div class="grab"></div>
+    <div class="card-head">
+      <div>
+        <div class="label" id="c-kicker">Candidate region</div>
+        <h2 id="c-name">—</h2>
+        <div class="meta"><span>Point <b id="c-site">—</b></span><span>Lat <b id="c-lat">—</b></span><span>Lon <b id="c-lon">—</b></span><span>Patch <b>200 m radius</b></span><span>Window <b id="c-win">—</b></span></div>
+      </div>
+      <div class="head-r">
+        <button class="btn" data-open="method">Method &amp; sources ↑</button>
+        <button class="btn" data-open="compare">Compare all nine</button>
+        <button class="x" id="close" aria-label="Close card">✕</button>
+      </div>
+    </div>
+    <div class="example-note" id="example-note"><b>Example data</b><span>Every number on this card is a <u>placeholder</u> generated for layout. They are not measurements and must not be cited. Real values will be derived from the archives linked under each readout.</span></div>
+
+    <div class="dials" id="dials"></div>
+
+    <div class="tl">
+      <div class="tl-head">
+        <div>
+          <div class="label" id="tl-label">Hourly Sun &amp; Earth visibility · 14 days · example data</div>
+          <div class="tl-read" style="margin-top:8px">
+            <div><span class="num n" id="t-time">—</span></div>
+            <div><span class="num n" id="t-sun">—</span><span class="k">SUN DISC VISIBLE</span></div>
+            <div><span class="num n" id="t-earth">—</span><span class="k">EARTH</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <span class="small">Eye height</span>
+          <div class="seg" id="hseg"><span class="thumb"></span><button data-h="1" class="on">1 m</button><button data-h="5">5 m</button></div>
+          <button class="play" id="play" aria-label="Play"><svg width="10" height="12" viewBox="0 0 10 12"><path id="playp" d="M0 0L10 6L0 12Z" fill="#fff"/></svg></button>
+        </div>
+      </div>
+      <div id="tlwrap"><canvas id="tlc"></canvas><div id="head"></div></div>
+    </div>
+    <p class="disclaim">Not a safety assessment, and no site is declared safe. No combined score and no ice-volume estimate. Screening cuts are shown with their source for reference; they are not flight rules. “Earth in view” counts any part of Earth’s disc above the local horizon, which is slightly optimistic compared with a DSN link budget.</p>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- Method & sources layer -->
+<section class="layer" id="method" aria-hidden="true">
+  <div class="panel">
+    <div class="grab"></div>
+    <div class="lh"><div><div class="label">Pull-up layer</div><h2>Method and sources</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
+
+    <h3>What each readout means</h3>
+    <div class="grid2">
+      <div class="box"><h4>Slope</h4><p>Median and 5–95% range of slope over a 20 m baseline inside a 200 m patch, from a LOLA-derived DEM. Uncertainty combines DEM vertical error and baseline choice.</p></div>
+      <div class="box"><h4>Sunlight</h4><p>Average fraction of the solar disc above the local horizon, hourly over the stated window, at 1 m or 5 m above ground. Horizons from LOLA topography; Sun position from JPL DE421.</p></div>
+      <div class="box"><h4>Earth view</h4><p>Share of hours with <em>any part</em> of Earth’s disc above the local horizon (DE421 + LOLA horizons). Slightly optimistic versus a DSN link budget, which needs margin above the horizon.</p></div>
+      <div class="box"><h4>Cold ground</h4><p>Distance to the nearest ground whose modelled annual maximum temperature stays below 110 K (Diviner), with permanent shadow mapped from LOLA illumination. Proximity only: no ice-volume estimate.</p></div>
+    </div>
+
+    <h3>What is real in this build</h3>
+    <div class="box"><p>Only <b>Nobile Rim 1 / NR101</b> is computed. Its slope, slope RMS, 18.6-year sunlight and Earth averages, Diviner temperature, distance to cold shadow, and the hourly Sun/Earth series (2025-01-01, 14 and 30 Earth days, 1 m and 5 m) are exported from the repository code to <code>web/data/nr101.json</code>. The other eight regions show placeholder values labelled <i>example</i>. The 3D-looking Moon is procedural art, not terrain. The slope and cold-ground notes above describe the example model; for NR101 see each readout's own line.</p></div>
+
+    <h3>Screening cut presets</h3>
+    <div class="presets" id="presets">
+      <button class="preset on" data-p="brief"><b>Published screening cuts</b><span>Slope &lt; 8° · avg. illumination &gt; 0.5</span></button>
+      <button class="preset" data-p="strict"><b>Stricter (illustrative)</b><span>Slope &lt; 5° · avg. illumination &gt; 0.6</span></button>
+      <button class="preset" data-p="off"><b>No cuts shown</b><span>Readouts only</span></button>
+    </div>
+    <div class="sl"><label>Slope cut</label><input type="range" id="sSlope" min="2" max="15" step="0.5" value="8"><output id="oSlope">8.0°</output></div>
+    <div class="sl"><label>Avg. illumination cut</label><input type="range" id="sIll" min="0.2" max="0.9" step="0.01" value="0.5"><output id="oIll">0.50</output></div>
+    <p class="small" style="margin-top:14px">Cuts are drawn as dashed lines on the region card and as markers in the comparison table. They are screening values shown with their source, not flight rules, and passing them does not make a site safe.</p>
+
+    <h3>Sources and archives</h3>
+    <ul class="cites">
+      <li><div>LROC QuickMap<span>Lunar Reconnaissance Orbiter Camera team, Arizona State University. Interactive map of LRO data layers (NAC/WAC, LOLA slope, illumination).</span></div><a href="https://quickmap.lroc.asu.edu/" target="_blank" rel="noopener">quickmap.lroc.asu.edu ↗</a></li>
+      <li><div>Moon Trek<span>NASA Solar System Treks Project, JPL. South-polar DEM, slope, and illumination products.</span></div><a href="https://trek.nasa.gov/moon/" target="_blank" rel="noopener">trek.nasa.gov/moon ↗</a></li>
+      <li><div>JPL DE421 planetary ephemeris<span>Folkner, Williams &amp; Boggs (2009), IPN Progress Report 42-178. Sun and Earth positions and lunar orientation; SPICE kernel via NAIF.</span></div><a href="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/" target="_blank" rel="noopener">naif.jpl.nasa.gov ↗</a></li>
+      <li><div>LRO Diviner Lunar Radiometer<span>Paige et al. (2010). Polar surface temperature products, PDS Geosciences Node.</span></div><a href="https://pds-geosciences.wustl.edu/missions/lro/diviner.htm" target="_blank" rel="noopener">pds-geosciences.wustl.edu ↗</a></li>
+      <li><div>LRO Lunar Orbiter Laser Altimeter (LOLA)<span>Smith et al. (2010). Polar gridded DEMs (5 m/px south pole), PDS Geosciences Node.</span></div><a href="https://pds-geosciences.wustl.edu/missions/lro/lola.htm" target="_blank" rel="noopener">pds-geosciences.wustl.edu ↗</a></li>
+      <li><div>Wueller et al. (2026)<span>JGR Planets. Source of the NR101 point and the other eight region points (Table A1).</span></div><a href="https://doi.org/10.1029/2025JE009434" target="_blank" rel="noopener">10.1029/2025JE009434 ↗</a></li>
+      <li><div>NASA (Oct 2024) Artemis III candidate landing regions<span>Source of the nine-region list. Region names only; this atlas adds no endorsement.</span></div><a href="https://www.nasa.gov/" target="_blank" rel="noopener">nasa.gov ↗</a></li>
+    </ul>
+
+    <h3>What this atlas is not</h3>
+    <div class="nots"><span>Not a Moon viewer</span><span>No combined score</span><span>No ranking</span><span>No ice-volume estimate</span><span>Never declares a site “safe”</span><span>Cuts ≠ flight rules</span></div>
+  </div>
+</section>
+
+<!-- Compare layer -->
+<section class="layer" id="compare" aria-hidden="true">
+  <div class="panel">
+    <div class="grab"></div>
+    <div class="lh"><div><div class="label">All nine regions · one real row, eight example rows</div><h2>Side by side, unranked</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
+    <div class="example-note"><b>Example data</b><span>Eight of nine rows are placeholder values for layout only; Nobile Rim 1 is real. Rows are listed by longitude, west to east. This is not a ranking and there is no combined score.</span></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Region</th><th>Slope (median)</th><th>Avg. sunlight · 1 m</th><th>Earth in view</th><th>Nearest cold ground</th><th>Shown cuts</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <p class="disclaim">Only the Nobile Rim 1 row is real (Sun and Earth are 18.6-year averages there; the other rows are example 14-day means). Rows are not comparable until all nine are computed. ± values for example rows are illustrative uncertainty half-ranges. “Shown cuts” states whether the example median falls inside the selected screening cuts (slope, illumination). It is a reference marker, not a pass/fail verdict and not a flight rule.</p>
+  </div>
+</section>
+
+<script src="data/nr101.js"></script>
+<script>
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const D2R=Math.PI/180;
+
+// ---------- seeded RNG ----------
+function rng(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return s/4294967296;}}
+
+// ---------- regions (Oct 2024 list; marker = first Wueller et al. 2026 Table A1 site per region, from docs/data-sources.md) ----------
+const REGIONS=[
+ {id:'CAB',name:'Peak near Cabeus B',lat:-83.763,lon:-69.983,site:'PCB01'},
+ {id:'DGR',name:'de Gerlache Rim 2',lat:-88.513,lon:-68.015,site:'dGR101'},
+ {id:'HAW',name:'Haworth',lat:-86.768,lon:-20.514,site:'HW01'},
+ {id:'MAL',name:'Malapert Massif',lat:-85.942,lon:-0.944,site:'MMA01'},
+ {id:'MMP',name:'Mons Mouton Plateau',lat:-85.111,lon:26.710,site:'MMP01'},
+ {id:'MMO',name:'Mons Mouton',lat:-85.416,lon:31.851,site:'MMO01'},
+ {id:'NR1',name:'Nobile Rim 1',lat:-85.295,lon:36.917,site:'NR101',real:true},
+ {id:'NR2',name:'Nobile Rim 2',lat:-84.054,lon:56.481,site:'NR201'},
+ {id:'SLP',name:'Slater Plain',lat:-87.478,lon:124.521,site:'SP01'},
+];
+let H0=new Date(Date.UTC(2026,10,2,0)); // example window start (real NR101 window: 2025-01-01)
+const EX_H0=new Date(Date.UTC(2026,10,2,0));
+const REAL=window.NR101_DATA||null; // generated by atlas/export_web.py; absent => example data everywhere
+const HOURS=336;
+
+// ---------- example data model (placeholder, physically-flavoured) ----------
+function horizonFn(r){const g=rng(r.id.charCodeAt(0)*977+r.id.charCodeAt(1)*31+r.id.charCodeAt(2));
+  const base=-0.3-g()*1.1, ridge=1.0+g()*1.6, a=[.6+g()*.8,.3+g()*.5,.15+g()*.3], p=[g()*6.3,g()*6.3,g()*6.3];
+  const f=(az,off)=>base+off+a[0]*Math.sin(2*az+p[0])+a[1]*Math.sin(5*az+p[1])+a[2]*Math.sin(11*az+p[2]);f.ridge=ridge;return f;}
+function series(r,height,hOff=0){
+  const H=horizonFn(r), c=90+r.lat, lam=r.lon*D2R, dip=height===5?-0.35:0;
+  const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS), az=new Float32Array(HOURS);
+  for(let t=0;t<HOURS;t++){
+    const L=(70+360*t/708.7)*D2R; az[t]=L;
+    const el=c*Math.cos(L-lam)+0.9;                    // sub-solar lat ~ -0.9 deg (example)
+    const hz=H(L,dip+hOff);
+    sun[t]=Math.max(0,Math.min(1,(el-hz+0.267)/0.534));
+    const LE=7.6*Math.sin(2*Math.PI*t/661+1.1)*D2R, dE=6.6*Math.sin(2*Math.PI*t/653+0.15);
+    const elE=c*Math.cos(LE-lam)-dE, hzE=H(LE,dip+hOff)+H.ridge;
+    earth[t]=(elE+0.95>hzE)?1:0;                     // any part of disc above horizon
+  }
+  return {sun,earth,az};
+}
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function realStats(height){
+  const q=REAL.query, w=REAL.timeline.windows.fourteen_earth_days.series;
+  const base=series(REGIONS.find(x=>x.id==='NR1'),height); // only the illustrative Sun azimuth for the hero lighting is reused
+  const sunS=w['sun_'+height+'m'], earS=w['earth_'+height+'m'];
+  const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS);
+  for(let t=0;t<HOURS;t++){sun[t]=sunS[t]==='1'?1:0;earth[t]=earS[t]==='1'?1:0;}
+  const rms=q.slope_rms_deg, km=q.distance_to_cold_shadow_m/1000, px=q.temperature_resolution_m/1000;
+  const win=k=>{const a=w[k+'_'+height+'m'];return 100*[...a].filter(c=>c==='1').length/a.length;};
+  return {real:true,q,
+    // slope: Barker et al. 2021 RMS slope error, +/- one RMS. Sun/Earth: 18.6-year averages have no published error bar here.
+    slope:{v:q.slope_deg,lo:Math.max(0,q.slope_deg-rms),hi:q.slope_deg+rms,unc:'±1 RMS slope error'},
+    sun:{v:q.solar_fraction,lo:q.solar_fraction,hi:q.solar_fraction,unc:'no uncertainty published for this average',win:win('sun')},
+    earth:{v:q.earth_fraction*100,lo:q.earth_fraction*100,hi:q.earth_fraction*100,unc:'no uncertainty published for this average',win:win('earth')},
+    // cold: distance to nearest permanent-shadow pixel with Diviner summer max < 110 K; range is +/- one Diviner pixel (240 m)
+    cold:{v:km,lo:Math.max(0,km-px),hi:km+px,unc:'± one Diviner pixel (240 m)'},
+    series:{sun,earth,az:base.az}};
+}
+function stats(r,height){
+  if(r.real&&REAL)return realStats(height);
+  const m=series(r,height), lo=series(r,height,0.4), hi=series(r,height,-0.4);
+  const g=rng(r.id.charCodeAt(1)*7919+r.id.charCodeAt(2)*104729);
+  const slope=r.id==='NR1'?4.2:2.6+g()*7.5, cold=r.id==='NR1'?1.9:0.6+g()*5.5;
+  return {
+    sun:{v:mean(m.sun),lo:mean(lo.sun),hi:mean(hi.sun)},
+    earth:{v:mean(m.earth)*100,lo:mean(lo.earth)*100,hi:mean(hi.earth)*100},
+    slope:{v:slope,lo:slope*0.68,hi:slope*1.42},
+    cold:{v:cold,lo:cold*0.62,hi:cold*1.45},
+    series:m
+  };
+}
+
+// ---------- cuts ----------
+const cuts={slope:8,ill:0.5,on:true};
+
+// ---------- procedural moon ----------
+const cv=$('#moon'), ctx=cv.getContext('2d');
+const N=640, EXT=8.5; // map covers +/-12 deg colatitude
+const off=document.createElement('canvas'); off.width=off.height=N;
+const octx=off.getContext('2d'); const img=octx.createImageData(N,N);
+const hgt=new Float32Array(N*N), gx=new Float32Array(N*N), gy=new Float32Array(N*N), alb=new Float32Array(N*N);
+function toMap(lat,lon){const r=(90+lat)/EXT*(N/2);return [N/2+r*Math.sin(lon*D2R), N/2-r*Math.cos(lon*D2R)];}
+(function build(){
+  const g=rng(4242);
+  // value noise
+  const G=64, grid=new Float32Array((G+1)*(G+1)).map(()=>g());
+  const vn=(x,y)=>{const xi=Math.floor(x)%G,yi=Math.floor(y)%G,xf=x-Math.floor(x),yf=y-Math.floor(y);
+    const s=t=>t*t*(3-2*t),a=grid[yi*(G+1)+xi],b=grid[yi*(G+1)+xi+1],c=grid[(yi+1)*(G+1)+xi],d=grid[(yi+1)*(G+1)+xi+1];
+    const u=s(xf),v=s(yf);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){let f=0,amp=1,fr=1/16;for(let o=0;o<5;o++){f+=amp*vn(x*fr+o*7.3,y*fr+o*3.1);amp*=.5;fr*=2;}
+    hgt[y*N+x]=f*4.0; alb[y*N+x]=0.86+0.22*vn(x/40+11,y/40+5);}
+  const crater=(cx,cy,R,depth)=>{const E=R*2.4,x0=Math.max(0,cx-E|0),x1=Math.min(N-1,cx+E|0),y0=Math.max(0,cy-E|0),y1=Math.min(N-1,cy+E|0);
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x-cx,y-cy)/R;let h;
+      if(d<1)h=-depth*(1-d*d)+depth*0.25*d**6; else if(d<2.4)h=depth*0.25*Math.exp(-(d-1)*3.2); else continue;
+      hgt[y*N+x]+=h;}};
+  const kmpx=(2*EXT*30.3)/N;
+  // named craters (approximate)
+  [[-89.9,0,21],[-87.4,-4,51],[-85.3,53,73],[-88.5,-87,32],[-85.3,-42,98],[-87.3,77,39],[-88.1,45,51],[-88.5,-152,32],[-84.5,-84,40],[-86.5,-60,26],[-83,25,40],[-82,-6,55]]
+   .forEach(([la,lo,dkm])=>{const [x,y]=toMap(la,lo);const R=dkm/2/kmpx;crater(x,y,R,R*0.32);});
+  // massifs / ridges (positive bumps)
+  const bump=(cx,cy,R,h)=>{for(let y=Math.max(0,cy-R*2|0);y<Math.min(N,cy+R*2);y++)for(let x=Math.max(0,cx-R*2|0);x<Math.min(N,cx+R*2);x++){const d=Math.hypot(x-cx,y-cy)/R;hgt[y*N+x]+=h*Math.exp(-d*d);}};
+  [[-86,0,8,5],[-84.6,30,9,5.5],[-85.6,20,6,3],[-84.9,-50,5,3.5]].forEach(([la,lo,R,h])=>{const[x,y]=toMap(la,lo);bump(x,y,R,h);});
+  // random craters, power-law sizes
+  for(let i=0;i<900;i++){const R=0.8+Math.pow(g(),4)*20;crater(g()*N,g()*N,R,R*(0.18+g()*0.12));}
+  for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){const i=y*N+x;gx[i]=(hgt[i+1]-hgt[i-1])*0.9;gy[i]=(hgt[i+N]-hgt[i-N])*0.9;}
+})();
+let sunAz=200*D2R, autoLight=true;
+function shade(){
+  const elev=9*D2R, lz=Math.sin(elev), ce=Math.cos(elev), lx=Math.sin(sunAz)*ce, ly=-Math.cos(sunAz)*ce;
+  const d=img.data, ux=Math.sin(sunAz), uy=-Math.cos(sunAz), rise=Math.tan(elev)/1.8*2;
+  for(let y=0;y<N;y++){for(let x=0;x<N;x++){const i=y*N+x;
+    const dx=(x-N/2)/(N/2),dy=(y-N/2)/(N/2),rr=Math.sqrt(dx*dx+dy*dy);
+    let I=(lz-gx[i]*lx-gy[i]*ly)/Math.sqrt(1+gx[i]*gx[i]+gy[i]*gy[i]);
+    I=I<0?0:I;
+    if(I>0){const h0=hgt[i];let px=x,py=y,sh=1;for(let s=1;s<=18;s++){px+=ux*2;py+=uy*2;const qx=px|0,qy=py|0;if(qx<0||qy<0||qx>=N||qy>=N)break;const dh=hgt[qy*N+qx]-(h0+s*rise);if(dh>0){sh=Math.max(0,1-dh*0.7);if(sh===0)break;}}I*=sh;}
+    I=Math.pow(I,1.1)*alb[i]+0.035;
+    const fade=Math.max(0,1-Math.pow(rr/1.0,4)); const v=Math.min(1,I*1.15)*fade;
+    const k=i*4; d[k]=v*226+3; d[k+1]=v*230+4; d[k+2]=v*236+6; d[k+3]=255;}}
+  octx.putImageData(img,0,0);
+}
+let W=0,Hh=0,DPR=1,cx=0,cy=0,ppd=0;
+function layout(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; Hh=innerHeight;
+  cv.width=W*DPR; cv.height=Hh*DPR;
+  if(W>900){cx=W*0.64;cy=Hh*0.70;ppd=Math.min(W,Hh)*0.58/6.2;}
+  else{cx=W*0.5;cy=Hh*0.46;ppd=Math.min(W,Hh*0.8)*0.5/6.0;}
+  placeMarkers(); draw(); 
+}
+function project(lat,lon){const r=(90+lat)*ppd;return [cx+r*Math.sin(lon*D2R), cy-r*Math.cos(lon*D2R)];}
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle='#050607';ctx.fillRect(0,0,W,Hh);
+  // faint earthshine glow toward 0 deg (near side)
+  const eg=ctx.createRadialGradient(cx,cy-EXT*ppd*1.1,0,cx,cy-EXT*ppd*1.1,EXT*ppd*1.4);
+  eg.addColorStop(0,'rgba(120,170,220,.07)');eg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=eg;ctx.fillRect(0,0,W,Hh);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  const S=EXT*ppd; ctx.drawImage(off,cx-S,cy-S,2*S,2*S);
+  // graticule
+  ctx.strokeStyle='rgba(169,220,255,.07)';ctx.lineWidth=1;
+  for(const c of [2,4,6,8]){ctx.beginPath();ctx.arc(cx,cy,c*ppd,0,Math.PI*2);ctx.stroke();}
+  for(let l=0;l<360;l+=30){const a=l*D2R;ctx.beginPath();ctx.moveTo(cx+ppd*.6*Math.sin(a),cy-ppd*.6*Math.cos(a));ctx.lineTo(cx+8*ppd*Math.sin(a),cy-8*ppd*Math.cos(a));ctx.stroke();}
+  ctx.fillStyle='rgba(235,242,247,.28)';ctx.font='10px '+getComputedStyle(document.body).fontFamily;ctx.textAlign='center';
+  for(const c of [4,6,8]){ctx.fillText((90-c)+'°S',cx+c*ppd*Math.sin(-150*D2R),cy-c*ppd*Math.cos(-150*D2R));}
+  // vignette
+  const vg=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*.35,W/2,Hh/2,Math.max(W,Hh)*.75);
+  vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.85)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,Hh);
+  const lg=ctx.createLinearGradient(0,0,W*.55,0);lg.addColorStop(0,'rgba(5,6,7,.75)');lg.addColorStop(1,'rgba(5,6,7,0)');
+  if(W>900){ctx.fillStyle=lg;ctx.fillRect(0,0,W*.55,Hh);}
+  $('#sunneedle').setAttribute('transform',`rotate(${(sunAz/D2R)%360} 22 22)`);
+  $('#sunlbl').textContent=`Illustrative lighting · Sun azimuth ${(((sunAz/D2R)%360)+360)%360|0}°`;
+}
+let last=0;
+function loop(t){
+  if(autoLight && t-last>45){sunAz+= (t-last)/1000*D2R*3; last=t; shade(); draw();}
+  else if(!autoLight && needRedraw){needRedraw=false;shade();draw();}
+  if(autoLight===false) last=t;
+  requestAnimationFrame(loop);
+}
+let needRedraw=false;
+
+// ---------- markers ----------
+const mkWrap=$('#markers');
+REGIONS.forEach((r,i)=>{const el=document.createElement('button');el.className='mk';el.dataset.id=r.id;el.style.setProperty('--d',(i*0.4)+'s');
+  el.setAttribute('aria-label',r.name);el.innerHTML='<span class="halo"></span><span class="hit"></span><span class="dot"></span><span class="tag">'+r.name+'</span>';
+  el.addEventListener('click',()=>openRegion(r.id));
+  el.addEventListener('mouseenter',()=>{if(!sel)el.classList.add('sel')});el.addEventListener('mouseleave',()=>{if(sel!==r.id)el.classList.remove('sel')});
+  mkWrap.appendChild(el);r.el=el;});
+function placeMarkers(){REGIONS.forEach(r=>{const[x,y]=project(r.lat,r.lon);r.el.style.left=x+'px';r.el.style.top=y+'px';r.el.classList.toggle('left',['CAB','DGR','HAW','MAL'].includes(r.id));r.el.classList.toggle('up',r.id==='MMO'||r.id==='MMP');r.el.classList.toggle('down',r.id==='NR1');});}
+
+// ---------- region card ----------
+let sel=null, height=1, cur=null, hour=0;
+const EXNOTE=document.querySelector('#example-note').innerHTML;
+const REALNOTE='<b style="color:#8fe3b0">Real data</b><span>Values on this card come from the repository code (<code>python -m atlas.export_web</code>) at Wueller et al. 2026 point NR101: slope, sunlight and Earth averages, Diviner temperature, and the hourly Sun/Earth series for 2025-01-01 + 14 days. '+(REAL&&REAL.query.interpolated_gap?'<b>Caution:</b> the LOLA return count at this 5 m pixel is 0, so slope here is interpolated, not measured. ':'')+'No combined score; screening cuts are not flight rules.</span>';
+const fmtLat=v=>v.toFixed(3)+'°', fmtLon=v=>(v>=0?'+':'')+v.toFixed(3)+'°';
+const fmtDate=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+function dialHTML(k){return `<div class="dial" data-k="${k}"><div class="label"></div><div class="q"></div>
+  <div class="ring"><svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="58" stroke="rgba(235,242,247,.08)" stroke-width="2"/>
+  <circle class="unc" cx="66" cy="66" r="58" stroke="rgba(169,220,255,.22)" stroke-width="8"/>
+  <circle class="arc" cx="66" cy="66" r="58" stroke="#a9dcff" stroke-width="2" style="filter:drop-shadow(0 0 4px rgba(169,220,255,.8))"/></svg>
+  <div class="val"><span class="num n">—</span><span class="u"></span></div></div>
+  <div class="def"></div>
+  <div class="rb"><div class="track"><div class="base"></div><div class="span"></div><div class="cut"><span></span></div><div class="pt"></div></div><div class="ends"><span></span><span></span></div><div class="rng"></div></div>
+  <div class="src"><a target="_blank" rel="noopener"></a><span class="tagx">Example</span></div></div>`;}
+$('#dials').innerHTML=['slope','sun','earth','cold'].map(dialHTML).join('');
+const DEFREAL={
+ slope:{src:'LOLA 5 m site DEM · Barker et al. 2021',href:'https://pgda.gsfc.nasa.gov/products/78',unit:'DEG · AT POINT',def:'Slope at the NR101 5 m pixel, with Barker et al. RMS slope error'},
+ sun:{src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',unit:'18.6-YR AVG',def:'18.6-year average fraction of hourly steps with any part of the Sun above the horizon. Long-term average, not this window.'},
+ earth:{src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',unit:'18.6-YR AVG',def:'18.6-year average, any part of the Earth disc above the horizon. Disc visibility, not a link budget.'},
+ cold:{src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',unit:'KM TO <110 K SHADOW',def:'Distance to nearest permanent-shadow pixel with Diviner summer max below 110 K. Proximity only, no ice volume.'}
+};
+const DEF={
+ slope:{lab:'Slope',q:'Flat enough to land?',unit:'DEG · MEDIAN',min:0,max:20,dec:1,suf:'°',def:'20 m baseline, within 200 m patch',src:'LOLA 5 m/px DEM · PDS',href:'https://pds-geosciences.wustl.edu/missions/lro/lola.htm',cut:()=>cuts.on?{v:cuts.slope,t:'cut < '+cuts.slope+'°'}:null},
+ sun:{lab:'Sunlight',q:'Lit enough to stay powered?',unit:'AVG ILLUM.',min:0,max:1,dec:2,suf:'',def:'',src:'LOLA horizons + JPL DE421',href:'https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/',cut:()=>cuts.on?{v:cuts.ill,t:'cut > '+cuts.ill.toFixed(2)}:null},
+ earth:{lab:'Earth view',q:'In view of Earth?',unit:'% OF HOURS',min:0,max:100,dec:0,suf:'%',def:'Any part of Earth disc above horizon',src:'JPL DE421 + Moon Trek DEM',href:'https://trek.nasa.gov/moon/',cut:()=>null},
+ cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM TO <110 K',min:0,max:10,dec:1,suf:'',def:'Nearest annual-max temperature below 110 K',src:'Diviner polar temps · PDS',href:'https://pds-geosciences.wustl.edu/missions/lro/diviner.htm',cut:()=>null},
+};
+const CIRC=2*Math.PI*58, ARC=CIRC*0.75;
+function renderDials(){
+  const s=cur;
+  for(const k of ['slope','sun','earth','cold']){const d=s.real?Object.assign({},DEF[k],DEFREAL[k]):DEF[k],v=s[k],el=$(`.dial[data-k="${k}"]`);
+    const lo=Math.min(v.lo,v.hi),hi=Math.max(v.lo,v.hi);
+    const f=x=>Math.max(0,Math.min(1,(x-d.min)/(d.max-d.min)));
+    el.querySelector('.label').textContent=d.lab; el.querySelector('.q').textContent=d.q;
+    el.querySelector('.n').textContent=v.v.toFixed(d.dec)+d.suf; el.querySelector('.u').textContent=d.unit;
+    el.querySelector('.def').textContent=s.real?d.def:k==='sun'?`Mean fraction of solar disc visible, ${height} m above ground, stated window`:k==='earth'?`Any part of Earth disc above horizon, ${height} m eye height`:d.def;
+    const arc=el.querySelector('.arc'),unc=el.querySelector('.unc');
+    arc.style.strokeDasharray=`${ARC*f(v.v)} ${CIRC}`;
+    unc.style.strokeDasharray=`0 ${ARC*f(lo)} ${ARC*(f(hi)-f(lo))} ${CIRC}`;
+    el.querySelector('.span').style.left=f(lo)*100+'%'; el.querySelector('.span').style.width=(f(hi)-f(lo))*100+'%';
+    el.querySelector('.pt').style.left=f(v.v)*100+'%';
+    const c=d.cut(),ce=el.querySelector('.cut'); if(c){ce.style.display='';ce.style.left=f(c.v)*100+'%';ce.querySelector('span').textContent=c.t;}else ce.style.display='none';
+    const ends=el.querySelectorAll('.ends span'); ends[0].textContent=d.min+d.suf; ends[1].textContent=d.max+d.suf;
+    let rt=`Range ${lo.toFixed(d.dec)}–${hi.toFixed(d.dec)}${d.suf} · example`;
+    if(s.real){rt=`${v.unc}`;
+      if(k==='sun')rt+=` · this ${height} m window: ${v.win.toFixed(0)}% of hours`;
+      if(k==='earth')rt+=` · this ${height} m window: ${v.win.toFixed(0)}% of hours`;
+      if(k==='slope')rt+=` (${lo.toFixed(1)}–${hi.toFixed(1)}°)`;
+      if(k==='cold')rt+=` · summer max ${s.q.summer_max_temperature_k.toFixed(0)} K here`;
+      rt+=' · real';}
+    el.querySelector('.rng').textContent=rt;
+    const tg=el.querySelector('.tagx');tg.textContent=s.real?'Real · NR101':'Example';tg.style.color=s.real?'#8fe3b0':'';
+    const a=el.querySelector('.src a'); a.textContent=d.src+' ↗'; a.href=d.href;
+  }
+}
+function openRegion(id){
+  const r=REGIONS.find(x=>x.id===id); if(!r)return; sel=id;
+  REGIONS.forEach(x=>x.el.classList.toggle('sel',x.id===id));
+  $('#c-name').textContent=r.name; $('#c-site').textContent=r.site||'TBD';
+  $('#c-lat').textContent=fmtLat(r.lat); $('#c-lon').textContent=fmtLon(r.lon);
+  cur=stats(r,height); H0=cur.real?new Date(REAL.timeline.start):EX_H0;
+  const e=new Date(H0.getTime()+13*864e5); $('#c-win').textContent=`${fmtDate(H0)} – ${fmtDate(e)} ${H0.getUTCFullYear()} · ${cur.real?'real':'example'}`;
+  $('#c-kicker').textContent=cur.real?'Candidate region · real values at NR101':'Candidate region · example data';
+  const en=$('#example-note'); en.className=cur.real?'example-note real-note':'example-note';
+  en.innerHTML=cur.real?REALNOTE:EXNOTE;
+  $('#tl-label').textContent=cur.real?'Hourly Sun & Earth visibility · 14 days from 2025-01-01 · real (DE421 + Site 06 terrain horizon)':'Hourly Sun & Earth visibility · 14 days · example data';
+  renderDials();
+  $('#sheet').classList.add('open'); $('#sheet').setAttribute('aria-hidden','false'); document.body.classList.add('sheet-open');
+  closeLayers(true); setNav('atlas');
+  requestAnimationFrame(()=>{sizeTL();setHour(hour);});
+  history.replaceState(null,'','#region/'+id);
+}
+function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');autoLight=true;stopPlay();history.replaceState(null,'','#');}
+$('#close').onclick=closeRegion;
+
+// ---------- timeline ----------
+const tlc=$('#tlc'),tctx=tlc.getContext('2d'),headEl=$('#head'),wrap=$('#tlwrap');
+let TW=0;
+function sizeTL(){const r=tlc.getBoundingClientRect();TW=r.width;tlc.width=r.width*DPR;tlc.height=96*DPR;drawTL();}
+function drawTL(){
+  if(!cur)return; const s=cur.series; tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,96);
+  const pad=56, w=TW-pad, bw=w/HOURS, font=getComputedStyle(document.body).fontFamily;
+  tctx.font='10px '+font; tctx.fillStyle='rgba(235,242,247,.5)'; tctx.textAlign='left';
+  tctx.fillText('SUN',0,22); tctx.fillText('EARTH',0,58);
+  for(let t=0;t<HOURS;t++){const x=pad+t*bw;
+    const v=s.sun[t]; tctx.fillStyle=v>0?`rgba(255,255,255,${0.12+0.78*v})`:'rgba(235,242,247,.05)'; tctx.fillRect(x,8,bw+0.6,22);
+    tctx.fillStyle=s.earth[t]?'rgba(169,220,255,.75)':'rgba(235,242,247,.05)'; tctx.fillRect(x,44,bw+0.6,22);}
+  tctx.fillStyle='rgba(235,242,247,.35)'; tctx.textAlign='center';
+  for(let d=0;d<=14;d+=1){const x=pad+d*24*bw; tctx.fillRect(x,72,1,d%7===0?8:4); if(d%2===0&&d<14) tctx.fillText('D'+(d+1),x+12*bw,92);}
+}
+function setHour(h){hour=Math.max(0,Math.min(HOURS-1,Math.round(h))); if(!cur)return; const s=cur.series;
+  const pad=56,bw=(TW-pad)/HOURS; headEl.style.transform=`translateX(${pad+(hour+0.5)*bw}px)`;
+  const d=new Date(H0.getTime()+hour*36e5);
+  $('#t-time').textContent=`D${Math.floor(hour/24)+1} · ${String(d.getUTCHours()).padStart(2,'0')}:00 UTC`;
+  $('#t-sun').textContent=Math.round(s.sun[hour]*100)+'%';
+  $('#t-earth').textContent=s.earth[hour]?'In view':'Below horizon';
+  $('#t-earth').style.color=s.earth[hour]?'var(--ice)':'var(--mute)';
+  autoLight=false; sunAz=s.az[hour]; needRedraw=true;
+}
+let dragging=false;
+const hx=e=>{const r=wrap.getBoundingClientRect();const pad=56;return (e.clientX-r.left-pad)/((r.width-pad)/HOURS);};
+wrap.addEventListener('pointerdown',e=>{dragging=true;wrap.setPointerCapture(e.pointerId);stopPlay();setHour(hx(e));});
+wrap.addEventListener('pointermove',e=>{if(dragging)setHour(hx(e));});
+wrap.addEventListener('pointerup',()=>dragging=false);
+let playT=null;
+function stopPlay(){if(playT){cancelAnimationFrame(playT);playT=null;$('#playp').setAttribute('d','M0 0L10 6L0 12Z');}}
+$('#play').onclick=()=>{if(playT){stopPlay();return;}$('#playp').setAttribute('d','M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z');let h=hour>=HOURS-1?0:hour,lt=performance.now();
+  const step=t=>{h+=(t-lt)/1000*24;lt=t;if(h>=HOURS-1){setHour(HOURS-1);stopPlay();return;}setHour(h);playT=requestAnimationFrame(step);};playT=requestAnimationFrame(step);};
+function segThumb(){const on=$('#hseg .on'),th=$('#hseg .thumb');th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}
+$$('#hseg button').forEach(b=>b.onclick=()=>{$$('#hseg button').forEach(x=>x.classList.toggle('on',x===b));segThumb();height=+b.dataset.h;
+  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);renderDials();drawTL();setHour(hour);}});
+
+// ---------- layers ----------
+function setNav(v){$$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function openLayer(id){closeLayers(true);$('#'+id).classList.add('open');$('#'+id).setAttribute('aria-hidden','false');document.body.classList.add('layer-open');setNav(id);if(id==='compare')renderTable();history.replaceState(null,'','#'+id);}
+function closeLayers(silent){$$('.layer').forEach(l=>{l.classList.remove('open');l.setAttribute('aria-hidden','true')});document.body.classList.remove('layer-open');if(!silent){setNav('atlas');history.replaceState(null,'','#'+(sel?'region/'+sel:''));}}
+$$('[data-close]').forEach(b=>b.onclick=()=>closeLayers());
+$('#scrim').onclick=()=>closeLayers();
+$$('[data-open]').forEach(b=>b.onclick=()=>openLayer(b.dataset.open));
+$$('.nav button').forEach(b=>b.onclick=()=>{const v=b.dataset.v;if(v==='atlas'){closeLayers();}else openLayer(v);});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.body.classList.contains('layer-open'))closeLayers();else if(sel)closeRegion();}});
+
+// presets & sliders
+function syncCuts(){$('#sSlope').value=cuts.slope;$('#sIll').value=cuts.ill;$('#oSlope').textContent=cuts.on?cuts.slope.toFixed(1)+'°':'off';$('#oIll').textContent=cuts.on?cuts.ill.toFixed(2):'off';if(cur)renderDials();renderTable();}
+$$('.preset').forEach(b=>b.onclick=()=>{$$('.preset').forEach(x=>x.classList.toggle('on',x===b));const p=b.dataset.p;
+  if(p==='brief'){cuts.slope=8;cuts.ill=0.5;cuts.on=true}else if(p==='strict'){cuts.slope=5;cuts.ill=0.6;cuts.on=true}else cuts.on=false;syncCuts();});
+$('#sSlope').oninput=e=>{cuts.slope=+e.target.value;cuts.on=true;$$('.preset').forEach(x=>x.classList.remove('on'));syncCuts();};
+$('#sIll').oninput=e=>{cuts.ill=+e.target.value;cuts.on=true;$$('.preset').forEach(x=>x.classList.remove('on'));syncCuts();};
+
+// compare table
+const ALL=REGIONS.map(r=>({r,s:stats(r,1)}));
+function renderTable(){
+  const rows=[...ALL].sort((a,b)=>a.r.lon-b.r.lon).map(({r,s})=>{
+    const hs=x=>((Math.abs(x.hi-x.lo))/2);const sunNote=s.real?'<small>18.6-yr avg</small>':'';
+    let cut='—';
+    if(cuts.on){const a=s.slope.v<cuts.slope,b=s.sun.v>cuts.ill;cut=`<span class="${a?'cutok':'cutno'}">slope ${a?'inside':'outside'}</span> · <span class="${b?'cutok':'cutno'}">illum. ${b?'inside':'outside'}</span>`;}
+    return `<tr data-id="${r.id}"><td><span class="nm">${r.name}</span><span class="sid">${s.real?'<b style="color:#8fe3b0">REAL</b> · ':'<b style="color:#ffc27a">EXAMPLE</b> · '}${r.site?r.site+' · ':''}${r.lat.toFixed(2)}°, ${r.lon.toFixed(1)}°</span></td>
+    <td>${s.slope.v.toFixed(1)}°<small>±${hs(s.slope).toFixed(1)}</small></td>
+    <td>${s.sun.v.toFixed(2)}${s.real?sunNote:'<small>±'+hs(s.sun).toFixed(2)+'</small>'}</td>
+    <td>${(s.earth.v).toFixed(0)}%${s.real?sunNote:'<small>±'+hs(s.earth).toFixed(0)+'</small>'}</td>
+    <td>${s.cold.v.toFixed(1)} km<small>±${hs(s.cold).toFixed(1)}</small></td>
+    <td style="font-size:12.5px">${cut}</td></tr>`;}).join('');
+  $('#tbody').innerHTML=rows;
+  $$('#tbody tr').forEach(tr=>tr.onclick=()=>openRegion(tr.dataset.id));
+}
+
+// ---------- init ----------
+addEventListener('resize',()=>{layout();if(sel){sizeTL();setHour(hour);}segThumb();});
+layout(); shade(); draw(); segThumb(); syncCuts(); requestAnimationFrame(loop);
+const h=location.hash.slice(1);
+if(h.startsWith('region/'))openRegion(h.split('/')[1]);
+else if(h==='compare'||h==='method'){ if(h==='method'&&false){} openLayer(h);}
+else if(h==='nr1+method'){openRegion('NR1');openLayer('method');}
+})();
+</script>
+</body>
+</html>

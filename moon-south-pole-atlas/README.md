@@ -71,3 +71,7 @@ The figure's method note states the south-polar frame, the sources, the nine coo
 ```
 python -m unittest tests.test_query tests.test_horizon tests.test_regions
 ```
+
+## Web prototype
+
+A static, dependency-free frontend prototype is in [web/](web/README.md). Nobile Rim 1 / NR101 uses real values exported by `python -m atlas.export_web`; the other eight regions are labelled example data.
