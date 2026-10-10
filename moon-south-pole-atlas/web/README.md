@@ -49,12 +49,16 @@ This writes `web/data/regions.json` and `nr101.json` (canonical) plus `.js` twin
 
 ## Screenshots
 
-`web/screenshots/`: `home.png`, `nr101-card.png` (with timeline), `haworth-card.png`, `cabeus-card-no-slope.png` (slope not computed), `compare.png`, `method.png`. Taken with headless Chrome (the long virtual-time budget lets the card open animation finish):
+`web/screenshots/`: mobile and before/after additions `home-mobile.png` (390×844), `home-mobile-360.png`, `home-1440x900.png`, `nr101-card-mobile.png`, `nr101-card-mobile-full.png` (whole card incl. cold-ground dial), `compare-mobile.png`, `before-home.png`, `before-home-mobile.png`; plus `home.png`, `nr101-card.png` (with timeline), `haworth-card.png`, `cabeus-card-no-slope.png` (slope not computed), `compare.png`, `method.png`. Taken with headless Chrome (the long virtual-time budget lets the card open animation finish):
 
 ```
 google-chrome --headless=new --window-size=1440,1000 --virtual-time-budget=15000 \
   --screenshot=web/screenshots/compare.png "file://$PWD/web/index.html#compare"
 ```
+
+## Backdrop
+
+The home-screen Moon is real data, not a drawing: the LOLA average sunlight visibility raster (Mazarico et al. 2011, `AVGVISIB_75S_120M_201608`, 120 m) resampled to `web/data/backdrop.webp` (3072 px, about 0.4 MB) by `python -m atlas.export_backdrop`. It is a tone map of how often ground sees the Sun, not a hillshade or an elevation model, and it carries no values. The export reprojects south-polar stereographic to the page's azimuthal-equidistant layout (radius proportional to colatitude, longitude 0 up, +/-8.5° of colatitude), so the markers use the same latitude and longitude as the terrain. The canvas draws at devicePixelRatio. If the image cannot load, the page falls back to the old procedural terrain. The UI credits the backdrop (bottom right). The NR101 timeline still shows the real Sun azimuth on the compass, but the backdrop lighting is not re-rendered per hour.
 
 ## Limitations
 

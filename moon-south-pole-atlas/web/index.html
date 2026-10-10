@@ -29,14 +29,14 @@ body.layer-open #moon{filter:brightness(.35) blur(2px)}
 body.sheet-open #markers{transform:scale(1.04) translateY(-3%)}
 body.layer-open #markers{opacity:.15}
 .mk{position:absolute;width:0;height:0;pointer-events:auto}
-.mk .hit{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%}
-.mk .dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#eaf7ff;box-shadow:0 0 0 1px rgba(169,220,255,.55),0 0 14px 3px var(--ice-glow);transition:transform .4s var(--spring)}
-.mk .halo{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(169,220,255,.35);animation:pulse 3.6s var(--ease) infinite;animation-delay:var(--d,0s)}
-@keyframes pulse{0%{transform:scale(.4);opacity:0}30%{opacity:.9}100%{transform:scale(1.5);opacity:0}}
-.mk .tag{position:absolute;white-space:nowrap;font-size:12px;color:var(--mute);transform:translate(var(--tx,12px),-50%);transition:color .3s, opacity .3s;letter-spacing:.01em;text-shadow:0 1px 8px #000}
-.mk.left .tag{--tx:calc(-100% - 12px)}
-.mk:hover .dot,.mk.sel .dot{transform:scale(1.6)}
-.mk:hover .tag,.mk.sel .tag{color:var(--ink)}
+.mk .hit{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%}
+.mk .dot{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(169,220,255,.85),0 0 0 4px rgba(5,6,7,.35),0 0 18px 5px var(--ice-glow);transition:transform .4s var(--spring)}
+.mk .halo{position:absolute;left:-20px;top:-20px;width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(169,220,255,.5);animation:pulse 3.6s var(--ease) infinite;animation-delay:var(--d,0s)}
+@keyframes pulse{0%{transform:scale(.4);opacity:0}30%{opacity:.95}100%{transform:scale(1.5);opacity:0}}
+.mk .tag{position:absolute;left:0;top:0;white-space:nowrap;font-size:13px;font-weight:500;line-height:1;padding:5px 9px;border-radius:999px;color:#eaf2f7;background:rgba(5,6,7,.62);border:1px solid rgba(169,220,255,.2);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:color .3s,background .3s,border-color .3s,opacity .3s;letter-spacing:.01em;text-shadow:0 1px 6px #000}
+.mk .tag .s{display:none}
+.mk:hover .dot,.mk.sel .dot{transform:scale(1.5)}
+.mk:hover .tag,.mk.sel .tag{color:#fff;background:rgba(10,18,26,.8);border-color:rgba(169,220,255,.6)}
 .mk.sel .halo{animation:none;opacity:1;transform:scale(1.05);border-color:var(--ice)}
 .mk:focus-visible{outline:none}.mk:focus-visible .halo{border-color:#fff;opacity:1;animation:none}
 
@@ -90,7 +90,7 @@ body.sheet-open .foot{opacity:0}
 .extra .label{font-size:10px}
 .conv{color:var(--mute);font-weight:300}
 .extra b .conv{display:block;font-size:12px;margin-top:1px}
-.ring .val .u .conv{display:block;margin-top:1px;letter-spacing:.02em;font-size:10px}
+.ring .val .u{text-align:center}.ring .val .u .conv{display:block;margin-top:2px;letter-spacing:.02em;font-size:10px;white-space:nowrap}
 td .conv{display:block;font-size:12px;white-space:nowrap}
 .na{color:#ffc27a}
 .dial.missing .ring{opacity:.45}
@@ -107,7 +107,6 @@ td .conv{display:block;font-size:12px;white-space:nowrap}
 .ring .val .u{font-size:11px;color:var(--mute);margin-top:4px;letter-spacing:.06em}
 .ring circle{fill:none;stroke-linecap:round;transition:stroke-dasharray 1.1s var(--ease),stroke-dashoffset 1.1s var(--ease)}
 .def{font-size:11.5px;color:var(--mute);text-align:center;line-height:1.45;min-height:34px}
-.mk.up .tag{transform:translate(-50%,-26px)}.mk.down .tag{transform:translate(-50%,12px)}
 .rb{margin-top:14px}
 .rb .track{position:relative;height:18px}
 .rb .base{position:absolute;left:0;right:0;top:8px;height:2px;background:var(--line2);border-radius:2px}
@@ -181,12 +180,14 @@ tbody tr:hover{background:rgba(169,220,255,.04)}
 td .nm{font-weight:400}
 td .sid{display:block;font-size:11px;color:var(--faint);margin-top:2px}
 .cutok{color:var(--ice)}.cutno{color:var(--faint)}
-.tablewrap{overflow-x:auto}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.swipe{display:none;font-size:11px;color:var(--ice);margin-top:12px;letter-spacing:.04em}
 
 .scrim{position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .5s}
 body.layer-open .scrim{opacity:1;pointer-events:auto}
 
 @media (max-width:900px){
+  .swipe{display:block}.tablewrap{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  td:first-child,th:first-child{min-width:138px}
   .top{padding:18px 18px}
   .hero-copy{left:18px;right:18px;top:auto;bottom:90px;max-width:none}
   .hero-copy h1{font-size:34px}
@@ -197,13 +198,13 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .grid2{grid-template-columns:1fr}
   .foot{left:18px;right:18px;bottom:18px}
   .compass span{display:none}
-  .mk .tag{display:none}.mk.sel .tag{display:block}
+  .mk .tag{font-size:12.5px;padding:5px 8px}
   .sl{grid-template-columns:1fr 70px}.sl label{grid-column:1/-1}
   .brand .t2{display:none}
   .nav .long{display:none}
   .brand .label{max-width:150px;line-height:1.4}
 }
-@media (max-width:520px){.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
+@media (max-width:520px){.mk .tag .l{display:none}.mk .tag .s{display:inline}.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
 </style>
 </head>
@@ -329,6 +330,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
     <div class="grab"></div>
     <div class="lh"><div><div class="label">All nine regions · same measures in every row</div><h2>Side by side, unranked</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
     <div class="example-note real-note"><b style="color:#8fe3b0">Computed</b><span>Every row is read from the same maps at one published point. Sunlight and Earth are 18.6-year averages in all rows. Rows are listed by longitude, west to east. This is not a ranking and there is no combined score. “n/a” means the input map does not cover the point.</span></div>
+    <div class="swipe" aria-hidden="true">Swipe the table sideways for all seven columns →</div>
     <div class="tablewrap"><table>
       <thead><tr><th>Region</th><th>Slope at point</th><th>Sunlight<br>18.6-yr avg</th><th>Earth in view<br>18.6-yr avg</th><th>Summer<br>max temp.</th><th>Nearest cold ground</th><th>Shown cuts</th></tr></thead>
       <tbody id="tbody"></tbody>
@@ -351,15 +353,15 @@ function rng(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5
 
 // ---------- regions (Oct 2024 list; marker = first Wueller et al. 2026 Table A1 site per region, from docs/data-sources.md) ----------
 const REGIONS=[
- {id:'CAB',name:'Peak near Cabeus B',lat:-83.763,lon:-69.983,site:'PCB01'},
- {id:'DGR',name:'de Gerlache Rim 2',lat:-88.513,lon:-68.015,site:'dGR101'},
- {id:'HAW',name:'Haworth',lat:-86.768,lon:-20.514,site:'HW01'},
- {id:'MAL',name:'Malapert Massif',lat:-85.942,lon:-0.944,site:'MMA01'},
- {id:'MMP',name:'Mons Mouton Plateau',lat:-85.111,lon:26.710,site:'MMP01'},
- {id:'MMO',name:'Mons Mouton',lat:-85.416,lon:31.851,site:'MMO01'},
- {id:'NR1',name:'Nobile Rim 1',lat:-85.295,lon:36.917,site:'NR101'},
- {id:'NR2',name:'Nobile Rim 2',lat:-84.054,lon:56.481,site:'NR201'},
- {id:'SLP',name:'Slater Plain',lat:-87.478,lon:124.521,site:'SP01'},
+ {id:'CAB',short:'Cabeus B',name:'Peak near Cabeus B',lat:-83.763,lon:-69.983,site:'PCB01'},
+ {id:'DGR',short:'de Gerlache 2',name:'de Gerlache Rim 2',lat:-88.513,lon:-68.015,site:'dGR101'},
+ {id:'HAW',short:'Haworth',name:'Haworth',lat:-86.768,lon:-20.514,site:'HW01'},
+ {id:'MAL',short:'Malapert',name:'Malapert Massif',lat:-85.942,lon:-0.944,site:'MMA01'},
+ {id:'MMP',short:'Mouton Plateau',name:'Mons Mouton Plateau',lat:-85.111,lon:26.710,site:'MMP01'},
+ {id:'MMO',short:'Mons Mouton',name:'Mons Mouton',lat:-85.416,lon:31.851,site:'MMO01'},
+ {id:'NR1',short:'Nobile 1',name:'Nobile Rim 1',lat:-85.295,lon:36.917,site:'NR101'},
+ {id:'NR2',short:'Nobile 2',name:'Nobile Rim 2',lat:-84.054,lon:56.481,site:'NR201'},
+ {id:'SLP',short:'Slater',name:'Slater Plain',lat:-87.478,lon:124.521,site:'SP01'},
 ];
 let H0=new Date(Date.UTC(2025,0,1,0)); // real NR101 timeline window start
 const REAL=window.NR101_DATA||null;       // hourly timeline, NR101 only (atlas/export_web.py)
@@ -401,7 +403,9 @@ const off=document.createElement('canvas'); off.width=off.height=N;
 const octx=off.getContext('2d'); const img=octx.createImageData(N,N);
 const hgt=new Float32Array(N*N), gx=new Float32Array(N*N), gy=new Float32Array(N*N), alb=new Float32Array(N*N);
 function toMap(lat,lon){const r=(90+lat)/EXT*(N/2);return [N/2+r*Math.sin(lon*D2R), N/2-r*Math.cos(lon*D2R)];}
-(function build(){
+let procBuilt=false;
+function buildProc(){
+  if(procBuilt)return;procBuilt=true;
   const g=rng(4242);
   // value noise
   const G=64, grid=new Float32Array((G+1)*(G+1)).map(()=>g());
@@ -424,9 +428,14 @@ function toMap(lat,lon){const r=(90+lat)/EXT*(N/2);return [N/2+r*Math.sin(lon*D2
   // random craters, power-law sizes
   for(let i=0;i<900;i++){const R=0.8+Math.pow(g(),4)*20;crater(g()*N,g()*N,R,R*(0.18+g()*0.12));}
   for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){const i=y*N+x;gx[i]=(hgt[i+1]-hgt[i-1])*0.9;gy[i]=(hgt[i+N]-hgt[i-N])*0.9;}
-})();
+}
+// Real backdrop: LOLA average sunlight visibility (Mazarico et al. 2011, 120 m), resampled by atlas/export_backdrop.py to this same layout.
+// The procedural terrain above is only a fallback if the image cannot load.
+let realBd=null;
+{const im=new Image();im.decoding='async';im.onload=()=>{realBd=im;layout();};im.onerror=()=>{buildProc();shade();draw();};im.src='data/backdrop.webp';}
 let sunAz=200*D2R, autoLight=true;
 function shade(){
+  if(realBd||!procBuilt)return;
   const elev=9*D2R, lz=Math.sin(elev), ce=Math.cos(elev), lx=Math.sin(sunAz)*ce, ly=-Math.cos(sunAz)*ce;
   const d=img.data, ux=Math.sin(sunAz), uy=-Math.cos(sunAz), rise=Math.tan(elev)/1.8*2;
   for(let y=0;y<N;y++){for(let x=0;x<N;x++){const i=y*N+x;
@@ -443,8 +452,8 @@ let W=0,Hh=0,DPR=1,cx=0,cy=0,ppd=0;
 function layout(){
   DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; Hh=innerHeight;
   cv.width=W*DPR; cv.height=Hh*DPR;
-  if(W>900){cx=W*0.64;cy=Hh*0.70;ppd=Math.min(W,Hh)*0.58/6.2;}
-  else{cx=W*0.5;cy=Hh*0.46;ppd=Math.min(W,Hh*0.8)*0.5/6.0;}
+  if(W>900){cx=W*0.675;cy=Hh*0.70;ppd=Math.min(W,Hh)*0.52/6.2;}
+  else{cx=W*0.5;cy=Hh*0.46;ppd=Math.min(W*0.42,Hh*0.8*0.5)/6.0;}
   placeMarkers(); draw(); 
 }
 function project(lat,lon){const r=(90+lat)*ppd;return [cx+r*Math.sin(lon*D2R), cy-r*Math.cos(lon*D2R)];}
@@ -455,7 +464,8 @@ function draw(){
   const eg=ctx.createRadialGradient(cx,cy-EXT*ppd*1.1,0,cx,cy-EXT*ppd*1.1,EXT*ppd*1.4);
   eg.addColorStop(0,'rgba(120,170,220,.07)');eg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=eg;ctx.fillRect(0,0,W,Hh);
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const S=EXT*ppd; ctx.drawImage(off,cx-S,cy-S,2*S,2*S);
+  const S=EXT*ppd; ctx.drawImage(realBd||off,cx-S,cy-S,2*S,2*S);
+  {const ef=ctx.createRadialGradient(cx,cy,S*.72,cx,cy,S);ef.addColorStop(0,'rgba(5,6,7,0)');ef.addColorStop(1,'rgba(5,6,7,1)');ctx.fillStyle=ef;ctx.fillRect(cx-S-2,cy-S-2,2*S+4,2*S+4);}
   // graticule
   ctx.strokeStyle='rgba(169,220,255,.07)';ctx.lineWidth=1;
   for(const c of [2,4,6,8]){ctx.beginPath();ctx.arc(cx,cy,c*ppd,0,Math.PI*2);ctx.stroke();}
@@ -467,13 +477,17 @@ function draw(){
   vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.85)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,Hh);
   const lg=ctx.createLinearGradient(0,0,W*.55,0);lg.addColorStop(0,'rgba(5,6,7,.75)');lg.addColorStop(1,'rgba(5,6,7,0)');
   if(W>900){ctx.fillStyle=lg;ctx.fillRect(0,0,W*.55,Hh);}
-  $('#sunneedle').setAttribute('transform',`rotate(${(sunAz/D2R)%360} 22 22)`);
-  $('#sunlbl').textContent=`Illustrative lighting · Sun azimuth ${(((sunAz/D2R)%360)+360)%360|0}°`;
+  const az=(((sunAz/D2R)%360)+360)%360|0, tl=!autoLight;
+  $('#sunneedle').setAttribute('transform',`rotate(${az} 22 22)`);
+  if(realBd){$('#sunneedle').style.opacity=tl?1:0;
+    $('#sunlbl').textContent=tl?`Sun azimuth ${az}° · NR101 timeline hour (backdrop lighting is not re-rendered)`:'Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011';}
+  else $('#sunlbl').textContent=`Illustrative lighting · Sun azimuth ${az}°`;
 }
 let last=0;
 function loop(t){
-  if(autoLight && t-last>45){sunAz+= (t-last)/1000*D2R*3; last=t; shade(); draw();}
+  if(!realBd && procBuilt && autoLight && t-last>45){sunAz+= (t-last)/1000*D2R*3; last=t; shade(); draw();}
   else if(!autoLight && needRedraw){needRedraw=false;shade();draw();}
+  else if(realBd && needRedraw){needRedraw=false;draw();}
   if(autoLight===false) last=t;
   requestAnimationFrame(loop);
 }
@@ -482,11 +496,31 @@ let needRedraw=false;
 // ---------- markers ----------
 const mkWrap=$('#markers');
 REGIONS.forEach((r,i)=>{const el=document.createElement('button');el.className='mk';el.dataset.id=r.id;el.style.setProperty('--d',(i*0.4)+'s');
-  el.setAttribute('aria-label',r.name);el.innerHTML='<span class="halo"></span><span class="hit"></span><span class="dot"></span><span class="tag">'+r.name+'</span>';
+  el.setAttribute('aria-label',r.name);el.innerHTML='<span class="halo"></span><span class="hit"></span><span class="dot"></span><span class="tag"><span class="l">'+r.name+'</span><span class="s">'+(r.short||r.name)+'</span></span>';
   el.addEventListener('click',()=>openRegion(r.id));
   el.addEventListener('mouseenter',()=>{if(!sel)el.classList.add('sel')});el.addEventListener('mouseleave',()=>{if(sel!==r.id)el.classList.remove('sel')});
   mkWrap.appendChild(el);r.el=el;});
-function placeMarkers(){REGIONS.forEach(r=>{const[x,y]=project(r.lat,r.lon);r.el.style.left=x+'px';r.el.style.top=y+'px';r.el.classList.toggle('left',['CAB','DGR','HAW','MAL'].includes(r.id));r.el.classList.toggle('up',r.id==='MMO'||r.id==='MMP');r.el.classList.toggle('down',r.id==='NR1');});}
+function placeMarkers(){
+  const pts=REGIONS.map(r=>{const[x,y]=project(r.lat,r.lon);r.el.style.left=x+'px';r.el.style.top=y+'px';return{r,x,y};});
+  // collision-aware, viewport-clamped label placement: try preferred side, then the others; never leave the screen
+  const M=10,TOP=W>900?20:64,BOT=Hh-10,G=14,pref={CAB:'u',DGR:'l',HAW:'l',MAL:'l',MMO:'u',MMP:'u',NR1:'d'};
+  const placed=[],hit=(a,b)=>a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t;
+  const dots=pts.map(p=>({l:p.x-22,r:p.x+22,t:p.y-22,b:p.y+22}));
+  if(W>900){const hc=document.querySelector('.hero-copy').getBoundingClientRect();placed.push({l:hc.left-8,r:hc.right+8,t:hc.top-8,b:hc.bottom+8});} // keep labels off the hero copy on desktop
+  pts.forEach(p=>{const t=p.r.el.querySelector('.tag');const w=t.offsetWidth,h=t.offsetHeight;
+    const c={l:[p.x-G-w,p.y-h/2],r:[p.x+G,p.y-h/2],u:[p.x-w/2,p.y-G-h-4],d:[p.x-w/2,p.y+G+4],a:[p.x+8,p.y-G-h-2],b:[p.x-8-w,p.y-G-h-2],c:[p.x+8,p.y+G+2],e:[p.x-8-w,p.y+G+2],f:[p.x+G,p.y-h-20],g:[p.x+G,p.y+20],i:[p.x-G-w,p.y-h-20],j:[p.x-G-w,p.y+20]};
+    const order=[pref[p.r.id]||'r',...'rludabcefgij'.split('').filter(k=>k!==(pref[p.r.id]||'r'))];
+    let best=null,bs=1e9;
+    for(const k of order){let[x,y]=c[k];
+      const ox=Math.max(0,M-x)+Math.max(0,x+w-(W-M)),oy=Math.max(0,TOP-y)+Math.max(0,y+h-BOT);
+      const rc={l:x,r:x+w,t:y,b:y+h};
+      let col=0;placed.forEach(q=>{if(hit(rc,q))col++});dots.forEach((q,i)=>{if(i!==pts.indexOf(p)&&hit(rc,q))col++});
+      const sc=(ox+oy)*100+col*60+order.indexOf(k);
+      if(sc<bs){bs=sc;best={x,y,rc};} if(sc<13)break;}
+    // final clamp
+    let{x,y}=best;x=Math.min(Math.max(x,M),W-M-w);y=Math.min(Math.max(y,TOP),BOT-h);
+    t.style.left=(x-p.x)+'px';t.style.top=(y-p.y)+'px';placed.push({l:x,r:x+w,t:y,b:y+h});});
+}
 
 // ---------- region card ----------
 let sel=null, height=1, cur=null, hour=0;
@@ -506,7 +540,7 @@ const DEF={
  slope:{lab:'Slope',q:'Flat enough to land?',unit:'DEG · AT POINT',min:0,max:20,dec:1,suf:'°',def:'Slope at the 5 m pixel containing the point, with the Barker et al. RMS slope error',src:'LOLA 5 m site DEM · Barker et al. 2021',href:'https://pgda.gsfc.nasa.gov/products/78',cut:()=>cuts.on?{v:cuts.slope,t:'cut < '+cuts.slope+'°'}:null},
  sun:{lab:'Sunlight',q:'Lit enough to stay powered?',unit:'18.6-YR AVG',min:0,max:1,dec:2,suf:'',def:'18.6-year average fraction of hourly steps with any part of the Sun above the horizon (120 m map). Long-term average, not a particular week.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>cuts.on?{v:cuts.ill,t:'cut > '+cuts.ill.toFixed(2)}:null},
  earth:{lab:'Earth view',q:'In view of Earth?',unit:'18.6-YR AVG',min:0,max:100,dec:0,suf:'%',def:'18.6-year average, any part of the Earth disc above the horizon (120 m map). Disc visibility, not a link budget.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>null},
- cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM · <110 K',unitHTML:()=>'KM · &lt;'+Units.kHTML(110),min:0,max:15,dec:1,suf:'',def:'Distance to the nearest permanent-shadow pixel with Diviner summer max below '+Units.kText(110)+'. Proximity only, no ice volume.',src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',cut:()=>null}
+ cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM · <110 K',unitHTML:()=>'KM · &lt;110&nbsp;K<span class="conv">'+Units.kHTML(110).replace(/^.*?<span class="conv"> \u00b7 /,'').replace(/<\/span>$/,'')+'</span>',min:0,max:15,dec:1,suf:'',def:'Distance to the nearest permanent-shadow pixel with Diviner summer max below '+Units.kText(110)+'. Proximity only, no ice volume.',src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',cut:()=>null}
 };
 const CIRC=2*Math.PI*58, ARC=CIRC*0.75;
 const NA_WHY={slope:s=>s.q.slope_source,sun:()=>'The 75°S illumination map has no value at this point.',earth:()=>'The 75°S illumination map has no value at this point.',cold:()=>'No permanent-shadow pixel below '+Units.kText(110)+' was found within the search window.'};
@@ -554,7 +588,7 @@ function renderExtras(){
   ex.push(['Permanent shadow',q.permanent_shadow==null?'n/a':q.permanent_shadow?'Inside':'Outside','75°S illumination map, '+pl(q.permanent_shadow_pixel_label)+' pixel']);
   ex.push(['LOLA returns in pixel',q.lola_return_count==null?'n/a':String(Math.round(q.lola_return_count)),q.lola_return_count==null?'Not computed: no 5 m tile contains this point':q.interpolated_gap?'0 = slope here is interpolated':'Measured returns at the 5 m pixel']);
   ex.push(['Slope DEM',pl(q.slope_dem_label)||'none','LOLA product 78; the 20 m mosaic is not substituted']);
-  $('#extras').innerHTML=ex.map(e=>`<div class="extra"><span class="label">${e[0]}</span><b class="${e[1]==='n/a'||e[1]==='none'?'na':''}">${e[1]}</b>${e[2]}</div>`).join('');
+  $('#extras').innerHTML=ex.map(e=>`<div class="extra"><span class="label">${e[0]}</span><b class="${e[1]==='n/a'||e[1]==='none'?'na':''}">${e[1]}</b>${e[2]}</div>`).join('');stripConvDots($('#extras'));
 }
 function openRegion(id){
   const r=REGIONS.find(x=>x.id===id); if(!r)return; sel=id;
@@ -583,10 +617,10 @@ function openRegion(id){
   if(!cur.missing)renderDials();
   $('#sheet').classList.add('open'); $('#sheet').setAttribute('aria-hidden','false'); document.body.classList.add('sheet-open');
   closeLayers(true); setNav('atlas');
-  if(hasTL)requestAnimationFrame(()=>{sizeTL();setHour(hour);}); else {autoLight=true;stopPlay();}
+  if(hasTL)requestAnimationFrame(()=>{sizeTL();setHour(hour);}); else {autoLight=true;needRedraw=true;stopPlay();}
   history.replaceState(null,'','#region/'+id);
 }
-function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');autoLight=true;stopPlay();history.replaceState(null,'','#');}
+function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');autoLight=true;needRedraw=true;stopPlay();history.replaceState(null,'','#');}
 $('#close').onclick=closeRegion;
 
 // ---------- timeline ----------
@@ -661,12 +695,14 @@ function renderTable(){
     <td>${s.q.summer_max_temperature_k==null?na:Units.kHTML(s.q.summer_max_temperature_k)}</td>
     <td>${s.cold?s.cold.v.toFixed(1)+' km<small>±'+hs(s.cold).toFixed(2)+'</small>':na}</td>
     <td style="font-size:12.5px">${cut}</td></tr>`;}).join('');
-  $('#tbody').innerHTML=rows;
+  $('#tbody').innerHTML=rows;stripConvDots($('#tbody'));
   $$('#tbody tr').forEach(tr=>tr.onclick=()=>openRegion(tr.dataset.id));
 }
 
+// block-level temperature conversions carry a leading separator dot from units.js; drop it where it would start a line
+function stripConvDots(root){(root||document).querySelectorAll('.extra b .conv, td .conv').forEach(e=>{e.innerHTML=e.innerHTML.replace(/^\s*\u00b7\s*/,'');});}
 // ---------- init ----------
-$$("[data-kelvin]").forEach(e=>e.innerHTML=Units.kHTML(+e.dataset.kelvin));
+$$("[data-kelvin]").forEach(e=>e.innerHTML=Units.kHTML(+e.dataset.kelvin));stripConvDots(document);
 addEventListener('resize',()=>{layout();if(sel&&cur&&cur.series){sizeTL();setHour(hour);}segThumb();});
 layout(); shade(); draw(); segThumb(); syncCuts(); requestAnimationFrame(loop);
 const h=location.hash.slice(1);
