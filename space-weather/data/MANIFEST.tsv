@@ -1,0 +1,6 @@
+filename	url	fetched_utc	sha256	bytes
+g13_epead_cpflux_5m_20170901_20170930.csv	https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/avg/2017/09/goes13/csv/g13_epead_cpflux_5m_20170901_20170930.csv	2026-10-10T23:31:22Z	545872247b0ee1f0141e55541ae3788f37a180d7777ae4701425642132625d2c	3185412
+prf2193.pdf	https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/weekly_reports/PRFs_of_SGD/2017/09/prf2193.pdf	2026-10-10T23:31:22Z	605c182ebd73b3bfa78bb7d3d220f10430485b6d9aa4cd25366476774ad4cdbe	352497
+prf2194.pdf	https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/weekly_reports/PRFs_of_SGD/2017/09/prf2194.pdf	2026-10-10T23:31:22Z	3de0da49b4c9b0e74d52b22b83b205c8d514ead068c0519e1033d1cfd756ddb1	277685
+radlab_crater_d1d2_20170904_20170915.csv	https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=LRO&instrument=CRaTER-D1D2&timestamp%3E=2017-09-04T00:00:00&timestamp%3C2017-09-15T00:00:00&absorbed_dose_rate&format=csv	2026-10-10T23:31:22Z	5a0d52f93f258f5d614a3fe7cb9eebc99dd6fd4507424af3480415d6015a7a31	18162
+radlab_data_api_20240522.html	https://web.archive.org/web/20240522074550id_/https://visualization.osdr.nasa.gov/radlab/gui/data-api/	2026-10-10T23:31:22Z	66476efa8aa1c39938e9ea1d682c8a973b18c39dedc494b1b8652bff24b6d135	42540

@@ -1,28 +1,38 @@
 # Space weather, three audiences
 
-Not started. The lunar atlas is first.
+One archived storm, drawn from the files named in [data/MANIFEST.tsv](data/MANIFEST.tsv). The payloads stay in `data/raw/` and out of git.
 
 ## Question
 
 When a solar radiation storm is underway, what does the public record actually say for three different people: a crew beyond low Earth orbit, passengers and crew on a polar flight, and operators of an electrical grid?
 
-The project translates one storm into those three pictures. It does not write radiation-transport code. Dose numbers come from a named model or a named instrument, with the date and the product id beside them.
+## This storm
 
-## Public records already in the way
+September 2017, NOAA region 2673, from 2017-09-04T00:00:00Z until 2017-09-15T00:00:00Z.
 
-| Source | What it holds | Limit |
-| --- | --- | --- |
-| [NOAA SWPC](https://www.swpc.noaa.gov/) | Forecasts, alerts, GOES particle fluxes, geomagnetic indices. SWPC also provides decision support to NASA’s Space Radiation Analysis Group for Artemis II. | Written for operators. The Artemis support is not a public crew display. |
-| [PREDICCS](https://prediccs.sr.unh.edu/) | Earth–Moon–Mars dose and flux from the EMMREM framework, fed by near-real-time particle data. | The site is a data access point, not a plain-language comparison. |
-| [RadLab](https://visualization.osdr.nasa.gov/radlab) | Absorbed dose and flux from instruments, including the ISS and beyond low Earth orbit, with a public API. | Strong for recorded dose. It does not speak for the grid or for aviation. |
-| [NCEI SWPC archive](https://www.ncei.noaa.gov/products/space-weather/partners/swpc-products-and-data) | Retrospective GOES particles, reports, and model output. | The place to pick a past storm and freeze it. |
+| Series | File | Product | Unit |
+| --- | --- | --- | --- |
+| NOAA alerts | `prf2193.pdf`, `prf2194.pdf` | SWPC PRF 2193 and 2194, Alerts and Warnings Issued | pfu threshold written on each proton alert; geomagnetic K on the grid sentence |
+| GOES protons | `g13_epead_cpflux_5m_20170901_20170930.csv` | GOES-13 EPEAD ZPGT10E and ZPGT100E, corrected integral flux | p/(cm^2 s sr) |
+| Dose | `radlab_crater_d1d2_20170904_20170915.csv` | RadLab CRaTER-D1D2 absorbed dose rate | uGy/hour, the `&mu;Gy/hour` unit in `radlab_data_api_20240522.html` |
 
-## Shape, when this folder becomes active
+The three sentences use thresholds those audiences already publish:
 
-1. Pick one archived storm with a NOAA alert, a GOES proton record, and a PREDICCS or RadLab dose product that covers the same days.
-2. Draw the three series on one time axis. Label units. Do not convert a flux into a dose inside this project.
-3. Write the sentence each audience can check: what changed, for how long, against which threshold that audience already publishes (NASA flight rules stay cited, not reinvented; aviation and grid thresholds likewise).
+- Crew beyond low Earth orbit: NASA SRAG's energetic solar particle event, >100 MeV integral flux above 1 pfu (AES-CHP-SW-002, 31 December 2020).
+- Polar flight: NOAA's S2 solar radiation storm, 10^2 pfu of >=10 MeV protons.
+- Grid operators: NOAA's G3 geomagnetic storm, Kp = 7.
 
-## Standing constraint
+Dose on the figure is the CRaTER-D1D2 column copied from the RadLab file. Dose was not computed from flux.
 
-A wrong dose is worse than a rough map. If a number cannot be traced to a file, it does not go on the figure.
+## Regenerate
+
+From this directory, with Python 3.14 (the standard library is enough; `python` may be absent from `PATH`):
+
+```bash
+/usr/local/opt/python@3.14/bin/python3.14 -m weather
+/usr/local/opt/python@3.14/bin/python3.14 -m unittest tests.test_storm
+```
+
+The entry point reads only the local files above and writes `output/september-2017.png` plus the three sentences on stdout. Two runs print the same text. The PNG carries that method note in a `tEXt` chunk named `method`.
+
+A sample with no time, value, unit, product id, or source file is left off the figure.
