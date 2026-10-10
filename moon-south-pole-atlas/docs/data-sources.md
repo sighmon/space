@@ -14,11 +14,25 @@ This is the landing layer, and the confidence mask.
 
 | Product | What it is | Where |
 | --- | --- | --- |
-| LOLA 5 m/pixel site DEMs | Height, slope (degrees), total height RMS error, slope RMS error, LOLA return count, 100 elevation clones | [PGDA product 78](https://pgda.gsfc.nasa.gov/products/78), files under [LOLA_5mpp](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/). Nobile Rim 1 is **Site 06**. The index page lists only some sites; Site 06, Haworth, and DM2 (Nobile Rim 2) are on disk anyway. Slope for the first map: [Site06_final_adj_5mpp_slp.tif](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_slp.tif) (about 64 MB). Same folder: `*_surf.tif`, `*_ldec.tif`, `*_toterr.tif`, `*_slperr.tif`. |
+| LOLA 5 m/pixel site DEMs | Height, slope (degrees), total height RMS error, slope RMS error, LOLA return count, 100 elevation clones | [PGDA product 78](https://pgda.gsfc.nasa.gov/products/78), files under [LOLA_5mpp](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/). Nobile Rim 1 is **Site 06**. The index page lists only some sites; Site 06, Haworth, DM2, Site 20, Site 23, and SL2 answer anyway. Slope for the first map: [Site06_final_adj_5mpp_slp.tif](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_slp.tif) (about 64 MB). Same folder: `*_surf.tif`, `*_ldec.tif`, `*_toterr.tif`, `*_slperr.tif`. |
 | LOLA 5 m/pixel mosaic, 87°S–90°S | Height, hillshade, slope, return count. Does **not** cover Nobile Rim 1, which is near 85°S. | [PGDA product 81](https://pgda.gsfc.nasa.gov/products/81) |
 | LOLA 20 m/pixel adjusted DEM, 80°S–90°S | Regional context: height, count, roughness, PSR map | [PGDA product 90](https://pgda.gsfc.nasa.gov/products/90). Cite Barker et al. 2023, PSJ, [10.3847/PSJ/acf3e1](https://doi.org/10.3847/PSJ/acf3e1). Data DOI [10.60903/gsfcpgda-lola-spole](https://doi.org/10.60903/gsfcpgda-lola-spole). |
 
 Cite the site DEMs as Barker et al. 2021, Planetary and Space Science 203, 105119, [10.1016/j.pss.2020.105119](https://doi.org/10.1016/j.pss.2020.105119). Reported typical errors inside the regions of interest: median RMS height about 0.3–0.5 m, median RMS slope about 1.5–2.5°. Error grows with the gap between LOLA tracks. The return-count map is the confidence mask. A smooth patch with a low count is interpolated, not measured.
+
+The nine-region comparison uses one point from Wueller et al. 2026, JGR Planets, [10.1029/2025JE009434](https://doi.org/10.1029/2025JE009434), Table A1 (the first listed site of each 2024 region). Slope is read only from the product-78 tile that contains that point.
+
+| Region | Point | Longitude, latitude | Slope tile |
+| --- | --- | --- | --- |
+| Peak near Cabeus B | PCB01 | 69.983°W, 83.763°S | No product-78 file. Slope missing. |
+| Haworth | HW01 | 20.514°W, 86.768°S | Haworth |
+| Malapert Massif | MMA01 | 0.944°W, 85.942°S | Site 23 |
+| Mons Mouton Plateau | MMP01 | 26.710°E, 85.111°S | Site 20 does not contain this point. Slope missing. |
+| Mons Mouton | MMO01 | 31.851°E, 85.416°S | Site 20 (Leibnitz beta), not a plateau DEM |
+| Nobile Rim 1 | NR101 | 36.917°E, 85.295°S | Site 06 |
+| Nobile Rim 2 | NR201 | 56.481°E, 84.054°S | DM2 |
+| de Gerlache Rim 2 | dGR101 | 68.015°W, 88.513°S | SL2, not Site 11 |
+| Slater Plain | SP01 | 124.521°E, 87.478°S | No product-78 file. Slope missing. |
 
 The horizon timeline reads [Site06_final_adj_5mpp_surf.tif](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif), the elevation grid from that same 5 m product. It uses that file's own georeferencing. It does not rebuild height from the slope grid, and it does not use the illumination label origin.
 

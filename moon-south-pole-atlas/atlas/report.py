@@ -10,6 +10,7 @@ import rasterio
 
 from atlas.frame import assess_embedded_crs, illumination_transform
 from atlas.load import DIVINER_NAME, SITE06_FILES
+from atlas.regions import slope_raster_records
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
@@ -30,6 +31,7 @@ RASTERS = [
         "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_ldec.tif",
         5.0,
     ),
+    *slope_raster_records(),
     (
         "AVGVISIB_75S_120M_201608.JP2",
         "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/JP2/AVGVISIB_75S_120M_201608.JP2",
@@ -151,6 +153,11 @@ def write_georef(path: Path | None = None) -> Path:
             "",
             "Horizon masks for the timed Sun and Earth series use Site06_final_adj_5mpp_surf.tif. "
             "That grid's own georeferencing is the one above. The illumination label origin is not used.",
+            "",
+            "The nine-region comparison samples one published point on each additional product-78 tile. "
+            "A point that falls outside a tile, or a region with no product-78 file, has no slope value from that file. "
+            "Those tiles are not resampled onto 5 m from a coarser mosaic. "
+            "Illumination and Diviner stay on the pixels measured above.",
             "",
         ]
     )

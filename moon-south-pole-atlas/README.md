@@ -57,3 +57,17 @@ python -m atlas.timeline --lat -85.295 --lon 36.917 --png output/nobile-rim-1-ti
 ```
 
 The ephemeris is JPL DE421 in the MOON_ME frame. Earth visibility is still disc visibility, not a link budget. Nothing in the output is a combined score.
+
+## Run the nine-region comparison
+
+Months 5–6 apply the same five fields at one published point in each of the nine October 2024 regions. The points are the first Wueller et al. 2026 Table A1 site in each region (NR101 stays 36.917°E, 85.295°S). The rows are not a ranking. Sunlight and Earth are the 18.6-year averages, not the NR101 hourly timeline. Where product 78 has no 5 m tile that contains the point, slope, slope RMS, and the LOLA return count are missing.
+
+```
+python -m atlas.regions --png output/nine-regions.png
+```
+
+The figure's method note states the south-polar frame, the sources, the nine coordinates, and four caveats: cuts are not flight rules, Earth visibility is not a radio link budget, ice is not a volume, and there is no single score.
+
+```
+python -m unittest tests.test_query tests.test_horizon tests.test_regions
+```

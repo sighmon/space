@@ -8,7 +8,7 @@ The first deliverable is a static sheet for Nobile Rim 1. A reader should be abl
 4. Summer maximum temperature, in kelvin, and whether the pixel is inside modeled permanent shadow.
 5. How the pixel was measured: LOLA returns in the pixel, or an interpolated gap.
 
-The sheet is a comparison tool. It does not rank Nobile Rim 1 against the other eight until the same five numbers exist for them.
+The sheet is a comparison tool. The nine-region comparison now reports the same five numbers at one published point in each region. It still does not rank them.
 
 ## Cuts we will draw, and where they come from
 

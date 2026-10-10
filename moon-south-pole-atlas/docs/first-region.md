@@ -42,3 +42,5 @@ An LROC NAC mosaic that covers Nobile Rim 1 together with Mons Mouton spans abou
 | 5–9 | Haworth, Malapert Massif, de Gerlache Rim 2, Slater Plain, Peak near Cabeus B | Same rubric, after the method has survived the first four. |
 
 Malapert Massif matters later because Earth stays high there. de Gerlache Rim 2 matters because it is closer to the pole and the nights are harsher. They are checks on the rubric, not the place to discover bugs in the projection.
+
+The nine-region comparison uses one Wueller et al. 2026 Table A1 point per region, the first listed site, the same choice as NR101. It does not rank the nine. A region with no product-78 tile under that point keeps slope missing.
