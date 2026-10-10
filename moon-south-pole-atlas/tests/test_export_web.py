@@ -102,6 +102,36 @@ class CommittedWebDataTest(unittest.TestCase):
                     "distance_to_cold_shadow_m"):
             self.assertAlmostEqual(row[key], nr[key], places=6)
 
+    def test_play_button_is_fixed_size_and_never_transformed(self):
+        import re
+
+        html = (WEB / "index.html").read_text()
+        rule = re.search(r"\.play\{[^}]*\}", html).group(0)
+        self.assertIn("width:38px", rule)
+        self.assertIn("height:38px", rule)
+        self.assertIn("flex:none", rule)
+        for m in re.finditer(r"\.play[^{,]*(?::active|:hover|:focus[^{,]*)?\{([^}]*)\}", html):
+            self.assertNotIn("scale", m.group(1))
+            self.assertNotIn("translate", m.group(1))
+            self.assertNotRegex(m.group(1), r"transform:(?!none)")
+        self.assertRegex(html, r"\.rate\{[^}]*width:\d+px")  # label width cannot change with Playing/Paused
+
+    def test_home_and_card_share_one_play_state(self):
+        html = (WEB / "index.html").read_text()
+        self.assertEqual(html.count('class="play js-play"'), 2)  # home control and card control
+        self.assertIn('id="homectl"', html)
+        self.assertIn("matchMedia('(prefers-reduced-motion: reduce)')", html)
+        self.assertIn("setPlaying(!(REDUCED||qs.has('paused')))", html)
+        self.assertIn("window.SUN_DATA", html)
+        self.assertEqual(html.count("function setPlaying("), 1)
+
+    def test_page_labels_every_zoom_source_and_no_nr101_only_claims(self):
+        html = (WEB / "index.html").read_text()
+        for needle in ("source_short", "source_pixel_m", "Real terrain ·", "LDEM_80S_20MPP_ADJ"):
+            self.assertIn(needle, html)
+        for stale in ("NR101 only", "only Site 06 (Nobile Rim 1) has been downloaded"):
+            self.assertNotIn(stale, html)
+
     def test_page_has_no_example_data_generator(self):
         html = (WEB / "index.html").read_text()
         for needle in ("horizonFn", "EXNOTE", "14-day means", "placeholder generated"):
