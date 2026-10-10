@@ -20,7 +20,7 @@ The three sentences use thresholds those audiences already publish:
 
 - Crew beyond low Earth orbit: NASA SRAG's energetic solar particle event, >100 MeV integral flux above 1 pfu (AES-CHP-SW-002, 31 December 2020).
 - Polar flight: NOAA's S2 solar radiation storm, 10^2 pfu of >=10 MeV protons.
-- Grid operators: NOAA's G3 geomagnetic storm, Kp = 7.
+- Grid operators: NOAA's G3 geomagnetic storm, Kp = 7. The grid sentence lists issued K alerts at or above 7, and it names the longest K>=7 warning as that warning's valid period. It does not treat the warning as a stretch of observed K.
 
 Dose on the figure is the CRaTER-D1D2 column copied from the RadLab file. Dose was not computed from flux.
 

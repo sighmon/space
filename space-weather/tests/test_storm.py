@@ -7,7 +7,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from weather.assemble import DOSE_NOT_FROM_FLUX, WINDOW_END, WINDOW_START, assemble
-from weather.figure import read_method, render
+from weather.figure import Canvas, read_method, render
+from weather.font8x8 import FONT
 from weather.parse import Alert, Point, dose_unit, parse_alert_pdf, parse_dose, parse_goes, traced_point
 from weather.storm import ALERT_NAMES, DOSE_NAME, GOES_NAME, RAW, UNIT_NAME, build_report
 
@@ -27,8 +28,11 @@ class AssemblyTests(unittest.TestCase):
             return Point(start + timedelta(minutes=minutes), value, unit, product, source)
 
         alerts = [
-            Alert("proton", start + timedelta(minutes=10), None, 10.0, ">=", "10MeV", "pfu", "SWPC PRF 0001", "alert.pdf"),
-            Alert("geomagnetic", start + timedelta(hours=1), start + timedelta(hours=3), 7.0, ">=", "K", "K", "SWPC PRF 0001", "alert.pdf"),
+            Alert("proton", start + timedelta(minutes=10), None, 10.0, ">=", "10MeV", "pfu", "SWPC PRF 0001", "alert.pdf", "alert"),
+            Alert("geomagnetic", start + timedelta(hours=1), start + timedelta(hours=3), 7.0, ">=", "K", "K", "SWPC PRF 0001", "alert.pdf", "extended warning"),
+            Alert("geomagnetic", start + timedelta(minutes=70), None, 8.0, "=", "K", "K", "SWPC PRF 0001", "alert.pdf", "alert"),
+            Alert("geomagnetic", start + timedelta(hours=2), None, 5.0, "=", "K", "K", "SWPC PRF 0001", "alert.pdf", "alert"),
+            Alert("geomagnetic", start + timedelta(minutes=150), None, 7.0, "=", "K", "K", "SWPC PRF 0001", "alert.pdf", "alert"),
         ]
         gt10 = [
             at(0, 50.0, "GOES-13 EPEAD ZPGT10E", "p/(cm^2 s sr)", "goes.csv"),
@@ -66,8 +70,20 @@ class AssemblyTests(unittest.TestCase):
         self.assertEqual(len(report.sentences), 3)
         self.assertIn("1 pfu", report.sentences[0])
         self.assertIn("100 pfu", report.sentences[1])
-        self.assertIn("Kp = 7", report.sentences[2])
-        self.assertIn("2 hours", report.sentences[2])
+        grid = report.sentences[2]
+        self.assertIn("Kp = 7", grid)
+        self.assertIn("2 hours", grid)
+        self.assertIn("issued-alert times, not a continuous interval", grid)
+        self.assertIn("extended warning valid from", grid)
+        self.assertIn("not an observed stretch of K at or above 7", grid)
+        self.assertNotIn("was at or above", grid)
+        self.assertIn(f"{_iso(start + timedelta(minutes=70))} (K = 8)", grid)
+        self.assertIn(f"{_iso(start + timedelta(hours=2))} (K = 5)", grid)
+        self.assertIn(f"{_iso(start + timedelta(minutes=150))} (K = 7)", grid)
+        self.assertIn(
+            f"valid from {_iso(start + timedelta(hours=1))} to {_iso(start + timedelta(hours=3))}",
+            grid,
+        )
         self.assertIn(DOSE_NOT_FROM_FLUX, report.text)
         self.assertIn(report.method, report.text)
         zeroed = assemble(
@@ -127,10 +143,54 @@ class AssemblyTests(unittest.TestCase):
             self.assertIn("2017-09-04T00:00:00Z .. 2017-09-15T00:00:00Z", sentence)
         self.assertIn("1 pfu", report.sentences[0])
         self.assertIn("100 pfu", report.sentences[1])
-        self.assertIn("Kp = 7", report.sentences[2])
-        self.assertIn("2017-09-07T23:00:00Z", report.sentences[2])
-        self.assertIn("2017-09-08T21:00:00Z", report.sentences[2])
-        self.assertLess(report.sentences[2].index("2017-09-07T23:00:00Z"), report.sentences[2].index("2017-09-08T21:00:00Z"))
+        grid = report.sentences[2]
+        self.assertIn("Kp = 7", grid)
+        self.assertIn("issued-alert times, not a continuous interval", grid)
+        self.assertIn("not an observed stretch of K at or above 7", grid)
+        self.assertNotIn("was at or above", grid)
+        observed = [
+            alert for alert in alerts
+            if alert.kind == "geomagnetic" and alert.role == "alert" and alert.end is None
+            and alert.value is not None and alert.value >= 7
+            and alert.start is not None and WINDOW_START <= alert.start < WINDOW_END
+        ]
+        self.assertGreater(len(observed), 0)
+        self.assertIn(f"{len(observed)} geomagnetic K alerts at or above 7", grid)
+        for alert in observed:
+            self.assertIn(f"{_iso(alert.start)} (K = {int(alert.value)})", grid)
+        warnings = [
+            alert for alert in alerts
+            if alert.kind == "geomagnetic" and alert.role in ("warning", "extended warning")
+            and alert.value is not None and alert.value >= 7
+            and alert.start is not None and alert.end is not None and alert.end > alert.start
+            and WINDOW_START <= alert.start < WINDOW_END and WINDOW_START <= alert.end <= WINDOW_END
+        ]
+        warning = min(
+            warnings,
+            key=lambda alert: (
+                -(alert.end - alert.start).total_seconds(),
+                alert.start,
+                -alert.value,
+                alert.product_id,
+                alert.source_file,
+            ),
+        )
+        self.assertIn(
+            f"{warning.role} valid from {_iso(warning.start)} to {_iso(warning.end)}",
+            grid,
+        )
+        below = [
+            alert for alert in alerts
+            if alert.kind == "geomagnetic" and alert.role == "alert" and alert.end is None
+            and alert.value is not None and alert.value < 7
+            and alert.start is not None and warning.start < alert.start < warning.end
+            and alert.source_file == warning.source_file
+        ]
+        self.assertGreater(len(below), 0)
+        self.assertIn("records K below 7 inside that valid period", grid)
+        for alert in below:
+            self.assertIn(f"{_iso(alert.start)} (K = {int(alert.value)})", grid)
+        self.assertLess(grid.index("issued-alert times"), grid.index("valid period"))
         joined = "\n".join(report.sentences)
         self.assertNotIn("99999", joined)
         render(report, OUT)
@@ -142,6 +202,20 @@ class AssemblyTests(unittest.TestCase):
             self.assertEqual(OUT.read_bytes(), first)
         finally:
             OUT.unlink(missing_ok=True)
+
+    def test_font_draws_lsb_on_the_left(self):
+        canvas = Canvas(16, 8)
+        canvas.fill((255, 255, 255))
+        canvas.text(0, 0, "S", (0, 0, 0), 1)
+        glyph = FONT[ord("S")]
+        for row, bits in enumerate(glyph):
+            for col in range(8):
+                dark = canvas.pixels[(row * canvas.width + col) * 3] < 128
+                self.assertEqual(dark, bool(bits & (1 << col)))
+
+
+def _iso(moment) -> str:
+    return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 if __name__ == "__main__":

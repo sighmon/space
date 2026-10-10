@@ -223,7 +223,7 @@ class Canvas:
             glyph = FONT[ord(character)] if 0 <= ord(character) < 128 else FONT[32]
             for row, bits in enumerate(glyph):
                 for col in range(8):
-                    if bits & (1 << (7 - col)):
+                    if bits & (1 << col):
                         for sy in range(scale):
                             for sx in range(scale):
                                 self.set(cursor + col * scale + sx, y + row * scale + sy, color)

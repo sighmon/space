@@ -16,6 +16,7 @@ _RANGE = re.compile(r"(\d{2})/(\d{4})\s*-\s*(?:(\d{2})/)?(\d{4})")
 _MOMENT = re.compile(r"(\d{2})/(\d{4})")
 _PROTON = re.compile(r"(>=|>)\s*(\d+)\s*pfu", re.IGNORECASE)
 _KINDEX = re.compile(r"K\s*(>=|=)\s*(\d)(?!\d)")
+_ROLE = re.compile(r"(EXTENDED WARNING|WARNING|ALERT|SUMMARY|WATCH|CANCELLATION)\s*:")
 _PRF = re.compile(r"SWPC PRF (\d{4})")
 _YEAR = re.compile(r"September 2017")
 
@@ -40,6 +41,7 @@ class Alert:
     unit: str
     product_id: str
     source_file: str
+    role: str = ""
 
 
 def traced_point(point: Point) -> bool:
@@ -91,6 +93,7 @@ def parse_alert_pdf(data: bytes, source_file: str) -> list[Alert]:
 
 def _alerts_in_block(block: str, product_id: str, source_file: str) -> list[Alert]:
     start, end = _event_span(block)
+    role = _role(block)
     found: list[Alert] = []
     if "Proton" in block and "MeV" in block:
         channel = "100MeV" if "100MeV" in block.replace(" ", "") or "100 MeV" in block else ""
@@ -111,6 +114,7 @@ def _alerts_in_block(block: str, product_id: str, source_file: str) -> list[Aler
                     unit="pfu",
                     product_id=product_id,
                     source_file=source_file,
+                    role=role,
                 )
             )
     kmatch = _KINDEX.search(block)
@@ -126,9 +130,15 @@ def _alerts_in_block(block: str, product_id: str, source_file: str) -> list[Aler
                 unit="K",
                 product_id=product_id,
                 source_file=source_file,
+                role=role,
             )
         )
     return found
+
+
+def _role(block: str) -> str:
+    match = _ROLE.search(block)
+    return match.group(1).lower() if match else ""
 
 
 def _event_span(block: str) -> tuple[datetime | None, datetime | None]:

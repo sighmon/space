@@ -60,14 +60,14 @@ def assemble(
 ) -> Report:
     kept_alerts = [item for item in alerts if traced_alert(item) and _alert_in_window(item, window_start, window_end)]
     proton_alerts = tuple(sorted((item for item in kept_alerts if item.kind == "proton"), key=_alert_key))
-    grid_alert = _grid_alert(kept_alerts, window_start, window_end)
+    grid_alert = _grid_warning(kept_alerts, window_start, window_end)
     gt10 = _keep_points(proton_gt10, window_start, window_end)
     gt100 = _keep_points(proton_gt100, window_start, window_end)
     kept_dose = _keep_points(dose, window_start, window_end)
     sentences = (
         _crew_sentence(gt100, window_start, window_end, kept_dose),
         _polar_sentence(gt10, window_start, window_end),
-        _grid_sentence(grid_alert, window_start, window_end),
+        _grid_sentence(kept_alerts, window_start, window_end),
     )
     method = _method(storm, window_start, window_end, active_region, proton_alerts, gt10, gt100, kept_dose)
     text = _text(storm, window_start, window_end, active_region, proton_alerts, gt10, gt100, kept_dose, sentences, method)
@@ -106,22 +106,36 @@ def _alert_key(alert: Alert) -> tuple:
     return (alert.start, alert.end or alert.start, alert.channel, alert.value, alert.product_id, alert.source_file)
 
 
-def _grid_alert(alerts: list[Alert], start: datetime, end: datetime) -> Alert | None:
+def _grid_warning(alerts: list[Alert], start: datetime, end: datetime) -> Alert | None:
     candidates = []
     for alert in alerts:
-        if alert.kind != "geomagnetic" or alert.end is None or alert.value is None:
+        if alert.kind != "geomagnetic" or alert.role not in ("warning", "extended warning"):
             continue
-        if alert.value < GRID_THRESHOLD_K:
+        if alert.end is None or alert.start is None or alert.value is None:
+            continue
+        if alert.value < GRID_THRESHOLD_K or alert.end <= alert.start:
             continue
         if not (start <= alert.start < end and start <= alert.end <= end):
-            continue
-        if alert.end <= alert.start:
             continue
         candidates.append(alert)
     if not candidates:
         return None
     candidates.sort(key=lambda alert: (-(alert.end - alert.start).total_seconds(), alert.start, -alert.value, alert.product_id, alert.source_file))
     return candidates[0]
+
+
+def _observed_grid(alerts: list[Alert], start: datetime, end: datetime) -> list[Alert]:
+    observed = []
+    for alert in alerts:
+        if alert.kind != "geomagnetic" or alert.role != "alert" or alert.end is not None:
+            continue
+        if alert.start is None or alert.value is None or alert.value < GRID_THRESHOLD_K:
+            continue
+        if not start <= alert.start < end:
+            continue
+        observed.append(alert)
+    observed.sort(key=lambda alert: (alert.start, -alert.value, alert.product_id, alert.source_file))
+    return observed
 
 
 def _crew_sentence(points: tuple[Point, ...], start: datetime, end: datetime, dose: tuple[Point, ...]) -> str:
@@ -151,21 +165,64 @@ def _polar_sentence(points: tuple[Point, ...], start: datetime, end: datetime) -
     )
 
 
-def _grid_sentence(alert: Alert | None, start: datetime, end: datetime) -> str:
+def _grid_sentence(alerts: list[Alert], start: datetime, end: datetime) -> str:
     window = _span(start, end)
-    if alert is None or alert.start is None or alert.end is None or alert.value is None:
+    observed = _observed_grid(alerts, start, end)
+    warning = _grid_warning(alerts, start, end)
+    if not observed and warning is None:
         return (
-            f"For electrical-grid operators, no geomagnetic K alert at or above "
-            f"{_k_text(GRID_THRESHOLD_K)} with both ends inside the storm window {window} "
+            f"For electrical-grid operators, no issued geomagnetic K alert at or above "
+            f"{_k_text(GRID_THRESHOLD_K)} inside the storm window {window} "
             f"is in the frozen alert files. {GRID_CITATION}."
         )
-    duration = _elapsed(alert.start, alert.end)
-    comparator = "at or above" if alert.comparator == ">=" else "equal to"
+    clauses: list[str] = []
+    if observed:
+        clauses.append(_observed_grid_clause(observed, window))
+    if warning is not None:
+        clauses.append(_warning_clause(warning, alerts))
+    clauses.append(f"{GRID_CITATION}.")
+    return "For electrical-grid operators, " + " ".join(clauses)
+
+
+def _observed_grid_clause(observed: list[Alert], window: str) -> str:
+    lead = observed[0]
+    times = ", ".join(f"{_iso(alert.start)} (K = {_k_text(alert.value)})" for alert in observed)
     return (
-        f"For electrical-grid operators, {alert.product_id} in {alert.source_file} "
-        f"warns that the geomagnetic K-index was {comparator} {_k_text(alert.value)} "
-        f"from {_iso(alert.start)} to {_iso(alert.end)} ({duration}), inside the storm window {window}. "
-        f"{GRID_CITATION}."
+        f"{lead.product_id} in {lead.source_file} records {len(observed)} geomagnetic K alerts "
+        f"at or above {_k_text(GRID_THRESHOLD_K)} inside the storm window {window}: {times}. "
+        f"These are issued-alert times, not a continuous interval."
+    )
+
+
+def _k_below_inside(alerts: list[Alert], warning: Alert) -> list[Alert]:
+    below = []
+    for alert in alerts:
+        if alert.kind != "geomagnetic" or alert.role != "alert" or alert.end is not None:
+            continue
+        if alert.source_file != warning.source_file or alert.start is None or alert.value is None:
+            continue
+        if alert.value >= GRID_THRESHOLD_K:
+            continue
+        if warning.start < alert.start < warning.end:
+            below.append(alert)
+    below.sort(key=lambda alert: (alert.start, alert.value, alert.product_id))
+    return below
+
+
+def _warning_clause(alert: Alert, alerts: list[Alert]) -> str:
+    comparator = "at or above" if alert.comparator == ">=" else "equal to"
+    article = "an" if alert.role[:1] in "aeiou" else "a"
+    below = _k_below_inside(alerts, alert)
+    listed = ", ".join(f"{_iso(item.start)} (K = {_k_text(item.value)})" for item in below)
+    recorded = ""
+    if listed:
+        recorded = f" The same file records K below 7 inside that valid period: {listed}."
+    return (
+        f"{alert.product_id} in {alert.source_file} gives {article} {alert.role} valid "
+        f"from {_iso(alert.start)} to {_iso(alert.end)} ({_elapsed(alert.start, alert.end)}) "
+        f"for K {comparator} {_k_text(alert.value)}. "
+        f"That span is the warning's valid period, not an observed stretch of K at or above "
+        f"{_k_text(GRID_THRESHOLD_K)}.{recorded}"
     )
 
 
