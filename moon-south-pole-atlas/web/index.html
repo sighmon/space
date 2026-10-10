@@ -84,6 +84,12 @@ body.sheet-open .foot{opacity:0}
 .example-note.real-note{background:rgba(143,227,176,.07);border-color:rgba(143,227,176,.28);color:#cfeedd}
 .real-note code,.box code{font-family:ui-monospace,monospace;font-size:11.5px;color:#a9dcff}
 
+.extras{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.extra{border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:12px;color:var(--mute);line-height:1.45}
+.extra b{display:block;font-weight:300;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.extra .label{font-size:10px}
+.na{color:#ffc27a}
+.dial.missing .ring{opacity:.45}
 .dials{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
 .dial{border:1px solid var(--line);border-radius:18px;padding:14px 16px 12px;background:rgba(255,255,255,.015);opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .7s var(--spring),border-color .3s}
 .sheet.open .dial{opacity:1;transform:none}
@@ -132,7 +138,7 @@ body.sheet-open .foot{opacity:0}
 .disclaim{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.55}
 
 /* ---------- layers (method / compare) ---------- */
-.layer{position:fixed;left:50%;bottom:0;width:min(1060px,100vw);height:calc(100vh - 70px);transform:translate(-50%,102%);z-index:20;transition:transform .8s var(--spring)}
+.layer{position:fixed;left:50%;bottom:0;width:min(1180px,100vw);height:calc(100vh - 70px);transform:translate(-50%,102%);z-index:20;transition:transform .8s var(--spring)}
 .layer.open{transform:translate(-50%,0)}
 .layer .panel{height:100%;background:var(--glass2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;overflow:auto;padding:20px 40px 50px;box-shadow:0 -40px 120px rgba(0,0,0,.7)}
 .layer h2{font-size:30px;font-weight:300;letter-spacing:-.02em}
@@ -162,9 +168,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .nots span{font-size:12.5px;padding:7px 12px;border-radius:999px;border:1px solid var(--line2);color:var(--mute)}
 
 table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
-th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500;text-align:right;padding:10px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:500;text-align:right;padding:10px 9px;border-bottom:1px solid var(--line2);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
-td{padding:14px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:300;white-space:nowrap}
+td{padding:12px 9px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:300;white-space:nowrap}
 td small{color:var(--faint);font-size:11.5px;margin-left:4px}
 tbody tr{cursor:pointer;transition:background .25s}
 tbody tr:hover{background:rgba(169,220,255,.04)}
@@ -181,7 +187,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .hero-copy{left:18px;right:18px;top:auto;bottom:90px;max-width:none}
   .hero-copy h1{font-size:34px}
   .qs,.hero-copy p{display:none}
-  .dials{grid-template-columns:1fr 1fr}
+  .dials,.extras{grid-template-columns:1fr 1fr}
   .sheet .panel{padding:16px 18px 22px}
   .layer .panel{padding:16px 20px 40px}
   .grid2{grid-template-columns:1fr}
@@ -193,7 +199,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .nav .long{display:none}
   .brand .label{max-width:150px;line-height:1.4}
 }
-@media (max-width:520px){.dials{grid-template-columns:1fr}.ring{width:116px;height:116px}.nav button{padding:7px 11px}}
+@media (max-width:520px){.dials,.extras{grid-template-columns:1fr}.ring{width:116px;height:116px}.nav button{padding:7px 11px}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
 </style>
 </head>
@@ -211,14 +217,14 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 </header>
 
 <section class="hero-copy">
-  <h1>Nine regions.<br>One stated week.<br><em>Every number sourced.</em></h1>
-  <p>A public, cited comparison of the nine Artemis&nbsp;III candidate regions named by NASA in October 2024. For a patch of ground in a given week, four questions, each answered with an uncertainty range and a link to its archive.</p>
+  <h1>Nine regions.<br>One method.<br><em>Every number sourced.</em></h1>
+  <p>A public, cited comparison of the nine Artemis&nbsp;III candidate regions named by NASA in October 2024. At one published point per region, four questions, each answered from the same maps with the same measures, an uncertainty where one is published, and a link to its archive. Where a map does not cover a point, the readout says so instead of guessing.</p>
   <div class="qs"><div>Flat enough to land?</div><div>Lit enough to stay powered?</div><div>In view of Earth?</div><div>Near ground cold enough to hold ice?</div></div>
   <div class="hint">Select a region marker to open its card</div>
 </section>
 
 <footer class="foot">
-  <div class="chip"><i></i>Nobile Rim 1 (NR101): real values · other eight regions: example placeholders</div>
+  <div class="chip"><i></i>Computed values for all nine points · slope missing for 3 regions (no 5 m DEM) · hourly timeline for NR101 only</div>
   <div class="compass"><span id="sunlbl">Illustrative lighting · Sun azimuth —</span>
     <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="rgba(235,242,247,.18)"/><text x="22" y="9" fill="rgba(235,242,247,.5)" font-size="6" text-anchor="middle" font-family="sans-serif">0°</text><g id="sunneedle"><line x1="22" y1="22" x2="22" y2="6" stroke="#a9dcff" stroke-width="1.2"/><circle cx="22" cy="6" r="2.2" fill="#fff"/></g><circle cx="22" cy="22" r="1.5" fill="#fff"/></svg>
   </div>
@@ -232,7 +238,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
       <div>
         <div class="label" id="c-kicker">Candidate region</div>
         <h2 id="c-name">—</h2>
-        <div class="meta"><span>Point <b id="c-site">—</b></span><span>Lat <b id="c-lat">—</b></span><span>Lon <b id="c-lon">—</b></span><span>Patch <b>200 m radius</b></span><span>Window <b id="c-win">—</b></span></div>
+        <div class="meta"><span>Point <b id="c-site">—</b></span><span>Lat <b id="c-lat">—</b></span><span>Lon <b id="c-lon">—</b></span><span>Basis <b>nearest pixel at this point</b></span><span>Averages <b id="c-win">—</b></span></div>
       </div>
       <div class="head-r">
         <button class="btn" data-open="method">Method &amp; sources ↑</button>
@@ -240,14 +246,15 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
         <button class="x" id="close" aria-label="Close card">✕</button>
       </div>
     </div>
-    <div class="example-note" id="example-note"><b>Example data</b><span>Every number on this card is a <u>placeholder</u> generated for layout. They are not measurements and must not be cited. Real values will be derived from the archives linked under each readout.</span></div>
+    <div class="example-note real-note" id="example-note"></div>
 
     <div class="dials" id="dials"></div>
+    <div class="extras" id="extras"></div>
 
-    <div class="tl">
+    <div class="tl" id="tlbox">
       <div class="tl-head">
         <div>
-          <div class="label" id="tl-label">Hourly Sun &amp; Earth visibility · 14 days · example data</div>
+          <div class="label" id="tl-label">Hourly Sun &amp; Earth visibility</div>
           <div class="tl-read" style="margin-top:8px">
             <div><span class="num n" id="t-time">—</span></div>
             <div><span class="num n" id="t-sun">—</span><span class="k">SUN DISC VISIBLE</span></div>
@@ -262,6 +269,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
       </div>
       <div id="tlwrap"><canvas id="tlc"></canvas><div id="head"></div></div>
     </div>
+    <p class="disclaim" id="tl-none" style="display:none;margin-top:16px"></p>
     <p class="disclaim">Not a safety assessment, and no site is declared safe. No combined score and no ice-volume estimate. Screening cuts are shown with their source for reference; they are not flight rules. “Earth in view” counts any part of Earth’s disc above the local horizon, which is slightly optimistic compared with a DSN link budget.</p>
   </div>
 </section>
@@ -276,14 +284,14 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 
     <h3>What each readout means</h3>
     <div class="grid2">
-      <div class="box"><h4>Slope</h4><p>Median and 5–95% range of slope over a 20 m baseline inside a 200 m patch, from a LOLA-derived DEM. Uncertainty combines DEM vertical error and baseline choice.</p></div>
-      <div class="box"><h4>Sunlight</h4><p>Average fraction of the solar disc above the local horizon, hourly over the stated window, at 1 m or 5 m above ground. Horizons from LOLA topography; Sun position from JPL DE421.</p></div>
-      <div class="box"><h4>Earth view</h4><p>Share of hours with <em>any part</em> of Earth’s disc above the local horizon (DE421 + LOLA horizons). Slightly optimistic versus a DSN link budget, which needs margin above the horizon.</p></div>
-      <div class="box"><h4>Cold ground</h4><p>Distance to the nearest ground whose modelled annual maximum temperature stays below 110 K (Diviner), with permanent shadow mapped from LOLA illumination. Proximity only: no ice-volume estimate.</p></div>
+      <div class="box"><h4>Slope</h4><p>Slope in degrees at the 5&nbsp;m pixel containing the point, from the LOLA product-78 site DEM (Barker et al. 2021). The ± is one published RMS slope error for that pixel. Three regions have no 5&nbsp;m tile and show no slope; the 20&nbsp;m mosaic is not substituted. Where the LOLA return count at the pixel is 0, the slope is interpolated.</p></div>
+      <div class="box"><h4>Sunlight</h4><p>18.6-year average fraction of hourly steps with any part of the Sun above the horizon, from the 75°S illumination map (Mazarico et al. 2011, 120&nbsp;m pixel, nearest pixel to the point). It is a long-term average, not the sunlight in a particular week, and has no published error bar.</p></div>
+      <div class="box"><h4>Earth view</h4><p>Same map family and averaging period: the 18.6-year average fraction of hours with <em>any part</em> of Earth’s disc above the horizon. Disc visibility, not a DSN link budget. For NR101 only, the hourly timeline on its card is a separate 14-day product, and its window percentages are labelled as such.</p></div>
+      <div class="box"><h4>Cold ground</h4><p>Distance from the point to the nearest permanent-shadow pixel (120&nbsp;m) whose Diviner summer-maximum temperature is below 110&nbsp;K (Williams et al. 2019, 240&nbsp;m pixel). Searched within 40&nbsp;km beyond the nine points. The ± is one Diviner pixel, a resolution bound, not a statistical error. Proximity only; no ice-volume estimate.</p></div>
     </div>
 
-    <h3>What is real in this build</h3>
-    <div class="box"><p>Only <b>Nobile Rim 1 / NR101</b> is computed. Its slope, slope RMS, 18.6-year sunlight and Earth averages, Diviner temperature, distance to cold shadow, and the hourly Sun/Earth series (2025-01-01, 14 and 30 Earth days, 1 m and 5 m) are exported from the repository code to <code>web/data/nr101.json</code>. The other eight regions show placeholder values labelled <i>example</i>. The 3D-looking Moon is procedural art, not terrain. The slope and cold-ground notes above describe the example model; for NR101 see each readout's own line.</p></div>
+    <h3>What is computed in this build</h3>
+    <div class="box"><p>All nine points (first Wueller et al. 2026 Table A1 point per region) are read by the repository’s <code>python -m atlas.regions</code> and exported by <code>python -m atlas.export_web</code> to <code>web/data/regions.json</code>. Every row uses the same measures: slope and RMS error at the point, 18.6-year sunlight and Earth averages, Diviner summer-maximum temperature, permanent-shadow flag, distance to cold shadow, and LOLA return count. Slope, slope error and return count are <b>not computed</b> for Peak near Cabeus B, Mons Mouton Plateau and Slater Plain because product 78 has no 5&nbsp;m site DEM containing those points. The hourly Sun/Earth series (2025-01-01, 14 and 30 Earth days, 1&nbsp;m and 5&nbsp;m) exists for Nobile Rim 1 only, because it needs the Site 06 elevation raster; the other eight cards say so. The 3D-looking Moon and its Sun-azimuth lighting are procedural art, not terrain.</p></div>
 
     <h3>Screening cut presets</h3>
     <div class="presets" id="presets">
@@ -315,16 +323,17 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
 <section class="layer" id="compare" aria-hidden="true">
   <div class="panel">
     <div class="grab"></div>
-    <div class="lh"><div><div class="label">All nine regions · one real row, eight example rows</div><h2>Side by side, unranked</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
-    <div class="example-note"><b>Example data</b><span>Eight of nine rows are placeholder values for layout only; Nobile Rim 1 is real. Rows are listed by longitude, west to east. This is not a ranking and there is no combined score.</span></div>
+    <div class="lh"><div><div class="label">All nine regions · same measures in every row</div><h2>Side by side, unranked</h2></div><button class="x" data-close aria-label="Close">✕</button></div>
+    <div class="example-note real-note"><b style="color:#8fe3b0">Computed</b><span>Every row is read from the same maps at one published point. Sunlight and Earth are 18.6-year averages in all rows. Rows are listed by longitude, west to east. This is not a ranking and there is no combined score. “n/a” means the input map does not cover the point.</span></div>
     <div class="tablewrap"><table>
-      <thead><tr><th>Region</th><th>Slope (median)</th><th>Avg. sunlight · 1 m</th><th>Earth in view</th><th>Nearest cold ground</th><th>Shown cuts</th></tr></thead>
+      <thead><tr><th>Region</th><th>Slope at point</th><th>Sunlight<br>18.6-yr avg</th><th>Earth in view<br>18.6-yr avg</th><th>Summer<br>max temp.</th><th>Nearest cold ground</th><th>Shown cuts</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
-    <p class="disclaim">Only the Nobile Rim 1 row is real (Sun and Earth are 18.6-year averages there; the other rows are example 14-day means). Rows are not comparable until all nine are computed. ± values for example rows are illustrative uncertainty half-ranges. “Shown cuts” states whether the example median falls inside the selected screening cuts (slope, illumination). It is a reference marker, not a pass/fail verdict and not a flight rule.</p>
+    <p class="disclaim">Slope ± is one RMS slope error (LOLA product 78, 5 m). Sunlight and Earth are 18.6-year averages with no published error bar; Earth is disc visibility, not a link budget. Temperature is the Diviner summer maximum on its own 240 m pixel. Cold ground ± is one Diviner pixel (0.24 km). “Shown cuts” states whether the value falls inside the selected screening cuts. It is a reference marker, not a pass/fail verdict and not a flight rule.</p>
   </div>
 </section>
 
+<script src="data/regions.js"></script>
 <script src="data/nr101.js"></script>
 <script>
 (()=>{
@@ -343,63 +352,38 @@ const REGIONS=[
  {id:'MAL',name:'Malapert Massif',lat:-85.942,lon:-0.944,site:'MMA01'},
  {id:'MMP',name:'Mons Mouton Plateau',lat:-85.111,lon:26.710,site:'MMP01'},
  {id:'MMO',name:'Mons Mouton',lat:-85.416,lon:31.851,site:'MMO01'},
- {id:'NR1',name:'Nobile Rim 1',lat:-85.295,lon:36.917,site:'NR101',real:true},
+ {id:'NR1',name:'Nobile Rim 1',lat:-85.295,lon:36.917,site:'NR101'},
  {id:'NR2',name:'Nobile Rim 2',lat:-84.054,lon:56.481,site:'NR201'},
  {id:'SLP',name:'Slater Plain',lat:-87.478,lon:124.521,site:'SP01'},
 ];
-let H0=new Date(Date.UTC(2026,10,2,0)); // example window start (real NR101 window: 2025-01-01)
-const EX_H0=new Date(Date.UTC(2026,10,2,0));
-const REAL=window.NR101_DATA||null; // generated by atlas/export_web.py; absent => example data everywhere
+let H0=new Date(Date.UTC(2025,0,1,0)); // real NR101 timeline window start
+const REAL=window.NR101_DATA||null;       // hourly timeline, NR101 only (atlas/export_web.py)
+const DATA=window.REGIONS_DATA||null;     // nine-region comparison (atlas/export_web.py)
 const HOURS=336;
+REGIONS.forEach(r=>{r.d=DATA?DATA.regions.find(x=>x.point_id===r.site)||null:null;});
 
-// ---------- example data model (placeholder, physically-flavoured) ----------
-function horizonFn(r){const g=rng(r.id.charCodeAt(0)*977+r.id.charCodeAt(1)*31+r.id.charCodeAt(2));
-  const base=-0.3-g()*1.1, ridge=1.0+g()*1.6, a=[.6+g()*.8,.3+g()*.5,.15+g()*.3], p=[g()*6.3,g()*6.3,g()*6.3];
-  const f=(az,off)=>base+off+a[0]*Math.sin(2*az+p[0])+a[1]*Math.sin(5*az+p[1])+a[2]*Math.sin(11*az+p[2]);f.ridge=ridge;return f;}
-function series(r,height,hOff=0){
-  const H=horizonFn(r), c=90+r.lat, lam=r.lon*D2R, dip=height===5?-0.35:0;
-  const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS), az=new Float32Array(HOURS);
-  for(let t=0;t<HOURS;t++){
-    const L=(70+360*t/708.7)*D2R; az[t]=L;
-    const el=c*Math.cos(L-lam)+0.9;                    // sub-solar lat ~ -0.9 deg (example)
-    const hz=H(L,dip+hOff);
-    sun[t]=Math.max(0,Math.min(1,(el-hz+0.267)/0.534));
-    const LE=7.6*Math.sin(2*Math.PI*t/661+1.1)*D2R, dE=6.6*Math.sin(2*Math.PI*t/653+0.15);
-    const elE=c*Math.cos(LE-lam)-dE, hzE=H(LE,dip+hOff)+H.ridge;
-    earth[t]=(elE+0.95>hzE)?1:0;                     // any part of disc above horizon
-  }
-  return {sun,earth,az};
-}
+// ---------- readouts: every number comes from regions.json; nothing is generated here ----------
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
-function realStats(height){
-  const q=REAL.query, w=REAL.timeline.windows.fourteen_earth_days.series;
-  const base=series(REGIONS.find(x=>x.id==='NR1'),height); // only the illustrative Sun azimuth for the hero lighting is reused
-  const sunS=w['sun_'+height+'m'], earS=w['earth_'+height+'m'];
-  const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS);
-  for(let t=0;t<HOURS;t++){sun[t]=sunS[t]==='1'?1:0;earth[t]=earS[t]==='1'?1:0;}
-  const rms=q.slope_rms_deg, km=q.distance_to_cold_shadow_m/1000, px=q.temperature_resolution_m/1000;
-  const win=k=>{const a=w[k+'_'+height+'m'];return 100*[...a].filter(c=>c==='1').length/a.length;};
-  return {real:true,q,
-    // slope: Barker et al. 2021 RMS slope error, +/- one RMS. Sun/Earth: 18.6-year averages have no published error bar here.
-    slope:{v:q.slope_deg,lo:Math.max(0,q.slope_deg-rms),hi:q.slope_deg+rms,unc:'±1 RMS slope error'},
-    sun:{v:q.solar_fraction,lo:q.solar_fraction,hi:q.solar_fraction,unc:'no uncertainty published for this average',win:win('sun')},
-    earth:{v:q.earth_fraction*100,lo:q.earth_fraction*100,hi:q.earth_fraction*100,unc:'no uncertainty published for this average',win:win('earth')},
-    // cold: distance to nearest permanent-shadow pixel with Diviner summer max < 110 K; range is +/- one Diviner pixel (240 m)
-    cold:{v:km,lo:Math.max(0,km-px),hi:km+px,unc:'± one Diviner pixel (240 m)'},
-    series:{sun,earth,az:base.az}};
-}
+// Illustrative Sun azimuth for the hero lighting only (not a computed value).
+function illumAz(){const az=new Float32Array(HOURS);for(let t=0;t<HOURS;t++)az[t]=(70+360*t/708.7)*D2R;return az;}
 function stats(r,height){
-  if(r.real&&REAL)return realStats(height);
-  const m=series(r,height), lo=series(r,height,0.4), hi=series(r,height,-0.4);
-  const g=rng(r.id.charCodeAt(1)*7919+r.id.charCodeAt(2)*104729);
-  const slope=r.id==='NR1'?4.2:2.6+g()*7.5, cold=r.id==='NR1'?1.9:0.6+g()*5.5;
-  return {
-    sun:{v:mean(m.sun),lo:mean(lo.sun),hi:mean(hi.sun)},
-    earth:{v:mean(m.earth)*100,lo:mean(lo.earth)*100,hi:mean(hi.earth)*100},
-    slope:{v:slope,lo:slope*0.68,hi:slope*1.42},
-    cold:{v:cold,lo:cold*0.62,hi:cold*1.45},
-    series:m
-  };
+  const q=r.d; if(!q)return {missing:true,r};
+  const px=q.temperature_resolution_m/1000, km=q.distance_to_cold_shadow_m==null?null:q.distance_to_cold_shadow_m/1000;
+  const rms=q.slope_rms_deg;
+  const out={real:true,q,r,
+    slope:q.slope_deg==null?null:{v:q.slope_deg,lo:Math.max(0,q.slope_deg-rms),hi:q.slope_deg+rms,unc:'±1 RMS slope error'},
+    sun:q.solar_fraction==null?null:{v:q.solar_fraction,lo:q.solar_fraction,hi:q.solar_fraction,unc:'no uncertainty published for this average'},
+    earth:q.earth_fraction==null?null:{v:q.earth_fraction*100,lo:q.earth_fraction*100,hi:q.earth_fraction*100,unc:'no uncertainty published for this average'},
+    cold:km==null?null:{v:km,lo:Math.max(0,km-px),hi:km+px,unc:'± one Diviner pixel ('+(px*1000).toFixed(0)+' m)'},
+    series:null};
+  if(r.id==='NR1'&&REAL){
+    const w=REAL.timeline.windows.fourteen_earth_days.series, sunS=w['sun_'+height+'m'], earS=w['earth_'+height+'m'];
+    const sun=new Float32Array(HOURS), earth=new Uint8Array(HOURS);
+    for(let t=0;t<HOURS;t++){sun[t]=sunS[t]==='1'?1:0;earth[t]=earS[t]==='1'?1:0;}
+    const win=k=>{const a=w[k+'_'+height+'m'];return 100*[...a].filter(c=>c==='1').length/a.length;};
+    out.series={sun,earth,az:illumAz()}; out.winSun=win('sun'); out.winEarth=win('earth');
+  }
+  return out;
 }
 
 // ---------- cuts ----------
@@ -501,7 +485,6 @@ function placeMarkers(){REGIONS.forEach(r=>{const[x,y]=project(r.lat,r.lon);r.el
 
 // ---------- region card ----------
 let sel=null, height=1, cur=null, hour=0;
-const EXNOTE=document.querySelector('#example-note').innerHTML;
 const REALNOTE='<b style="color:#8fe3b0">Real data</b><span>Values on this card come from the repository code (<code>python -m atlas.export_web</code>) at Wueller et al. 2026 point NR101: slope, sunlight and Earth averages, Diviner temperature, and the hourly Sun/Earth series for 2025-01-01 + 14 days. '+(REAL&&REAL.query.interpolated_gap?'<b>Caution:</b> the LOLA return count at this 5 m pixel is 0, so slope here is interpolated, not measured. ':'')+'No combined score; screening cuts are not flight rules.</span>';
 const fmtLat=v=>v.toFixed(3)+'°', fmtLon=v=>(v>=0?'+':'')+v.toFixed(3)+'°';
 const fmtDate=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
@@ -512,63 +495,90 @@ function dialHTML(k){return `<div class="dial" data-k="${k}"><div class="label">
   <div class="val"><span class="num n">—</span><span class="u"></span></div></div>
   <div class="def"></div>
   <div class="rb"><div class="track"><div class="base"></div><div class="span"></div><div class="cut"><span></span></div><div class="pt"></div></div><div class="ends"><span></span><span></span></div><div class="rng"></div></div>
-  <div class="src"><a target="_blank" rel="noopener"></a><span class="tagx">Example</span></div></div>`;}
+  <div class="src"><a target="_blank" rel="noopener"></a><span class="tagx">—</span></div></div>`;}
 $('#dials').innerHTML=['slope','sun','earth','cold'].map(dialHTML).join('');
-const DEFREAL={
- slope:{src:'LOLA 5 m site DEM · Barker et al. 2021',href:'https://pgda.gsfc.nasa.gov/products/78',unit:'DEG · AT POINT',def:'Slope at the NR101 5 m pixel, with Barker et al. RMS slope error'},
- sun:{src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',unit:'18.6-YR AVG',def:'18.6-year average fraction of hourly steps with any part of the Sun above the horizon. Long-term average, not this window.'},
- earth:{src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',unit:'18.6-YR AVG',def:'18.6-year average, any part of the Earth disc above the horizon. Disc visibility, not a link budget.'},
- cold:{src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',unit:'KM TO <110 K SHADOW',def:'Distance to nearest permanent-shadow pixel with Diviner summer max below 110 K. Proximity only, no ice volume.'}
-};
 const DEF={
- slope:{lab:'Slope',q:'Flat enough to land?',unit:'DEG · MEDIAN',min:0,max:20,dec:1,suf:'°',def:'20 m baseline, within 200 m patch',src:'LOLA 5 m/px DEM · PDS',href:'https://pds-geosciences.wustl.edu/missions/lro/lola.htm',cut:()=>cuts.on?{v:cuts.slope,t:'cut < '+cuts.slope+'°'}:null},
- sun:{lab:'Sunlight',q:'Lit enough to stay powered?',unit:'AVG ILLUM.',min:0,max:1,dec:2,suf:'',def:'',src:'LOLA horizons + JPL DE421',href:'https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/',cut:()=>cuts.on?{v:cuts.ill,t:'cut > '+cuts.ill.toFixed(2)}:null},
- earth:{lab:'Earth view',q:'In view of Earth?',unit:'% OF HOURS',min:0,max:100,dec:0,suf:'%',def:'Any part of Earth disc above horizon',src:'JPL DE421 + Moon Trek DEM',href:'https://trek.nasa.gov/moon/',cut:()=>null},
- cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM TO <110 K',min:0,max:10,dec:1,suf:'',def:'Nearest annual-max temperature below 110 K',src:'Diviner polar temps · PDS',href:'https://pds-geosciences.wustl.edu/missions/lro/diviner.htm',cut:()=>null},
+ slope:{lab:'Slope',q:'Flat enough to land?',unit:'DEG · AT POINT',min:0,max:20,dec:1,suf:'°',def:'Slope at the 5 m pixel containing the point, with the Barker et al. RMS slope error',src:'LOLA 5 m site DEM · Barker et al. 2021',href:'https://pgda.gsfc.nasa.gov/products/78',cut:()=>cuts.on?{v:cuts.slope,t:'cut < '+cuts.slope+'°'}:null},
+ sun:{lab:'Sunlight',q:'Lit enough to stay powered?',unit:'18.6-YR AVG',min:0,max:1,dec:2,suf:'',def:'18.6-year average fraction of hourly steps with any part of the Sun above the horizon (120 m map). Long-term average, not a particular week.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>cuts.on?{v:cuts.ill,t:'cut > '+cuts.ill.toFixed(2)}:null},
+ earth:{lab:'Earth view',q:'In view of Earth?',unit:'18.6-YR AVG',min:0,max:100,dec:0,suf:'%',def:'18.6-year average, any part of the Earth disc above the horizon (120 m map). Disc visibility, not a link budget.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>null},
+ cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM · <110 K',min:0,max:15,dec:1,suf:'',def:'Distance to the nearest permanent-shadow pixel with Diviner summer max below 110 K. Proximity only, no ice volume.',src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',cut:()=>null}
 };
 const CIRC=2*Math.PI*58, ARC=CIRC*0.75;
+const NA_WHY={slope:s=>s.q.slope_source,sun:()=>'The 75°S illumination map has no value at this point.',earth:()=>'The 75°S illumination map has no value at this point.',cold:()=>'No permanent-shadow pixel below 110 K was found within the search window.'};
 function renderDials(){
   const s=cur;
-  for(const k of ['slope','sun','earth','cold']){const d=s.real?Object.assign({},DEF[k],DEFREAL[k]):DEF[k],v=s[k],el=$(`.dial[data-k="${k}"]`);
+  for(const k of ['slope','sun','earth','cold']){const d=DEF[k],v=s[k],el=$(`.dial[data-k="${k}"]`);
+    el.querySelector('.label').textContent=d.lab; el.querySelector('.q').textContent=d.q;
+    const a=el.querySelector('.src a'); a.textContent=d.src+' ↗'; a.href=d.href;
+    const tg=el.querySelector('.tagx');
+    const arc=el.querySelector('.arc'),unc=el.querySelector('.unc'),ce=el.querySelector('.cut');
+    if(!v){ // not computed: say so, show no number
+      el.classList.add('missing');
+      el.querySelector('.n').textContent='n/a'; el.querySelector('.u').textContent='NOT COMPUTED';
+      el.querySelector('.def').textContent=NA_WHY[k](s);
+      arc.style.strokeDasharray=`0 ${CIRC}`; unc.style.strokeDasharray=`0 ${CIRC}`;
+      el.querySelector('.span').style.width='0'; el.querySelector('.pt').style.left='-10px'; ce.style.display='none';
+      el.querySelectorAll('.ends span').forEach(x=>x.textContent='');
+      el.querySelector('.rng').textContent='Not computed for this point'; tg.textContent='Not computed'; tg.style.color='#ffc27a';
+      continue;}
+    el.classList.remove('missing');
     const lo=Math.min(v.lo,v.hi),hi=Math.max(v.lo,v.hi);
     const f=x=>Math.max(0,Math.min(1,(x-d.min)/(d.max-d.min)));
-    el.querySelector('.label').textContent=d.lab; el.querySelector('.q').textContent=d.q;
     el.querySelector('.n').textContent=v.v.toFixed(d.dec)+d.suf; el.querySelector('.u').textContent=d.unit;
-    el.querySelector('.def').textContent=s.real?d.def:k==='sun'?`Mean fraction of solar disc visible, ${height} m above ground, stated window`:k==='earth'?`Any part of Earth disc above horizon, ${height} m eye height`:d.def;
-    const arc=el.querySelector('.arc'),unc=el.querySelector('.unc');
+    el.querySelector('.def').textContent=d.def;
     arc.style.strokeDasharray=`${ARC*f(v.v)} ${CIRC}`;
     unc.style.strokeDasharray=`0 ${ARC*f(lo)} ${ARC*(f(hi)-f(lo))} ${CIRC}`;
     el.querySelector('.span').style.left=f(lo)*100+'%'; el.querySelector('.span').style.width=(f(hi)-f(lo))*100+'%';
     el.querySelector('.pt').style.left=f(v.v)*100+'%';
-    const c=d.cut(),ce=el.querySelector('.cut'); if(c){ce.style.display='';ce.style.left=f(c.v)*100+'%';ce.querySelector('span').textContent=c.t;}else ce.style.display='none';
+    const c=d.cut(); if(c){ce.style.display='';ce.style.left=f(c.v)*100+'%';ce.querySelector('span').textContent=c.t;}else ce.style.display='none';
     const ends=el.querySelectorAll('.ends span'); ends[0].textContent=d.min+d.suf; ends[1].textContent=d.max+d.suf;
-    let rt=`Range ${lo.toFixed(d.dec)}–${hi.toFixed(d.dec)}${d.suf} · example`;
-    if(s.real){rt=`${v.unc}`;
-      if(k==='sun')rt+=` · this ${height} m window: ${v.win.toFixed(0)}% of hours`;
-      if(k==='earth')rt+=` · this ${height} m window: ${v.win.toFixed(0)}% of hours`;
-      if(k==='slope')rt+=` (${lo.toFixed(1)}–${hi.toFixed(1)}°)`;
-      if(k==='cold')rt+=` · summer max ${s.q.summer_max_temperature_k.toFixed(0)} K here`;
-      rt+=' · real';}
+    let rt=v.unc;
+    if(k==='slope')rt+=` (${lo.toFixed(1)}–${hi.toFixed(1)}°)`+(s.q.interpolated_gap?' · return count 0: interpolated, not measured':'');
+    if(k==='cold')rt+=` · summer max ${s.q.summer_max_temperature_k.toFixed(0)} K here`;
+    if(s.series&&k==='sun')rt+=` · NR101 14-day window, ${height} m: ${s.winSun.toFixed(0)}% of hours (separate product)`;
+    if(s.series&&k==='earth')rt+=` · NR101 14-day window, ${height} m: ${s.winEarth.toFixed(0)}% of hours (separate product)`;
     el.querySelector('.rng').textContent=rt;
-    const tg=el.querySelector('.tagx');tg.textContent=s.real?'Real · NR101':'Example';tg.style.color=s.real?'#8fe3b0':'';
-    const a=el.querySelector('.src a'); a.textContent=d.src+' ↗'; a.href=d.href;
+    tg.textContent='Computed · '+s.q.point_id; tg.style.color='#8fe3b0';
   }
+  renderExtras();
+}
+const pl=x=>x?x.replace(/\.0+ m/,' m'):x;
+function renderExtras(){
+  const q=cur.q, ex=[];
+  ex.push(['Summer max temperature',q.summer_max_temperature_k==null?'n/a':q.summer_max_temperature_k.toFixed(0)+' K','Diviner, own '+(q.temperature_resolution_m||0).toFixed(0)+' m pixel; not a 5 m measurement']);
+  ex.push(['Permanent shadow',q.permanent_shadow==null?'n/a':q.permanent_shadow?'Inside':'Outside','75°S illumination map, '+pl(q.permanent_shadow_pixel_label)+' pixel']);
+  ex.push(['LOLA returns in pixel',q.lola_return_count==null?'n/a':String(Math.round(q.lola_return_count)),q.lola_return_count==null?'Not computed: no 5 m tile contains this point':q.interpolated_gap?'0 = slope here is interpolated':'Measured returns at the 5 m pixel']);
+  ex.push(['Slope DEM',pl(q.slope_dem_label)||'none','LOLA product 78; the 20 m mosaic is not substituted']);
+  $('#extras').innerHTML=ex.map(e=>`<div class="extra"><span class="label">${e[0]}</span><b class="${e[1]==='n/a'||e[1]==='none'?'na':''}">${e[1]}</b>${e[2]}</div>`).join('');
 }
 function openRegion(id){
   const r=REGIONS.find(x=>x.id===id); if(!r)return; sel=id;
   REGIONS.forEach(x=>x.el.classList.toggle('sel',x.id===id));
   $('#c-name').textContent=r.name; $('#c-site').textContent=r.site||'TBD';
   $('#c-lat').textContent=fmtLat(r.lat); $('#c-lon').textContent=fmtLon(r.lon);
-  cur=stats(r,height); H0=cur.real?new Date(REAL.timeline.start):EX_H0;
-  const e=new Date(H0.getTime()+13*864e5); $('#c-win').textContent=`${fmtDate(H0)} – ${fmtDate(e)} ${H0.getUTCFullYear()} · ${cur.real?'real':'example'}`;
-  $('#c-kicker').textContent=cur.real?'Candidate region · real values at NR101':'Candidate region · example data';
-  const en=$('#example-note'); en.className=cur.real?'example-note real-note':'example-note';
-  en.innerHTML=cur.real?REALNOTE:EXNOTE;
-  $('#tl-label').textContent=cur.real?'Hourly Sun & Earth visibility · 14 days from 2025-01-01 · real (DE421 + Site 06 terrain horizon)':'Hourly Sun & Earth visibility · 14 days · example data';
-  renderDials();
+  cur=stats(r,height);
+  const en=$('#example-note');
+  if(cur.missing){ // regions.js absent: no numbers are invented
+    en.className='example-note'; en.innerHTML='<b>No data</b><span>web/data/regions.js did not load. Run <code>python -m atlas.export_web</code>. No placeholder values are shown.</span>';
+    $('#dials').style.display='none';$('#extras').style.display='none';$('#tlbox').style.display='none';
+  }else{
+    $('#dials').style.display='';$('#extras').style.display='';
+    $('#c-kicker').textContent='Candidate region · computed values at '+r.site;
+    const missing=!cur.slope;
+    en.className='example-note '+(missing?'':'real-note');
+    en.innerHTML=missing?'<b>Slope not computed</b><span>'+cur.q.slope_source+' Sunlight, Earth view, temperature and cold-ground distance below are computed.</span>'
+      :'<b style="color:#8fe3b0">Computed</b><span>Values come from the repository code (<code>python -m atlas.regions</code>, exported by <code>python -m atlas.export_web</code>) at Wueller et al. 2026 point '+r.site+', nearest pixel of each map. '+(cur.q.interpolated_gap?'<b>Caution:</b> the LOLA return count at this 5 m pixel is 0, so slope here is interpolated, not measured. ':'')+'No combined score; screening cuts are not flight rules.</span>';
+  }
+  const hasTL=!!(cur.series);
+  $('#c-win').textContent='18.6-yr avg (readouts)'+(hasTL?' · timeline '+fmtDate(H0)+' – '+fmtDate(new Date(H0.getTime()+13*864e5))+' '+H0.getUTCFullYear():'');
+  $('#tlbox').style.display=hasTL?'':'none';
+  const nt=$('#tl-none'); nt.style.display=hasTL||cur.missing?'none':'';
+  nt.textContent='No hourly Sun/Earth timeline for '+r.name+': it needs the 5 m elevation raster of that site to build the terrain horizon, and only Site 06 (Nobile Rim 1) has been downloaded and processed. The 18.6-year averages above are the comparable measure for all nine regions.';
+  $('#tl-label').textContent='Hourly Sun & Earth visibility · 14 days from 2025-01-01 · DE421 + Site 06 terrain horizon · NR101 only';
+  if(!cur.missing)renderDials();
   $('#sheet').classList.add('open'); $('#sheet').setAttribute('aria-hidden','false'); document.body.classList.add('sheet-open');
   closeLayers(true); setNav('atlas');
-  requestAnimationFrame(()=>{sizeTL();setHour(hour);});
+  if(hasTL)requestAnimationFrame(()=>{sizeTL();setHour(hour);}); else {autoLight=true;stopPlay();}
   history.replaceState(null,'','#region/'+id);
 }
 function closeRegion(){sel=null;REGIONS.forEach(x=>x.el.classList.remove('sel'));$('#sheet').classList.remove('open');document.body.classList.remove('sheet-open');autoLight=true;stopPlay();history.replaceState(null,'','#');}
@@ -609,7 +619,7 @@ $('#play').onclick=()=>{if(playT){stopPlay();return;}$('#playp').setAttribute('d
   const step=t=>{h+=(t-lt)/1000*24;lt=t;if(h>=HOURS-1){setHour(HOURS-1);stopPlay();return;}setHour(h);playT=requestAnimationFrame(step);};playT=requestAnimationFrame(step);};
 function segThumb(){const on=$('#hseg .on'),th=$('#hseg .thumb');th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}
 $$('#hseg button').forEach(b=>b.onclick=()=>{$$('#hseg button').forEach(x=>x.classList.toggle('on',x===b));segThumb();height=+b.dataset.h;
-  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);renderDials();drawTL();setHour(hour);}});
+  if(sel){cur=stats(REGIONS.find(x=>x.id===sel),height);if(cur.missing)return;renderDials();if(cur.series){drawTL();setHour(hour);}}});
 
 // ---------- layers ----------
 function setNav(v){$$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
@@ -631,22 +641,27 @@ $('#sIll').oninput=e=>{cuts.ill=+e.target.value;cuts.on=true;$$('.preset').forEa
 // compare table
 const ALL=REGIONS.map(r=>({r,s:stats(r,1)}));
 function renderTable(){
+  const na='<span class="na">n/a</span>';
   const rows=[...ALL].sort((a,b)=>a.r.lon-b.r.lon).map(({r,s})=>{
-    const hs=x=>((Math.abs(x.hi-x.lo))/2);const sunNote=s.real?'<small>18.6-yr avg</small>':'';
+    if(s.missing)return `<tr data-id="${r.id}"><td><span class="nm">${r.name}</span><span class="sid">${r.site} · no data loaded</span></td><td colspan="6">${na}</td></tr>`;
+    const hs=x=>((Math.abs(x.hi-x.lo))/2);
     let cut='—';
-    if(cuts.on){const a=s.slope.v<cuts.slope,b=s.sun.v>cuts.ill;cut=`<span class="${a?'cutok':'cutno'}">slope ${a?'inside':'outside'}</span> · <span class="${b?'cutok':'cutno'}">illum. ${b?'inside':'outside'}</span>`;}
-    return `<tr data-id="${r.id}"><td><span class="nm">${r.name}</span><span class="sid">${s.real?'<b style="color:#8fe3b0">REAL</b> · ':'<b style="color:#ffc27a">EXAMPLE</b> · '}${r.site?r.site+' · ':''}${r.lat.toFixed(2)}°, ${r.lon.toFixed(1)}°</span></td>
-    <td>${s.slope.v.toFixed(1)}°<small>±${hs(s.slope).toFixed(1)}</small></td>
-    <td>${s.sun.v.toFixed(2)}${s.real?sunNote:'<small>±'+hs(s.sun).toFixed(2)+'</small>'}</td>
-    <td>${(s.earth.v).toFixed(0)}%${s.real?sunNote:'<small>±'+hs(s.earth).toFixed(0)+'</small>'}</td>
-    <td>${s.cold.v.toFixed(1)} km<small>±${hs(s.cold).toFixed(1)}</small></td>
+    if(cuts.on){const a=s.slope?s.slope.v<cuts.slope:null,b=s.sun?s.sun.v>cuts.ill:null;
+      const part=(n,x,w)=>x===null?`<span class="cutno">${n} n/a</span>`:`<span class="${x?'cutok':'cutno'}">${n} ${x?'inside':'outside'}</span>`;
+      cut=part('slope',a)+' · '+part('illum.',b);}
+    return `<tr data-id="${r.id}"><td><span class="nm">${r.name}</span><span class="sid">${s.q.point_id} · ${r.lat.toFixed(2)}°, ${r.lon.toFixed(1)}°</span></td>
+    <td>${s.slope?s.slope.v.toFixed(1)+'°<small>±'+hs(s.slope).toFixed(1)+'</small>':na}</td>
+    <td>${s.sun?s.sun.v.toFixed(2):na}</td>
+    <td>${s.earth?s.earth.v.toFixed(0)+'%':na}</td>
+    <td>${s.q.summer_max_temperature_k==null?na:s.q.summer_max_temperature_k.toFixed(0)+' K'}</td>
+    <td>${s.cold?s.cold.v.toFixed(1)+' km<small>±'+hs(s.cold).toFixed(2)+'</small>':na}</td>
     <td style="font-size:12.5px">${cut}</td></tr>`;}).join('');
   $('#tbody').innerHTML=rows;
   $$('#tbody tr').forEach(tr=>tr.onclick=()=>openRegion(tr.dataset.id));
 }
 
 // ---------- init ----------
-addEventListener('resize',()=>{layout();if(sel){sizeTL();setHour(hour);}segThumb();});
+addEventListener('resize',()=>{layout();if(sel&&cur&&cur.series){sizeTL();setHour(hour);}segThumb();});
 layout(); shade(); draw(); segThumb(); syncCuts(); requestAnimationFrame(loop);
 const h=location.hash.slice(1);
 if(h.startsWith('region/'))openRegion(h.split('/')[1]);
