@@ -1,6 +1,6 @@
 # Lunar atlas web prototype
 
-A single static page: Moon hero with nine region markers, region cards with four readouts and uncertainty bars, an hourly Sun/Earth timeline with Play/Pause and speed, a site zoom that follows the simulated Sun, a method and sources layer, and an unranked comparison table. No build step, no network requests, no dependencies.
+A single static page: Moon hero with nine region markers, region cards with four readouts and uncertainty bars, a Play/Pause and speed control on both the home map and the cards (one shared Sun clock), an hourly terrain-aware Sun/Earth timeline, a site zoom of real elevation data that follows the simulated Sun, a method and sources layer, and an unranked comparison table. No build step, no network requests, no dependencies.
 
 ## Open it
 
@@ -11,7 +11,7 @@ cd moon-south-pole-atlas/web
 python -m http.server 8000     # then open http://localhost:8000
 ```
 
-Deep links: `#region/NR1`, `#compare`, `#method`. For a fixed Sun time (used for the screenshots): `#region/NR1?h=140&paused&zoom` (`h` is the hour 0 to 335 from 2025-01-01 00:00 UTC, `paused` stops playback, `zoom` scrolls the card to the site zoom).
+Deep links: `#region/NR1`, `#compare`, `#method`. For a fixed Sun time (used for the screenshots): `#?h=100&paused` (home) or `#region/NR1?h=140&paused&zoom` (`h` is the hour 0 to 335 from 2025-01-01 00:00 UTC, `paused` stops playback, `zoom` scrolls the card to the site zoom).
 
 ## What is computed and what is not
 
@@ -19,24 +19,33 @@ Deep links: `#region/NR1`, `#compare`, `#method`. For a fixed Sun time (used for
 | --- | --- |
 | Nine region cards and the comparison table: slope with RMS slope error, 18.6-year sunlight and Earth averages, Diviner summer max temperature, permanent-shadow flag, distance to cold shadow, LOLA return count | **Computed** by `atlas.regions`, exported to `data/regions.json`. Every row uses the same measures. |
 | Slope, slope error, return count for Peak near Cabeus B, Mons Mouton Plateau, Slater Plain | **Not computed**, shown as `n/a` with the reason: product 78 has no 5 m site DEM containing those points, and the 20 m mosaic is not substituted. |
-| NR101 hourly Sun and Earth series (2025-01-01 + 14 days shown, 30 days exported, 1 m and 5 m) | **Computed** from the repo's horizon and DE421 code, `data/nr101.json`. **NR101 only**: the other eight cards say no terrain-aware timeline exists (they show only the real DE421 Sun curve), because the terrain horizon needs each site's 5 m elevation raster, and only Site 06 has been downloaded and processed. |
+| NR101 hourly Sun and Earth series (2025-01-01 + 14 days shown, 30 days exported, 1 m and 5 m) | **Computed** from the repo's horizon and DE421 code, `data/nr101.json`. |
+| Hourly terrain-aware Sun and Earth series for the other eight regions (14 days from 2025-01-01, 1 m and 5 m eye height) | **Computed** by `atlas.export_zoom` with the same `atlas.horizon` code and DE421 vectors, from each region's own elevation raster (table below), stored as 0/1 strings in `data/zoom.json` (`strips`). Terrain beyond the raster is not in the mask: 3.3 to 15 km from the point depending on the raster, listed on each card. |
 | Region marker positions (first Wueller et al. 2026 Table A1 point per region) | Real coordinates |
 | Sun azimuth and elevation, hourly for 14 days from 2025-01-01, **all nine points** (`data/sun.json`) | **Computed** from JPL DE421 through `atlas.ephemeris` (same code and window as the NR101 timeline). Sun disc centre against a smooth local horizontal on the 1737.4 km sphere; no terrain, no refraction. |
-| Site zoom, **NR101** | **Real terrain.** Hillshade with cast shadows from the LOLA product 78 Site 06 5 m elevation raster (`Site06_final_adj_5mpp_surf.tif`), resampled to 10 m, 2.56 km across, north up, lit from the DE421 Sun direction of the hour shown (`data/zoom.json`). Exposure-stretched, point-source Sun, shadows only from terrain inside the chip. Not a photograph. |
-| Site zoom, **the other eight regions** | **Not terrain.** A 15.4 km crop of the LOLA average-sunlight-visibility map (120 m pixels, same raster as the backdrop, `data/zoom/<ID>.webp`), static. Only the Sun arrow and the azimuth/elevation numbers move (real DE421). No elevation raster has been processed for them, so no hillshade or shadows are drawn. |
-| Home Moon lighting while a card is open | The backdrop is the static LOLA average-sunlight map. A soft light wash and a Sun marker on it follow the real Sun azimuth of the open region; this marks direction only and is not re-rendered terrain. |
+| Site zoom, **all nine regions** | **Real terrain.** Hillshade with cast shadows from real LOLA elevation, north up, lit from the DE421 Sun direction of the hour shown (`data/zoom.json`). Seven regions use 5 m LOLA elevation shown at 10 m pixels (2.56 km across): six from the product-78 site DEMs and Slater Plain from the product-81 87–90°S mosaic, which fills gaps by interpolation; two (Peak near Cabeus B, Mons Mouton Plateau) use the 20 m LOLA polar DEM at native 20 m pixels (5.12 km across, no upsampling), because no 5 m LOLA elevation covers them. The card badge says "Real terrain · 5 m DEM" or "· 20 m DEM" and names the file and citation. Exposure-stretched, point-source Sun, shadows only from terrain inside the chip. Not a photograph. At 20 m, boulders and small craters are not resolved. |
+| Home Moon lighting | The backdrop is the static LOLA average-sunlight map. A soft light wash and a Sun marker follow the real DE421 Sun direction as seen from the pole (longitude of the Sun, `sun.json` `home`); this marks direction only and is not re-rendered terrain. The home Play/Pause drives it. |
 
 ### Play, speed, scrubbing
 
-Every card with Sun data (all nine) autoplays when it opens, unless the system asks for reduced motion, in which case it starts paused. The round button toggles Play/Pause. Speeds are 1× = 6 simulated hours per second, 4× = 24 (the default, one day per second), 16× = 96; playback loops over the 14 days. Dragging the timeline pauses it. One simulated clock drives the timeline playhead and readout, the footer/desktop compass, the light wash on the Moon backdrop, and the site zoom.
+The Sun simulation autoplays on the home map and on every card, unless the system asks for reduced motion (`prefers-reduced-motion`), in which case it starts paused. There is one shared clock and one play state: the Play/Pause button on the home map (top right, outside the label zone; labels are placed around it) and the one on the card are the same control, so pausing at home stays paused when a card opens, and the Sun time carries over. Speeds are 1× = 6 simulated hours per second, 4× = 24 (the default, one day per second), 16× = 96; playback loops over the 14 days. Dragging the timeline pauses it.
+
+The Play/Pause button is a fixed 38×38 px circle that never moves: no transform on press or hover (only a tint), a fixed-width status label, a fixed-size icon, and an outline that does not take layout space. `node --experimental-websocket web/test_play_button.js [WxH]` presses it repeatedly in headless Chrome and fails if its rectangle changes by 0.01 px.
 
 ### Which regions have what
 
-| Region (point) | Sun position | Zoom picture | Hourly terrain-aware Sun/Earth visibility |
-| --- | --- | --- | --- |
-| Nobile Rim 1 (NR101) | real, DE421 | **real 5 m DEM hillshade** | yes, 1 m and 5 m |
-| Haworth, Malapert, Mons Mouton, Nobile Rim 2, de Gerlache Rim 2 (HW01, MMA01, MMO01, NR201, dGR101) | real, DE421 | LOLA avg-sunlight crop, static. A 5 m **slope** tile is on disk, but slope alone has no height or aspect and cannot be hillshaded; the `_ldec` tiles are return counts, not elevation. | no |
-| Peak near Cabeus B, Mons Mouton Plateau, Slater Plain (PCB01, MMP01, SP01) | real, DE421 | LOLA avg-sunlight crop, static. No 5 m tile contains the point. | no |
+| Region (point) | Elevation raster behind the zoom and strips | Zoom pixel |
+| --- | --- | --- |
+| Nobile Rim 1 (NR101) | LOLA product 78 Site 06, `Site06_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| Haworth (HW01) | product 78 Haworth, `Haworth_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| Malapert Massif (MMA01) | product 78 Site 23, `Site23_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| Mons Mouton (MMO01) | product 78 Site 20 (Leibnitz beta), `Site20_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| Nobile Rim 2 (NR201) | product 78 DM2, `DM2_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| de Gerlache Rim 2 (dGR101) | product 78 SL2, `SL2_final_adj_5mpp_surf.tif` | 10 m from 5 m |
+| Slater Plain (SP01) | [product 81](https://pgda.gsfc.nasa.gov/products/81) 87–90°S 5 m mosaic `ldem_87s_5mpp.tif` (3.5 GB, with interpolation fill-in), a 4000 × 4000 pixel (20 km) window read by HTTP range requests, stored as `ldem_87s_5mpp_win20km_SP01.tif` (36 MB) | 10 m from 5 m |
+| Peak near Cabeus B (PCB01), Mons Mouton Plateau (MMP01) | product 90 LOLA 20 m polar DEM `LDEM_80S_20MPP_ADJ.TIF` (Barker et al. 2023), a 30 km × 30 km window around each point read from the cloud-optimised GeoTIFF with HTTP range requests and stored as `LDEM_80S_20MPP_ADJ_win30km_<ID>.tif` (about 5 MB each; the full file is 2.6 GB) | native 20 m |
+
+All nine regions now have real terrain. If a region ever has no elevation raster on disk, the exporter skips it and the card falls back to the static LOLA average-sunlight crop, badged amber "Sunlight map · static", with the reason stated; nothing is faked.
 
 The card for each region says which of these it is, with a badge on the picture (green "Real terrain", amber "Sunlight map · static"). Nothing is faked: where only a map exists, the picture does not respond to the Sun.
 
@@ -58,22 +67,23 @@ From `moon-south-pole-atlas/`, with the packages in `requirements.txt` and the r
 
 ```
 python -m atlas.export_web                  # regions.* and nr101.*, about 20 s
-python -m atlas.export_zoom                 # sun.*, zoom.*, zoom/*.webp, about 10 s (needs the Site 06 _surf.tif, the 120 m JP2 and kernels)
+python -m atlas.export_zoom                 # sun.*, zoom.*, zoom/*.webp, about 10 s (needs the nine elevation rasters in `data/raw`, the 120 m JP2 and kernels; about 1 minute)
 python -m atlas.export_web --skip-timeline  # regions.* only
 python -m unittest tests.test_query tests.test_horizon tests.test_regions tests.test_export_web tests.test_export_zoom
 ```
 
-This writes `web/data/regions.json` and `nr101.json` (canonical) plus `.js` twins (`window.REGIONS_DATA`, `window.NR101_DATA`); `atlas.export_zoom` adds `sun.*` (`window.SUN_DATA`) and `zoom.*` (`window.ZOOM_DATA`, 16-bit heights as base64) and nine small WebP crops (about 30 kB). The elevation chip is stored as 256×256 unsigned 16-bit heights (step about 0.007 m) and decoded in the browser, so no canvas pixel reads are needed and `file://` still works. Total `web/data` is about 1 MB. The page loads the `.js` files with `<script>` tags because browsers block `fetch` of local JSON from `file://`. The exporter refuses any key named score, safe, safety, rank, ranking or similar.
+This writes `web/data/regions.json` and `nr101.json` (canonical) plus `.js` twins (`window.REGIONS_DATA`, `window.NR101_DATA`); `atlas.export_zoom` adds `sun.*` (`window.SUN_DATA`) and `zoom.*` (`window.ZOOM_DATA`, nine 16-bit elevation chips as base64 plus the terrain strips) and nine small WebP sunlight crops (kept as the fallback). Each elevation chip is stored as 256×256 unsigned 16-bit heights (step about 0.007 m) and decoded in the browser, so no canvas pixel reads are needed and `file://` still works. Total `web/data` is about 3.7 MB (zoom.js and zoom.json are identical twins, about 1.6 MB each). The page loads the `.js` files with `<script>` tags because browsers block `fetch` of local JSON from `file://`. The exporter refuses any key named score, safe, safety, rank, ranking or similar.
 
 ## Screenshots
 
 `web/screenshots/` (all taken with headless Chrome at a fixed Sun time using the deep link above, so they are reproducible):
 
-- Site zoom at different Sun times, NR101 (real terrain): `nr101-zoom-h060-desktop.png` (D3 12:00 UTC, Sun az 95°, el +1.1°, long shadows, east wall lit), `nr101-zoom-h140-desktop.png` (D6 20:00, az 54°, el +4.2°), `nr101-zoom-h260-desktop.png` (D11 20:00, az 354°, el +6.1°, lit from the north); mobile: `nr101-zoom-h060-mobile390.png`, `nr101-zoom-h260-mobile390.png` (390×844), `nr101-zoom-h140-mobile360.png` (360×740).
-- Static sunlight-map zoom (no terrain): `haworth-zoom-desktop.png`, `haworth-zoom-mobile360.png`, `cabeus-zoom-mobile390.png`.
-- Autoplay state: `nr101-playing-desktop.png` (Play/Pause button, speed control, loop running).
-- Cards: `nr101-card.png`, `nr101-card-mobile.png`, `nr101-card-mobile-360.png`, `haworth-card.png`, `cabeus-card-no-slope.png`.
-- Home: `home-1440x900.png`, `home.png`, `home-mobile.png` (390×844), `home-mobile-360.png` (360×740); `compare.png`, `compare-mobile.png`, `method.png`; `before-home*.png` are the older baseline.
+- Home with the Play/Pause + speed control: `home-1440x900.png`, `home.png`, `home-mobile.png` (390×844), `home-mobile-360.png` (360×740) at a fixed Sun time (D5 04:00 UTC); `home-playing-1440x900.png` autoplaying.
+- Site zoom at different Sun times, NR101 (real 5 m): `nr101-zoom-h060-desktop.png` (D3 12:00 UTC, Sun az 95°, el +1.1°), `nr101-zoom-h140-desktop.png` (D6 20:00), `nr101-zoom-h260-desktop.png` (D11 20:00); mobile: `nr101-zoom-h060-mobile390.png`, `nr101-zoom-h260-mobile390.png`, `nr101-zoom-h140-mobile360.png`.
+- Newly real zooms, 5 m DEMs: `haworth-zoom-h060-desktop.png` and `haworth-zoom-desktop.png` (h=60 and h=200), `haworth-zoom-mobile360.png`, `malapert-zoom-h060-desktop.png` and `malapert-zoom-h260-desktop.png`, `nobile2-zoom-h100-desktop.png`, `degerlache-zoom-h200-mobile390.png`, `mouton-zoom-h100-desktop.png`.
+- Newly real zooms, 20 m polar DEM (badge "Real terrain · 20 m DEM"): `cabeus-zoom-h060-desktop.png`, `cabeus-zoom-mobile390.png` (h=60 and h=140), `moutonplateau-zoom-h200-mobile360.png`; Slater Plain (5 m, product 81): `slater-zoom-h120-desktop.png`.
+- Autoplay state on a card: `nr101-playing-desktop.png`.
+- Cards: `nr101-card.png`, `nr101-card-mobile.png`, `nr101-card-mobile-360.png`, `haworth-card.png`, `cabeus-card.png`; `compare.png`, `compare-mobile.png`, `method.png`; `before-home*.png` are the older baseline.
 
 ```
 google-chrome --headless=new --window-size=1440,900 --virtual-time-budget=25000 \
@@ -84,7 +94,7 @@ Without `paused` the page autoplays; with headless virtual time the simulated cl
 
 ## Backdrop
 
-The home-screen Moon is real data, not a drawing: the LOLA average sunlight visibility raster (Mazarico et al. 2011, `AVGVISIB_75S_120M_201608`, 120 m) resampled to `web/data/backdrop.webp` (3072 px, about 0.4 MB) by `python -m atlas.export_backdrop`. It is a tone map of how often ground sees the Sun, not a hillshade or an elevation model, and it carries no values. The export reprojects south-polar stereographic to the page's azimuthal-equidistant layout (radius proportional to colatitude, longitude 0 up, +/-8.5° of colatitude), so the markers use the same latitude and longitude as the terrain. The canvas draws at devicePixelRatio. If the image cannot load, the page falls back to the old procedural terrain. The UI credits the backdrop (bottom right). With a card open, the compass and a faint light wash on the backdrop follow the real DE421 Sun azimuth of that region; the backdrop image itself is not re-rendered per hour.
+The home-screen Moon is real data, not a drawing: the LOLA average sunlight visibility raster (Mazarico et al. 2011, `AVGVISIB_75S_120M_201608`, 120 m) resampled to `web/data/backdrop.webp` (3072 px, about 0.4 MB) by `python -m atlas.export_backdrop`. It is a tone map of how often ground sees the Sun, not a hillshade or an elevation model, and it carries no values. The export reprojects south-polar stereographic to the page's azimuthal-equidistant layout (radius proportional to colatitude, longitude 0 up, +/-8.5° of colatitude), so the markers use the same latitude and longitude as the terrain. The canvas draws at devicePixelRatio. If the image cannot load, the page falls back to the old procedural terrain. The UI credits the backdrop (bottom right). The compass, a faint light wash and a Sun marker on the backdrop follow the real DE421 Sun direction as seen from the pole, whether or not a card is open, and are driven by the shared Play/Pause; the backdrop image itself is not re-rendered per hour.
 
 ## Limitations
 
@@ -93,6 +103,7 @@ The home-screen Moon is real data, not a drawing: the LOLA average sunlight visi
 - Where the LOLA return count at the pixel is 0 (NR101, Malapert, Nobile Rim 2, de Gerlache Rim 2), slope there is interpolated, not measured. The card says so.
 - Sunlight and Earth averages have no published error bar.
 - Earth visibility is disc visibility, not a radio link budget.
-- Hourly terrain-aware Sun/Earth visibility is NR101 only. The other eight cards show the real Sun elevation curve (centre of disc against a smooth horizontal), which ignores terrain, so it can say "Sun above horizontal" where hills would hide it.
-- The zoom for NR101 is exposure-stretched, uses a point-source Sun and only casts shadows from terrain inside its 2.56 km chip.
-- Only NR101 has an elevation raster on disk; the other five 5 m tiles are slope, slope error and return count.
+- Zoom shadows are cast only by terrain inside the chip (2.56 km at 10 m, 5.12 km at 20 m), with a point-source Sun and exposure stretch. The hourly strips use the whole raster instead: 3.3 to 15 km from the point, so terrain beyond it is missing and a far horizon can be too low.
+- The two 20 m regions (PCB01, MMP01) have 4× coarser pixels than the 5 m site DEMs. Boulders, small craters and narrow ridges are not resolved, so their near horizons and shadows are smoother. Slope stays n/a for them (no 5 m slope tile).
+- Sun elevation below the local horizontal still lights slopes that face the Sun; the zoom says so ("Sun below horizontal · only facing slopes lit") rather than going black.
+- The 5 m `_surf` tiles are the product-78 adjusted surface heights; error rasters (`_toterr`) were not downloaded and no vertical error is drawn.

@@ -4,14 +4,17 @@ Writes, into web/data/:
   sun.json / sun.js     DE421 Sun azimuth and elevation, hourly, for all nine points
                         (window.SUN_DATA). Sun disc centre against a smooth local horizontal.
                         No terrain is involved, so it is the same kind of number for every region.
-  zoom.json / zoom.js   a local north-up elevation chip of the real LOLA Site 06 5 m DEM
-                        around NR101 (window.ZOOM_DATA), 16-bit heights, base64.
+  zoom.json / zoom.js   a local north-up elevation chip (window.ZOOM_DATA), 16-bit heights, base64,
+                        for every region that has a real LOLA elevation raster on disk (see DEM_SOURCES):
+                        5 m product-78 site DEMs (``*_surf.tif``) where a tile contains the point, and
+                        a window of the 5 m 87-90S mosaic (product 81) for Slater Plain, and windows of the 20 m LOLA polar DEM (LDEM_80S_20MPP_ADJ) for the rest. Also the
+                        terrain-aware hourly Sun/Earth visibility strips for each of those regions.
   zoom/<ID>.webp        a crop of the LOLA average-sunlight-visibility map (120 m) around each
                         point, north-up. The same raster as the home backdrop. Not terrain.
 
-Only NR101 has an elevation raster on disk (Site06 ``_surf.tif``). The other tiles in data/raw
-are slope, slope error and return-count rasters: they cannot be hillshaded, so no terrain is
-drawn for those regions.
+Slope, slope-error and return-count tiles in data/raw cannot be hillshaded and are not used here.
+A region with no elevation raster would keep only the static sunlight crop; at present all nine
+regions have one (the three without a 5 m site tile use the 20 m polar DEM).
 
     python -m atlas.export_zoom
 """
@@ -37,10 +40,33 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW = PACKAGE_ROOT / "data" / "raw"
 DEFAULT_OUT = PACKAGE_ROOT / "web" / "data"
 HOURS = 336  # 14 Earth days from 2025-01-01T00Z, same window as the NR101 timeline
-DEM_NAME = "Site06_final_adj_5mpp_surf.tif"
-DEM_REGION_POINT = "NR101"
 DEM_N = 256          # chip is DEM_N x DEM_N
-DEM_PX_M = 10.0      # metres per chip pixel (2.56 km across); source is 5 m
+STRIP_HEIGHTS_M = (1, 5)
+# point id -> elevation raster on disk. ``pixel_m`` is the chip pixel: 10 m for the 5 m site DEMs
+# (2x2 box mean of bilinear samples), the native 20 m for the polar-DEM windows (no upsampling).
+DEM_SOURCES = {
+    "NR101": dict(file="Site06_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 Site 06",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif"),
+    "HW01": dict(file="Haworth_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 Haworth",
+                 url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Haworth/Haworth_final_adj_5mpp_surf.tif"),
+    "MMA01": dict(file="Site23_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 Site 23",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site23/Site23_final_adj_5mpp_surf.tif"),
+    "MMO01": dict(file="Site20_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 Site 20 (Leibnitz beta)",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site20/Site20_final_adj_5mpp_surf.tif"),
+    "NR201": dict(file="DM2_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 DM2",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif"),
+    "dGR101": dict(file="SL2_final_adj_5mpp_surf.tif", source_pixel_m=5.0, pixel_m=10.0, product="LOLA product 78 SL2",
+                   url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/SL2/SL2_final_adj_5mpp_surf.tif"),
+    "PCB01": dict(file="LDEM_80S_20MPP_ADJ_win30km_PCB01.tif", source_pixel_m=20.0, pixel_m=20.0, product="LOLA product 90 polar DEM, 30 km window",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF"),
+    "MMP01": dict(file="LDEM_80S_20MPP_ADJ_win30km_MMP01.tif", source_pixel_m=20.0, pixel_m=20.0, product="LOLA product 90 polar DEM, 30 km window",
+                  url="https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF"),
+    "SP01": dict(file="ldem_87s_5mpp_win20km_SP01.tif", source_pixel_m=5.0, pixel_m=10.0,
+                 product="LOLA product 81 87-90S 5 m mosaic (interpolation fill-in), 20 km window",
+                 url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/87S/ldem_87s_5mpp.tif"),
+}
+CITATION = {5.0: "Barker et al. 2021, Planetary and Space Science 203, 105119",
+            20.0: "Barker et al. 2023, Planetary Science Journal, 10.3847/PSJ/acf3e1"}
 MAP_N = 256          # backdrop crop size
 MAP_SPAN_M = 15_360.0  # 128 source pixels of 120 m
 _BANNED = {"score", "safety", "safety_score", "habitability", "habitability_score", "fused_score", "rank", "ranking", "safe"}
@@ -101,34 +127,80 @@ def decode_heights(rec: dict, n: int) -> np.ndarray:
     return rec["min_m"] + q.astype(np.float64) * rec["step_m"]
 
 
-def dem_chip(raw: Path, lon: float, lat: float) -> dict:
+def read_dem(raw: Path, name: str):
     import rasterio
 
-    with rasterio.open(raw / DEM_NAME) as src:
+    with rasterio.open(raw / name) as src:
         arr = src.read(1).astype(np.float64)
         t = src.transform
         nodata = src.nodata
     if not np.isfinite(arr).all() or (nodata is not None and np.isfinite(nodata) and (arr == nodata).any()):
-        raise RuntimeError("DEM contains nodata; refusing to fill it")
+        raise RuntimeError(f"{name} contains nodata; refusing to fill it")
+    return arr, t
+
+
+def dem_chip(raw: Path, point_id: str, lon: float, lat: float) -> dict:
+    spec = DEM_SOURCES[point_id]
+    arr, t = read_dem(raw, spec["file"])
+    px = spec["pixel_m"]
+    sub = 2 if px > spec["source_pixel_m"] else 1
     (ex, ey), (nx, ny) = local_axes_in_grid(lon, lat)
     x0, y0 = lonlat_to_xy(lon, lat)
-    E, N = north_up_offsets(DEM_N, DEM_PX_M, sub=2)
+    E, N = north_up_offsets(DEM_N, px, sub=sub)
     x = x0 + E * ex + N * nx
     y = y0 + E * ey + N * ny
     col = (x - t.c) / t.a - 0.5
     row = (y - t.f) / t.e - 0.5
     h = _bilinear(arr, col, row)
-    h = h.reshape(DEM_N, 2, DEM_N, 2).mean(axis=(1, 3))  # 2x2 box = anti-aliased 10 m pixel
+    if sub > 1:
+        h = h.reshape(DEM_N, sub, DEM_N, sub).mean(axis=(1, 3))  # 2x2 box = anti-aliased chip pixel
     rec = encode_heights(h)
     q = rec.pop("_q")
+    res = spec["source_pixel_m"]
+    how = f"resampled to {px:g} m by 2x2 box mean" if sub > 1 else "native pixel spacing, bilinear at the chip grid, not upsampled"
     rec.update({
-        "n": DEM_N, "pixel_m": DEM_PX_M, "extent_m": DEM_N * DEM_PX_M,
+        "n": DEM_N, "pixel_m": px, "extent_m": DEM_N * px, "source_pixel_m": res,
         "orientation": "north up, east right, local frame at the point (grid convergence removed)",
-        "source": "LOLA product 78 Site 06 5 m elevation, Site06_final_adj_5mpp_surf.tif (Barker et al. 2021), resampled to 10 m by 2x2 box mean",
-        "point_id": DEM_REGION_POINT, "longitude_deg": lon, "latitude_deg": lat,
+        "source": f"{spec['product']} elevation, {spec['file']} ({CITATION[res]}), {how}",
+        "source_short": f"{spec['product']}, {res:g} m elevation",
+        "citation": CITATION[res], "file": spec["file"], "url": spec["url"],
+        "point_id": point_id, "longitude_deg": lon, "latitude_deg": lat,
         "relief_m": float(h.max() - h.min()),
     })
     return rec
+
+
+def terrain_strips(raw: Path, point_id: str, lon: float, lat: float, sun_xyz, earth_xyz) -> dict:
+    """Hourly terrain-aware Sun and Earth disc visibility (the repo's own horizon code), 1 m and 5 m eye height.
+
+    Same method as atlas.timeline for NR101: horizon = highest terrain elevation angle per 0.5 degree azimuth
+    bin from the observer's 3D position, disc visible when centre altitude + angular radius clears it.
+    Terrain outside the raster is not in the mask (the 20 m windows reach 15 km from the point).
+    """
+    from atlas.horizon import (EARTH_EQUATORIAL_RADIUS_M, SUN_RADIUS_M, horizon_from_elevation,
+                               visibility_mask)
+
+    spec = DEM_SOURCES[point_id]
+    arr, t = read_dem(raw, spec["file"])
+    x0, y0 = lonlat_to_xy(lon, lat)
+    col = int(math.floor((x0 - t.c) / t.a)); row = int(math.floor((y0 - t.f) / t.e))
+    if not (0 <= row < arr.shape[0] and 0 <= col < arr.shape[1]):
+        raise RuntimeError(f"{point_id} is outside {spec['file']}")
+    surface = float(arr[row, col])
+    transform = (t.a, t.b, t.c, t.d, t.e, t.f)
+    east, north, _up = enu_axes(lon, lat)
+    out = {}
+    for h in STRIP_HEIGHTS_M:
+        hor = horizon_from_elevation(arr, transform, observer_x_m=x0, observer_y_m=y0, surface_elevation_m=surface,
+                                     height_m=h, min_horizontal_m=spec["source_pixel_m"] / 2.0)
+        obs = position_xyz(lon, lat, RADIUS_M + surface + h)
+        for body, xyz, rad in (("sun", sun_xyz, SUN_RADIUS_M), ("earth", earth_xyz, EARTH_EQUATORIAL_RADIUS_M)):
+            m = visibility_mask(obs, east, north, xyz, rad, hor)
+            out[f"{body}_{h}m"] = "".join("1" if v else "0" for v in m)
+    out["surface_elevation_m"] = surface
+    out["source_pixel_m"] = spec["source_pixel_m"]
+    out["reach_m"] = float(min(row, col, arr.shape[0] - 1 - row, arr.shape[1] - 1 - col) * spec["source_pixel_m"])
+    return out
 
 
 def map_crop(src_values: np.ndarray, lon: float, lat: float):
@@ -180,11 +252,30 @@ def build(raw: Path, kernels: Path, out: Path) -> None:
         "definition": "Azimuth in degrees from local north toward east and elevation in degrees of the Sun's disc centre above a smooth local horizontal (spherical Moon, radius 1737.4 km, MOON_ME frame, point-source centre, no terrain, no refraction). Stored in tenths of a degree.",
         "points": points,
     }
-    dem = dem_chip(raw, points[DEM_REGION_POINT]["longitude_deg"], points[DEM_REGION_POINT]["latitude_deg"])
+    # Sun as seen from the pole, for the home map: longitude of the Sun's direction (map angle) and elevation at 90S.
+    sx, sy = sun[:, 0], sun[:, 1]
+    home_lon = np.degrees(np.arctan2(sy, sx)) % 360.0
+    _az, home_el = sun_azel(0.0, -90.0, sun)
+    sun_data["home"] = {
+        "definition": "Longitude of the Sun's direction in MOON_ME (the angle the home map draws the light from) and the Sun's centre elevation at the pole, hours as in points. Tenths of a degree.",
+        "longitude_deg_x10": [int(round(v * 10)) % 3600 for v in home_lon],
+        "elevation_deg_x10": [int(round(v * 10)) for v in home_el],
+    }
+    vec = moon_centered_vectors_m(kernels, hours)
+    dems, strips = {}, {}
+    for r in REGIONS:
+        if r.point_id not in DEM_SOURCES or not (raw / DEM_SOURCES[r.point_id]["file"]).is_file():
+            continue
+        dems[r.point_id] = dem_chip(raw, r.point_id, r.longitude_deg, r.latitude_deg)
+        if r.point_id != "NR101":  # NR101 keeps its published nr101.json timeline (atlas.timeline, 14 and 30 days)
+            ts = terrain_strips(raw, r.point_id, r.longitude_deg, r.latitude_deg, vec["sun"], vec["earth"])
+            ts["source"] = dems[r.point_id]["source_short"]
+            strips[r.point_id] = ts
     maps = write_map_crops(raw, out)
     zoom = {
         "provenance": "Generated by atlas/export_zoom.py.",
-        "dem": {DEM_REGION_POINT: dem},
+        "dem": dems,
+        "strips": strips,
         "map": {"label": "LOLA average sunlight visibility (Mazarico et al. 2011, AVGVISIB_75S_120M_201608), 120 m pixels, north up. A long-term average, not terrain and not a particular time.", "crops": maps},
     }
     for name, glob, data in (("sun", "SUN_DATA", sun_data), ("zoom", "ZOOM_DATA", zoom)):

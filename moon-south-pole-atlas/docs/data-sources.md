@@ -114,3 +114,23 @@ Put files in `data/raw/`. Do not commit them. Record the URL, the date fetched, 
   `-k` and `SECLEVEL=0` turn off certificate and key-strength checks, so the transport proves nothing. Integrity rests on the SHA-256 in `data/MANIFEST.tsv`, which must match after download. Use these flags for this one host only.
 - **imbrium.mit.edu.** The MANIFEST URLs are `http://`. From the build box the HTTP connection timed out; the same paths over `https://` worked and matched the checksums.
 - **pgda.gsfc.nasa.gov** product-78 tiles download normally over HTTPS. Haworth is 142 MB per file; the rest are 41–71 MB. The complete set is about 1.56 GB.
+
+
+## Elevation rasters behind the site zoom and hourly strips (added 10 October 2026)
+
+All nine regions now have a real elevation raster on disk; every file is in `data/MANIFEST.tsv` with URL, fetch time and sha256 (raw data stays out of git).
+
+| Point | File in `data/raw` | Source | Pixel |
+| --- | --- | --- | --- |
+| NR101 | `Site06_final_adj_5mpp_surf.tif` | [PGDA product 78](https://pgda.gsfc.nasa.gov/products/78), Site06 | 5 m |
+| HW01 | `Haworth_final_adj_5mpp_surf.tif` | product 78, Haworth (142 MB) | 5 m |
+| MMA01 | `Site23_final_adj_5mpp_surf.tif` | product 78, Site 23 | 5 m |
+| MMO01 | `Site20_final_adj_5mpp_surf.tif` | product 78, Site 20 (Leibnitz beta) | 5 m |
+| NR201 | `DM2_final_adj_5mpp_surf.tif` | product 78, DM2 | 5 m |
+| dGR101 | `SL2_final_adj_5mpp_surf.tif` | product 78, SL2 | 5 m |
+| SP01 | `ldem_87s_5mpp_win20km_SP01.tif` | [product 81](https://pgda.gsfc.nasa.gov/products/81), `ldem_87s_5mpp.tif` (3.5 GB, 87°S–90°S, 40000 × 40000 px, "with interpolation fillin"), a 4000 × 4000 pixel (20 km) window around the point | 5 m |
+| PCB01, MMP01 | `LDEM_80S_20MPP_ADJ_win30km_<ID>.tif` | [product 90](https://pgda.gsfc.nasa.gov/products/90), `LDEM_80S_20MPP_ADJ.TIF` (2.6 GB cloud-optimised GeoTIFF, 30400 × 30400 px, 80°S–90°S), a 1500 × 1500 pixel (30 km) window centred on the point | 20 m |
+
+The 20 m file is a COG and the 87°S file is tiled, so each window was read with HTTP range requests (GDAL `/vsicurl/`, 10 MB chunks for the 87°S file) rather than downloading 2.6 GB and 3.5 GB. An SP01 window of the 20 m DEM (`LDEM_80S_20MPP_ADJ_win30km_SP01.tif`) is also on disk as a coarser fallback and is not used. The manifest URL for these carries the pixel window as a fragment (`#window=col…,row…`); the sha256 and byte count are those of the stored window, which keeps the pixel grid and georeferencing of the parent file. Values are metres, no scale or offset, no nodata inside the windows. Total `data/raw` is about 2.0 GB.
+
+Slater Plain (87.478°S) is inside the 87–90°S 5 m mosaic, so it gets 5 m elevation; the mosaic's interpolated fill-in (no matching LOLA return count was downloaded here) means smooth patches there are not all measured. No 5 m LOLA elevation covers Peak near Cabeus B (83.763°S) or Mons Mouton Plateau (85.111°S): no product-78 site tile contains them and the mosaic starts at 87°S, so they use the 20 m polar DEM. An `LDEM_875S_5M`-style mosaic (87.5°S–90°S) would not cover any of the nine points, Slater Plain being just outside at 87.478°S. Shape-from-shading product 104 (5 m, the 13 original 2022 regions, Zenodo) includes Peak near Cabeus B but was not downloaded: it is masked in shadow and is not LOLA elevation, so it is a possible follow-up for Cabeus B.

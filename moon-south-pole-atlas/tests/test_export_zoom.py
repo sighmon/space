@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 
-from atlas.export_zoom import (DEM_N, HOURS, _BANNED, _check, decode_heights, encode_heights,
-                               local_axes_in_grid, north_up_offsets, sun_azel)
+from atlas.export_zoom import (DEM_N, DEM_SOURCES, HOURS, _BANNED, _check, decode_heights, encode_heights,
+                               local_axes_in_grid, north_up_offsets, read_dem, sun_azel, terrain_strips)
 from atlas.frame import RADIUS_M, lonlat_to_xy
 from atlas.horizon import enu_axes, position_xyz
 from atlas.regions import REGIONS
@@ -79,13 +79,65 @@ class ExportedDataTest(unittest.TestCase):
         _check(self.sun)
         _check(self.zoom)
 
-    def test_dem_only_for_nr101_and_map_crop_for_all(self):
-        self.assertEqual(list(self.zoom["dem"]), ["NR101"])
-        rec = self.zoom["dem"]["NR101"]
-        h = decode_heights(rec, rec["n"])
-        self.assertAlmostEqual(float(h.max() - h.min()), rec["relief_m"], delta=2 * rec["step_m"] + 1e-6)
+    def test_every_region_has_a_labelled_dem_and_a_map_crop(self):
+        self.assertEqual(sorted(self.zoom["dem"]), sorted(r.point_id for r in REGIONS))
+        for pid, rec in self.zoom["dem"].items():
+            spec = DEM_SOURCES[pid]
+            self.assertEqual(rec["source_pixel_m"], spec["source_pixel_m"], pid)
+            self.assertEqual(rec["file"], spec["file"], pid)
+            self.assertAlmostEqual(rec["extent_m"], rec["n"] * rec["pixel_m"])
+            self.assertGreaterEqual(rec["pixel_m"], rec["source_pixel_m"], pid)  # never finer than the source
+            self.assertIn(str(int(rec["source_pixel_m"])) + " m", rec["source_short"])
+            h = decode_heights(rec, rec["n"])
+            self.assertAlmostEqual(float(h.max() - h.min()), rec["relief_m"], delta=2 * rec["step_m"] + 1e-6)
+            self.assertGreater(rec["relief_m"], 50.0, pid)  # real relief, not a flat fill
         for r in REGIONS:
             self.assertTrue((WEB.parent / self.zoom["map"]["crops"][r.point_id]["file"]).is_file(), r.point_id)
+        # 5 m for seven regions (six site DEMs + the 87-90S mosaic for Slater Plain); 20 m polar DEM windows for the other two
+        self.assertEqual(sorted(p for p, d in self.zoom["dem"].items() if d["source_pixel_m"] == 20.0), ["MMP01", "PCB01"])
+
+    def test_strips_for_every_region_but_nr101(self):
+        self.assertEqual(sorted(self.zoom["strips"]), sorted(r.point_id for r in REGIONS if r.point_id != "NR101"))
+        for pid, st in self.zoom["strips"].items():
+            for key in ("sun_1m", "sun_5m", "earth_1m", "earth_5m"):
+                self.assertEqual(len(st[key]), HOURS, (pid, key))
+                self.assertTrue(set(st[key]) <= {"0", "1"})
+            self.assertIn("m elevation", st["source"])
+            self.assertGreater(st["reach_m"], 3000.0)
+        home = self.sun["home"]
+        self.assertEqual(len(home["longitude_deg_x10"]), HOURS)
+        self.assertTrue(all(abs(v) < 120 for v in home["elevation_deg_x10"]))
+
+    @unittest.skipUnless(all((ROOT / "data" / "raw" / s["file"]).is_file() for s in DEM_SOURCES.values()), "DEM rasters not on disk")
+    def test_chip_centre_matches_raster_at_the_point(self):
+        for r in REGIONS:
+            spec, rec = DEM_SOURCES[r.point_id], self.zoom["dem"][r.point_id]
+            arr, t = read_dem(ROOT / "data" / "raw", spec["file"])
+            x, y = lonlat_to_xy(r.longitude_deg, r.latitude_deg)
+            col, row = (x - t.c) / t.a - 0.5, (y - t.f) / t.e - 0.5
+            c0, r0 = int(col), int(row)
+            local = arr[r0 - 3:r0 + 5, c0 - 3:c0 + 5]  # a few source pixels around the point
+            h = decode_heights(rec, rec["n"])[rec["n"] // 2 - 1:rec["n"] // 2 + 1, rec["n"] // 2 - 1:rec["n"] // 2 + 1]
+            self.assertGreaterEqual(float(h.min()), float(local.min()) - 1.0, r.point_id)
+            self.assertLessEqual(float(h.max()), float(local.max()) + 1.0, r.point_id)
+
+    @unittest.skipUnless((KERNELS / "de421.bsp").is_file() and (ROOT / "data" / "raw" / DEM_SOURCES["SP01"]["file"]).is_file(), "kernels or SP01 DEM not on disk")
+    def test_sp01_strips_recompute_identically(self):
+        from datetime import datetime, timezone
+
+        from atlas.ephemeris import moon_centered_vectors_m, utc_hours
+
+        hours = utc_hours(datetime(2025, 1, 1, tzinfo=timezone.utc), HOURS)
+        v = moon_centered_vectors_m(KERNELS, hours)
+        r = next(x for x in REGIONS if x.point_id == "SP01")
+        again = terrain_strips(ROOT / "data" / "raw", "SP01", r.longitude_deg, r.latitude_deg, v["sun"], v["earth"])
+        for key in ("sun_1m", "sun_5m", "earth_1m", "earth_5m"):
+            self.assertEqual(again[key], self.zoom["strips"]["SP01"][key], key)
+        # the Sun strip at the pole map-angle export matches the same vectors
+        lon = np.degrees(np.arctan2(v["sun"][:, 1], v["sun"][:, 0])) % 360
+        got = np.array(self.sun["home"]["longitude_deg_x10"]) / 10
+        d = (got - lon + 180) % 360 - 180
+        self.assertLess(float(np.abs(d).max()), 0.06)
 
     @unittest.skipUnless((KERNELS / "de421.bsp").is_file(), "kernels not on disk")
     def test_nr101_matches_recomputed_ephemeris(self):
