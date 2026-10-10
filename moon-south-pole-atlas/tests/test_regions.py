@@ -139,7 +139,8 @@ class RegionComparisonTests(unittest.TestCase):
         self.assertIs(present["cuts"]["slope_under_5_deg"], True)
         self.assertIs(present["cuts"]["average_sunlight_above_0_5"], True)
         self.assertIs(present["cuts"]["earth_visibility_at_or_above_0_99"], False)
-        self.assertNotIn("distance_to_cold_shadow_m", present)
+        self.assertIn("distance_to_cold_shadow_m", present)
+        self.assertIsNone(present["distance_to_cold_shadow_m"])  # no cold-shadow centers were passed
         for banned in ("habitability", "safety", "score", "fused_score", "rank", "ranking"):
             self.assertNotIn(banned, comparison)
             self.assertNotIn(banned, present)
