@@ -567,12 +567,19 @@ function draw(){
   else{$('#sunneedle').style.opacity=0;$('#sunlbl').textContent='Backdrop: LOLA average sunlight visibility, 120 m · Mazarico et al. 2011';}
 }
 let last=0, lastZ=0, lastD=0, sunStamp='', homeSun=null;
+// Exactly one rAF loop. It re-arms itself first and each step is isolated, so an error in one
+// frame (or while a card opens/closes) can never stop the Sun clock.
+let rafId=0;
+function startLoop(){if(!rafId)rafId=requestAnimationFrame(loop);}   // idempotent
 function loop(t){
-  const dt=Math.min(0.1,Math.max(0,(t-last)/1000)); last=t;
-  if(playing&&SUN&&!dragging){let h=simH+dt*RATE[speed]; if(h>=HOURS-1)h-=HOURS-1; setHour(h);}   // one shared clock for home and cards
-  if(zDirty&&t-lastZ>45)renderZoom(t);
-  if(needRedraw&&t-lastD>30){needRedraw=false;lastD=t;if(!realBd&&procBuilt)shade();draw();}
-  requestAnimationFrame(loop);
+  rafId=requestAnimationFrame(loop);
+  try{
+    t=(typeof t==='number'&&isFinite(t))?t:performance.now();
+    const dt=(last>0&&t>last)?Math.min(0.1,(t-last)/1000):0; last=t;   // first frame / clock jumps give dt 0, never NaN or huge
+    if(playing&&SUN&&!dragging&&dt>0){let h=simH+dt*RATE[speed]; if(!isFinite(h))h=0; if(h>=HOURS-1)h-=HOURS-1; setHour(h);}   // one shared clock for home and cards
+  }catch(e){console.error('sun clock',e);}
+  try{if(zDirty&&t-lastZ>45)renderZoom(t);}catch(e){zDirty=false;console.error('zoom',e);}
+  try{if(needRedraw&&t-lastD>30){needRedraw=false;lastD=t;if(!realBd&&procBuilt)shade();draw();}}catch(e){console.error('draw',e);}
 }
 let needRedraw=false;
 
@@ -754,7 +761,8 @@ function sunAt(h){
 const p2=n=>String(n).padStart(2,'0');
 function setHour(h,force){
   simH=Math.max(0,Math.min(HOURS-1,h)); if(!SUN)return;
-  if(cur&&cur.sunp)headEl.style.transform=`translateX(${PAD+(simH+0.5)*(TW-PAD)/HOURS}px)`;
+  const cardOn=!!(sel&&cur&&cur.sunp);   // card closed: home clock keeps running, zoom/timeline are left alone
+  if(cardOn)headEl.style.transform=`translateX(${PAD+(simH+0.5)*(TW-PAD)/HOURS}px)`;
   const q=Math.floor(simH*8); if(q===lastQ&&!force)return; lastQ=q;
   const hi=Math.min(HOURS-1,Math.floor(simH)), d=new Date(H0.getTime()+Math.floor(simH*4)*9e5), s=cur&&cur.series;
   sunStamp=`${d.getUTCFullYear()}-${p2(d.getUTCMonth()+1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
@@ -762,7 +770,7 @@ function setHour(h,force){
     const a0=HSUN.longitude_deg_x10[i]/10, a1=HSUN.longitude_deg_x10[i+1]/10, dd=((a1-a0+540)%360)-180;
     homeSun={lon:(a0+dd*f+360)%360, el:(HSUN.elevation_deg_x10[i]*(1-f)+HSUN.elevation_deg_x10[i+1]*f)/10};}
   $('#hstamp').textContent=`D${Math.floor(simH/24)+1} · ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
-  if(cur&&cur.sunp){
+  if(cardOn){
     $('#t-time').textContent=`D${Math.floor(simH/24)+1} · ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
     sunNow=sunAt(simH); sunAz=sunNow.az*D2R;
     if(s){$('#k-sun').textContent='SUN DISC VISIBLE';$('#t-sun').textContent=Math.round(s.sun[hi]*100)+'%';
@@ -860,7 +868,7 @@ function zoomOverlay(sun,scaleM,mpp,label){
 }
 function renderZoom(t,force){
   zDirty=false; lastZ=t||performance.now();
-  if(!zmode||!sunNow||(!$('#zoom').offsetParent&&!force))return;
+  if(!sel||!cur||!zmode||!sunNow||(!$('#zoom').offsetParent&&!force))return;
   const sun=sunNow, rg=REGIONS.find(x=>x.id===sel);
   zx.setTransform(1,0,0,1,0,0);zx.fillStyle='#000';zx.fillRect(0,0,ZS,ZS);
   zx.imageSmoothingEnabled=true;zx.imageSmoothingQuality='high';
@@ -920,7 +928,7 @@ const h=location.hash.slice(1);
 {const qs=new URLSearchParams(h.split('?')[1]||'');   // #?h=120&paused or #region/NR1?h=120&paused&zoom; autoplay by default, reduced motion starts paused
  if(qs.has('h'))simH=Math.max(0,Math.min(HOURS-1,+qs.get('h')||0));
  setPlaying(!(REDUCED||qs.has('paused')));}
-layout(); shade(); draw(); segThumb(); syncCuts(); setHour(simH,true); placeMarkers(); requestAnimationFrame(()=>{segThumb();placeMarkers();}); requestAnimationFrame(loop);
+layout(); shade(); draw(); segThumb(); syncCuts(); setHour(simH,true); placeMarkers(); requestAnimationFrame(()=>{segThumb();placeMarkers();}); startLoop();
 if(h.startsWith('region/')){const [pth,qs]=h.split('?');initQ=new URLSearchParams(qs||'');openRegion(pth.split('/')[1]);}  // e.g. #region/NR1?h=120&paused&zoom opens at a fixed Sun time, scrolled to the zoom
 else if(h==='compare'||h==='method'){ if(h==='method'&&false){} openLayer(h);}
 else if(h==='nr1+method'){openRegion('NR1');openLayer('method');}
