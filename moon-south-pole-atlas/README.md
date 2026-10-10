@@ -76,7 +76,7 @@ The web prototype has its own tests under `web/` (plain Node, no dependencies). 
 
 ```
 node web/test_units.js && node web/test_contrast.js
-for t in test_sunmarker test_play_button test_no_overflow test_playback_restart test_findings test_review2 test_close_github; do
+for t in test_sunmarker test_play_button test_no_overflow test_playback_restart test_findings test_review2 test_close_github test_review3; do
   node --experimental-websocket web/$t.js || break
 done
 ```

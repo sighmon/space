@@ -245,7 +245,9 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .layer .panel{--px:20px;padding:8px 20px 40px}
   .grid2{grid-template-columns:1fr}
   .foot{left:18px;right:18px;bottom:18px}
-  body.sheet-open .foot{opacity:0;visibility:hidden}
+  /* narrow: the Sun dial stays visible only when it fits in the gap between the header and the top of the open sheet (class set by fitDial()); otherwise it is hidden */
+  body.sheet-open .foot{opacity:0;visibility:hidden;pointer-events:none}
+  body.sheet-open.dial-fit .foot{opacity:1;visibility:visible;left:var(--dial-left,18px);right:auto;top:var(--dial-top,auto);bottom:auto;transform:none;width:auto}
   .zoom{grid-template-columns:1fr}
   .compass span{display:none}
   .mk .tag{font-size:12.5px;padding:5px 8px}
@@ -623,7 +625,7 @@ function loop(t){
   try{
     t=(typeof t==='number'&&isFinite(t))?t:performance.now();
     const dt=(last>0&&t>last)?Math.min(0.1,(t-last)/1000):0; last=t;   // first frame / clock jumps give dt 0, never NaN or huge
-    if(playing&&SUN&&!dragging&&dt>0){let h=simH+dt*RATE[speed]; if(!isFinite(h))h=0; if(h>=HOURS-1)h-=HOURS-1; setHour(h);}   // one shared clock for home and cards
+    if(playing&&SUN&&!dragging&&dt>0){let h=simH+dt*RATE[speed]; if(!isFinite(h))h=0; if(h>=HOURS)h-=HOURS; setHour(h);}   // one shared clock for home and cards
   }catch(e){console.error('sun clock',e);}
   try{if(zDirty&&t-lastZ>66&&zoomVisible)renderZoom(t);}catch(e){zDirty=false;console.error('zoom',e);}
   try{if(needRedraw&&!document.body.classList.contains('layer-open')&&t-lastD>=(document.body.classList.contains('sheet-open')?100:FRAME_MS)){needRedraw=false;lastD=t;if(!realBd&&procBuilt)shade();draw();}}catch(e){console.error('draw',e);}
@@ -715,7 +717,7 @@ function renderDials(){
     const ends=el.querySelectorAll('.ends span'); ends[0].textContent=d.min+d.suf; ends[1].textContent=d.max+d.suf;
     let rt=v.unc;
     if(k==='slope')rt+=` (${(v.v-v.pm).toFixed(1)}–${(v.v+v.pm).toFixed(1)}°)`+(s.q.interpolated_gap?' · return count 0: interpolated, not measured':'');
-    if(k==='cold')rt+=` · summer max ${Units.kHTML(s.q.summer_max_temperature_k)} here`;
+    if(k==='cold')rt+=Units.has(s.q.summer_max_temperature_k)?` · summer max ${Units.kHTML(s.q.summer_max_temperature_k)} here`:' · summer max n/a here';
     if(s.series&&k==='sun')rt+=` · ${s.q.point_id} 14-day window, ${height} m: ${s.winSun.toFixed(0)}% of hours (separate product)`;
     if(s.series&&k==='earth')rt+=` · ${s.q.point_id} 14-day window, ${height} m: ${s.winEarth.toFixed(0)}% of hours (separate product)`;
     el.querySelector('.rng').innerHTML=rt;
@@ -792,6 +794,30 @@ function openRegion(id){
 }
 // Closed panels are inert (not tabbable, not clickable, hidden from assistive tech), not just moved off-screen.
 // Opening moves focus into the panel (its close button); closing returns focus to whatever opened it.
+
+// Narrow screens (<=900 px): with a card open, show the Sun dial wherever it fits above the sheet without touching the header
+// (brand text, GitHub link, nav): first in the gap just above the sheet, else in the header band between brand and nav.
+// It is hidden only when no free spot exists. Measured from the live layout, not guessed.
+const DIAL=44, DIAL_PAD=8;
+function dialSpot(){
+  const sheetTop=innerHeight-$('#sheet').offsetHeight;   // layout height: independent of the slide-in transform
+  const obs=$$('.top .brand .label,.top .brand .small,.top .ghlink,.top .nav').map(e=>e.getBoundingClientRect()).filter(r=>r.width&&r.height);
+  const hit=(x,y)=>obs.some(r=>x<r.right+DIAL_PAD&&x+DIAL>r.left-DIAL_PAD&&y<r.bottom+DIAL_PAD&&y+DIAL>r.top-DIAL_PAD);
+  const xs=[]; const c=(innerWidth-DIAL)/2; for(let d=0;d<=innerWidth;d+=2){xs.push(c+d);if(d)xs.push(c-d);}
+  const ys=[sheetTop-DIAL_PAD-DIAL]; for(let y=24;y>=8;y-=8)ys.push(y);
+  for(const y of ys){ if(y<8||y+DIAL>sheetTop-DIAL_PAD+0.5)continue;
+    for(const x of xs){ if(x<12||x+DIAL>innerWidth-12)continue; if(!hit(x,y))return {x,y}; } }
+  return null;
+}
+function fitDial(){
+  const b=document.body, set=on=>{if(b.classList.contains('dial-fit')!==on)b.classList.toggle('dial-fit',on);};
+  if(innerWidth>900||!b.classList.contains('sheet-open')){set(false);return;}
+  const p=dialSpot();
+  if(p){b.style.setProperty('--dial-top',p.y+'px');b.style.setProperty('--dial-left',p.x+'px');set(true);}else set(false);
+}
+addEventListener('resize',fitDial);
+new ResizeObserver(fitDial).observe($('#sheet'));
+new MutationObserver(fitDial).observe(document.body,{attributes:true,attributeFilter:['class']});
 const trigger=new Map();
 function panelOpen(p,focusSel){
   const a=document.activeElement; if(a&&a!==document.body&&!p.contains(a)&&!p.classList.contains('open'))trigger.set(p,a);
@@ -853,9 +879,9 @@ function sunAt(h){
 const p2=n=>String(n).padStart(2,'0');
 let lastHead=0, lastUI=0;
 function setHour(h,force){
-  simH=Math.max(0,Math.min(HOURS-1,h)); if(!SUN)return;
+  simH=Math.max(0,Math.min(HOURS-1e-6,h)); if(!SUN)return;   // time is continuous in [0,HOURS): hour 335 spans 335..336, then playback wraps to 0 (seamless)
   const cardOn=!!(sel&&cur&&cur.sunp);   // card closed: home clock keeps running, zoom/timeline are left alone
-  if(cardOn){const n=performance.now();if(force||n-lastHead>=FRAME_MS){lastHead=n;headEl.style.transform=`translateX(${PAD+(simH+0.5)*(TW-PAD)/HOURS}px)`;}}   // playhead moves at the same ~30 fps cap
+  if(cardOn){const n=performance.now();if(force||n-lastHead>=FRAME_MS){lastHead=n;headEl.style.transform=`translateX(${Math.min(TW,PAD+(simH+0.5)*(TW-PAD)/HOURS)}px)`;}}   // playhead moves at the same ~30 fps cap
   const q=Math.floor(simH*8); if(q===lastQ&&!force)return; lastQ=q;
   const hi=Math.min(HOURS-1,Math.floor(simH)), d=new Date(H0.getTime()+Math.floor(simH*4)*9e5), s=cur&&cur.series;
   sunStamp=`${d.getUTCFullYear()}-${p2(d.getUTCMonth()+1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())} UTC`;
@@ -888,7 +914,7 @@ function setPlaying(on){
   $$('.js-play').forEach(b=>{b.setAttribute('aria-label',playing?'Pause Sun movement':'Play Sun movement');});   /* one announcement: the label flips, no aria-pressed */
   $$('.js-rate').forEach(r=>r.textContent=playing?`Playing · ${RATE[speed]} h/s`:'Paused');
 }
-$$('.js-play').forEach(b=>{b.onclick=()=>{if(playing){setPlaying(false);return;}if(simH>=HOURS-1)setHour(0,true);setPlaying(true);};
+$$('.js-play').forEach(b=>{b.onclick=()=>{if(playing){setPlaying(false);return;}setPlaying(true);};
   b.addEventListener('mousedown',e=>e.preventDefault());});   // no focus ring or scroll jump on mouse press
 $$('.js-seg button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;$$('.js-seg button').forEach(x=>x.classList.toggle('on',x.dataset.s===b.dataset.s));segThumb();setPlaying(playing);});
 function segThumb(){$$('.seg').forEach(g=>{const on=g.querySelector('.on'),th=g.querySelector('.thumb');if(on&&on.offsetWidth){th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px';}});}
@@ -1024,7 +1050,7 @@ $$("[data-kelvin]").forEach(e=>e.innerHTML=Units.kHTML(+e.dataset.kelvin));strip
 addEventListener('resize',()=>{layout();if(sel&&cur&&cur.sunp){sizeTL();setHour(simH,true);}segThumb();});
 const h=location.hash.slice(1);
 {const qs=new URLSearchParams(h.split('?')[1]||'');   // #?h=120&paused or #region/NR1?h=120&paused&zoom; autoplay by default, reduced motion starts paused
- if(qs.has('h'))simH=Math.max(0,Math.min(HOURS-1,+qs.get('h')||0));
+ if(qs.has('h'))simH=Math.max(0,Math.min(HOURS-1e-6,+qs.get('h')||0));
  setPlaying(!(REDUCED||qs.has('paused')));}
 layout(); shade(); draw(); segThumb(); syncCuts(); setHour(simH,true); placeMarkers(); requestAnimationFrame(()=>{segThumb();placeMarkers();}); startLoop();
 if(h.startsWith('region/')){const [pth,qs]=h.split('?');initQ=new URLSearchParams(qs||'');openRegion(pth.split('/')[1]);}  // e.g. #region/NR1?h=120&paused&zoom opens at a fixed Sun time, scrolled to the zoom

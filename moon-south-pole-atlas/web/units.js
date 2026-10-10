@@ -9,14 +9,19 @@
   const shown = k => Math.round(k);
   const toF = k => toC(k) * 9 / 5 + 32;
   // Plain text: "203 K · −70 °C · −94 °F"
+  // A missing temperature (null / undefined / NaN / non-number) is "n/a", never Math.round(null) = 0 K.
+  const has = k => typeof k === "number" && isFinite(k);
+  const NA = "n/a";
   function kText(k, prefix) {
+    if (!has(k)) return NA;
     return (prefix || "") + num(k) + " K \u00b7 " + num(toC(shown(k))) + " \u00b0C \u00b7 " + num(toF(shown(k))) + " \u00b0F";
   }
   // HTML: kelvin primary, Celsius/Fahrenheit in a muted .conv span.
   function kHTML(k, prefix) {
+    if (!has(k)) return NA;
     return (prefix || "") + num(k) + "&nbsp;K<span class=\"conv\"> \u00b7 " + num(toC(shown(k))) + "&nbsp;\u00b0C \u00b7 " + num(toF(shown(k))) + "&nbsp;\u00b0F</span>";
   }
-  const api = { shown, toC, toF, num, kText, kHTML };
+  const api = { has, shown, toC, toF, num, kText, kHTML };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Units = api;
 })(typeof window !== "undefined" ? window : globalThis);
