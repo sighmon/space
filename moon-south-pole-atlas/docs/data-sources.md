@@ -100,4 +100,17 @@ USGS Lunar Grid Reference System in Artemis Condensed Coordinates, for the nine 
 
 ## Downloads
 
-Put files in `data/raw/`. Do not commit them. Record the URL, the date fetched, and the checksum in `data/raw/MANIFEST.tsv` when the first download happens. The illumination JPEG2000 files are tens of megabytes and worth keeping whole. The Site 06 GeoTIFFs are the same order. The 100 elevation clones are not needed for the first sheet.
+Put files in `data/raw/`. Do not commit them. Record the URL, the date fetched, the SHA-256, and the byte count in `data/MANIFEST.tsv` (tracked in git, one level above the ignored `data/raw/`) when each download happens. Check files with `tail -n +2 data/MANIFEST.tsv | awk -F'\t' '{print $4"  data/raw/"$1}' | sha256sum -c -`. The illumination JPEG2000 files are tens of megabytes and worth keeping whole. The Site 06 GeoTIFFs are the same order. The 100 elevation clones are not needed for the first sheet.
+
+### Download quirks (seen 8–10 October 2026)
+
+- **Diviner host TLS.** `luna1.diviner.ucla.edu` serves a certificate the system trust store cannot verify (`curl: (60) unable to get local issuer certificate`) and, when that is bypassed, a weak Diffie-Hellman key that OpenSSL's default security level rejects (`dh key too small`). Plain `http://` timed out from the build box. The fetch that worked was:
+
+  ```
+  curl -k --ciphers 'DEFAULT:@SECLEVEL=0' -o data/raw/polar_south_80_summer_max-float.tif \
+    https://luna1.diviner.ucla.edu/~jpierre/diviner/level4_polar/additional_maps/polar_south_80_summer_max-float.tif
+  ```
+
+  `-k` and `SECLEVEL=0` turn off certificate and key-strength checks, so the transport proves nothing. Integrity rests on the SHA-256 in `data/MANIFEST.tsv`, which must match after download. Use these flags for this one host only.
+- **imbrium.mit.edu.** The MANIFEST URLs are `http://`. From the build box the HTTP connection timed out; the same paths over `https://` worked and matched the checksums.
+- **pgda.gsfc.nasa.gov** product-78 tiles download normally over HTTPS. Haworth is 142 MB per file; the rest are 41–71 MB. The complete set is about 1.56 GB.

@@ -13,32 +13,50 @@ python -m http.server 8000     # then open http://localhost:8000
 
 Deep links: `#region/NR1`, `#compare`, `#method`.
 
-## What is real and what is example
+## What is computed and what is not
 
 | Part | Status |
 | --- | --- |
-| Nobile Rim 1 / NR101 card: slope and RMS slope error, 18.6-year sunlight and Earth averages, Diviner summer max temperature, distance to cold shadow, LOLA return count | **Real**, from `data/nr101.json` |
-| NR101 hourly Sun and Earth series (2025-01-01 + 14 days shown, 30 days exported, 1 m and 5 m) | **Real**, from the repo's horizon and DE421 code |
+| Nine region cards and the comparison table: slope with RMS slope error, 18.6-year sunlight and Earth averages, Diviner summer max temperature, permanent-shadow flag, distance to cold shadow, LOLA return count | **Computed** by `atlas.regions`, exported to `data/regions.json`. Every row uses the same measures. |
+| Slope, slope error, return count for Peak near Cabeus B, Mons Mouton Plateau, Slater Plain | **Not computed**, shown as `n/a` with the reason: product 78 has no 5 m site DEM containing those points, and the 20 m mosaic is not substituted. |
+| NR101 hourly Sun and Earth series (2025-01-01 + 14 days shown, 30 days exported, 1 m and 5 m) | **Computed** from the repo's horizon and DE421 code, `data/nr101.json`. **NR101 only**: the other eight cards say no timeline exists, because the terrain horizon needs each site's 5 m elevation raster, and only Site 06 has been downloaded and processed. |
 | Region marker positions (first Wueller et al. 2026 Table A1 point per region) | Real coordinates |
-| The other eight regions' readouts, timelines and table rows | **Example placeholders**, labelled on screen |
 | Moon surface rendering and Sun-azimuth lighting | Procedural art, not terrain |
 
-There is no combined score, no ranking, no "safe" verdict and no ice volume. Screening cuts are shown as reference marks, not flight rules.
+There are no example or placeholder numbers left. If `data/regions.js` fails to load, cards say so and show nothing. There is no combined score, no ranking, no "safe" verdict and no ice volume. Screening cuts are shown as reference marks, not flight rules.
 
-## Regenerate the real data
+### Consistent measures
 
-From `moon-south-pole-atlas/`, with the packages in `requirements.txt` and the rasters and kernels in `data/raw/` (see `data/MANIFEST.tsv`):
+Earlier prototype rows mixed 18.6-year averages (NR101) with 14-day means (example rows). Now every table row and card readout is the 18.6-year average from the 75°S / 120 m maps. The NR101 card also prints its 14-day window percentage next to the average, labelled "separate product", because the two differ (for example Sun at 1 m: 100% over the first 14 days of January 2025, against 0.77 long-term).
+
+Cold-ground distance for all nine rows is searched inside one window (the nine points plus 40 km), so rows are comparable. The ± on it is one Diviner pixel (240 m), a resolution bound, not a statistical error.
+
+## Regenerate the data
+
+From `moon-south-pole-atlas/`, with the packages in `requirements.txt` and the rasters and kernels in `data/raw/` (checksums in `data/MANIFEST.tsv`; the Diviner host needs the TLS workaround in `docs/data-sources.md`):
 
 ```
-python -m atlas.export_web
+python -m atlas.export_web                  # regions.* and nr101.*, about 20 s
+python -m atlas.export_web --skip-timeline  # regions.* only
+python -m unittest tests.test_query tests.test_horizon tests.test_regions tests.test_export_web
 ```
 
-This writes `web/data/nr101.json` (canonical) and `web/data/nr101.js` (the same object as `window.NR101_DATA`). The page loads the `.js` file with a `<script>` tag because browsers block `fetch` of local JSON from `file://`. If the file is missing, the page falls back to example data everywhere.
+This writes `web/data/regions.json` and `nr101.json` (canonical) plus `.js` twins (`window.REGIONS_DATA`, `window.NR101_DATA`). The page loads the `.js` files with `<script>` tags because browsers block `fetch` of local JSON from `file://`. The exporter refuses any key named score, safe, safety, rank, ranking or similar.
+
+## Screenshots
+
+`web/screenshots/`: `home.png`, `nr101-card.png` (with timeline), `haworth-card.png`, `cabeus-card-no-slope.png` (slope not computed), `compare.png`, `method.png`. Taken with headless Chrome:
+
+```
+google-chrome --headless=new --window-size=1440,1000 --virtual-time-budget=6000 \
+  --screenshot=web/screenshots/compare.png "file://$PWD/web/index.html#compare"
+```
 
 ## Limitations
 
-- Only one region is computed. The other eight need their own point queries and timelines (and three of the nine have no product-78 slope tile).
-- At NR101 the LOLA return count is 0, so the slope there is interpolated, not measured. The card says so.
-- Sunlight and Earth dials for NR101 are 18.6-year averages with no published error bar. The window fraction for the current eye height is printed beside them.
-- The cold-ground range is plus or minus one 240 m Diviner pixel, a resolution bound, not a statistical error.
+- Three of nine regions have no slope, slope error or return count (no product-78 5 m tile contains the point). Mons Mouton (MMO01) is on the Site 20 Leibnitz beta tile, which is not a Mons Mouton Plateau DEM.
+- One published point per region, nearest pixel, not a region polygon.
+- Where the LOLA return count at the pixel is 0 (NR101, Malapert, Nobile Rim 2, de Gerlache Rim 2), slope there is interpolated, not measured. The card says so.
+- Sunlight and Earth averages have no published error bar.
 - Earth visibility is disc visibility, not a radio link budget.
+- Timeline is NR101 only.
