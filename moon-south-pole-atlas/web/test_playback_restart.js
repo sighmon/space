@@ -75,6 +75,23 @@ const getJSON=u=>new Promise((res,rej)=>http.get(u,r=>{let d='';r.on('data',c=>d
   await click('#close'); await sleep(250);
   check(await advancing(),'deep-linked card closed: Sun still advances');
   await homeToggle('deep-link');
+  // hidden tab: the loop stops (no rAF, no redraw), the clock does not run or jump, and everything resumes on return
+  await send('Page.enable');
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:`window.__raf=0;const o=window.requestAnimationFrame.bind(window);window.requestAnimationFrame=f=>{window.__raf++;return o(f)};`});
+  await load('#?h=100',false);
+  await click('#homectl .js-seg button[data-s="1"]'); await sleep(200);
+  const mins=async()=>{const m=(await stamp()).match(/D(\d+) · (\d+):(\d+)/);return ((+m[1])*24+(+m[2]))*60+(+m[3]);};
+  check(await advancing(),'(visibility) playing at 1x before hiding');
+  const m0=await mins();
+  await ev(`Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'))`);
+  await sleep(300); const r0=await ev(`window.__raf`); await sleep(1500); const r1=await ev(`window.__raf`);
+  check(r1===r0,'hidden tab: no requestAnimationFrame callbacks are scheduled ('+(r1-r0)+' in 1.5 s)');
+  const m1=await mins(); check(Math.abs(m1-m0)<=45,'hidden tab: simulated clock stands still ('+(m1-m0)+' min)');
+  await ev(`delete document.hidden;document.dispatchEvent(new Event('visibilitychange'))`);
+  await sleep(120); const m2=await mins();
+  check(m2-m1>=0&&m2-m1<=90,'return to the tab: clock resumes without a jump ('+(m2-m1)+' min after 120 ms)');
+  check(await advancing(),'return to the tab: Sun advances again');
+  const r2=await ev(`window.__raf`); await sleep(500); check(await ev(`window.__raf`)>r2,'return to the tab: frame loop running again');
   check(errors.length===0,'no uncaught page errors'+(errors.length?': '+[...new Set(errors)].join(' | '):''));
   ws.close(); ch.kill();
   if(fails.length){console.log('FAILED',fails.length);process.exit(1);} console.log('playback restart ok');

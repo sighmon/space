@@ -4,6 +4,8 @@
 //  - the top handle (role=button, aria-label, tabindex) is >=44 px tall, full panel width and closes on click, Enter and Space
 //  - GitHub link: correct href/target/rel, inline SVG, visible on the home screen without colliding with other controls, also in the method layer
 //  - Sun keeps running after closing via X and via handle
+//  - NO OVERLAP: the 'View on GitHub' link never overlaps the Sun label/compass, nav, brand, chip, Play control or hero copy
+//    at 901, 1280, 1440, 390 and 360 px, with a region card open (every region), a layer open, and everything closed
 // usage: node --experimental-websocket web/test_close_github.js   (needs google-chrome on PATH)
 const {spawn}=require('child_process'), path=require('path'), http=require('http'), fs=require('fs');
 const url='file://'+path.resolve(process.env.PAGE||path.join(__dirname,'index.html'));
@@ -121,6 +123,43 @@ const WIDTHS=[1440,390,360], IDS=['CAB','DGR','HAW','MAL','MMP','MMO','NR1','NR2
     await ev(`document.querySelector('.mk[data-id="NR1"]').click()`); await sleep(800);
     await ev(`document.querySelector('#sheet .grab').click()`); await sleep(400);
     const a=await st(); await sleep(700); check(a!==await st(),T+': Sun still advances after handle close');
+  }
+  // ---- A: GitHub link vs every other visible element, at every width, card open / layer open / closed
+  const overlap=()=>ev(`(()=>{
+    const vis=e=>{if(!e||!e.getClientRects().length)return false;for(let n=e;n&&n!==document.documentElement;n=n.parentElement){const c=getComputedStyle(n);if(c.visibility==='hidden'||c.display==='none'||+c.opacity===0)return false;}return true;};
+    const R=e=>{const r=e.getBoundingClientRect();return {l:r.left,r:r.right,t:r.top,b:r.bottom};};
+    const gh=document.querySelector('.top .js-gh'); const g=R(gh);
+    // the sr-only text span of the compass has a 1px box; the visible parts are the dial svg and (when shown) the label
+    const named={'sun label':'#sunlbl','compass':'.compass','compass dial':'.compass svg','nav':'.nav','brand title':'.brand .label','brand subtitle':'.brand .t2','home play control':'#homectl','status chip':'.foot .chip','hero copy':'.hero-copy','hint':'.hint'};
+    const hits=[];for(const [k,sel] of Object.entries(named)){const e=document.querySelector(sel);if(!vis(e))continue;const r=R(e);if(r.r-r.l<=1.5&&r.b-r.t<=1.5)continue;
+      if(g.l<r.r&&g.r>r.l&&g.t<r.b&&g.b>r.t)hits.push(k);}
+    if(innerWidth>900)for(const [k,sel] of [['open card panel','.sheet.open .panel'],['open layer panel','.layer.open .panel']]){const e=document.querySelector(sel);if(!e)continue;const r=R(e);
+      if(g.l<r.r&&g.r>r.l&&g.t<r.b&&g.b>r.t)hits.push(k);}   // desktop: an open panel must not cover the link either
+    const lbl=document.querySelector('#sunlbl'),lr=R(lbl);
+    return {hits,gh:g,label:{vis:vis(lbl),w:lr.r-lr.l,h:lr.b-lr.t,l:lr.l,t:lr.t},txt:lbl.textContent};})()`);
+  for(const [w,hh] of [[901,800],[1280,800],[1440,900],[1440,560],[390,844],[360,740]]){
+    await send('Emulation.setDeviceMetricsOverride',{width:w,height:hh,deviceScaleFactor:1,mobile:w<=430});
+    await send('Page.navigate',{url:url+'#?paused'}); await sleep(1500);
+    const T=w+'x'+hh;
+    let o=await overlap(); check(o.hits.length===0,T+' closed: GitHub link overlaps nothing '+o.hits.join(','));
+    for(const rid of IDS){
+      await ev(`document.querySelector('.mk[data-id="${rid}"]').click()`); await sleep(950);
+      o=await overlap(); check(o.hits.length===0,T+' card '+rid+' open: GitHub link overlaps nothing '+o.hits.join(','));
+      if(w>900&&rid==='NR1'){
+        check(o.label.vis===false||(o.label.l>o.gh.r||o.label.t>o.gh.b||o.label.l+o.label.w<o.gh.l),T+': Sun label is clear of the GitHub link');
+        if(process.env.SHOT&&(w===1280||w===901))await shot(path.join(process.env.SHOT,`card-open-github-${w}.png`));
+      }
+      await ev(`document.querySelector('#close').click()`); await sleep(500);
+    }
+    for(const L of ['method','compare']){
+      await ev(`document.querySelector('.nav button[data-v="${L}"]').click()`); await sleep(1000);
+      o=await overlap(); check(o.hits.length===0,T+' '+L+' layer open: GitHub link overlaps nothing '+o.hits.join(','));
+      await ev(`document.querySelector('#${L} [data-close]').click()`); await sleep(700);
+    }
+    // card open AND scrolled, then a layer over it
+    await ev(`document.querySelector('.mk[data-id="CAB"]').click()`); await sleep(900);
+    await ev(`document.querySelector('[data-open="method"]').click()`); await sleep(1000);
+    o=await overlap(); check(o.hits.length===0,T+' card + layer: GitHub link overlaps nothing '+o.hits.join(','));
   }
   check(errors.length===0,'no uncaught page errors '+[...new Set(errors)].join('|'));
   ws.close(); ch.kill();

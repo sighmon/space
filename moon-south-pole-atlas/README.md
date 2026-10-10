@@ -69,7 +69,16 @@ python -m atlas.regions --png output/nine-regions.png
 The figure's method note states the south-polar frame, the sources, the nine coordinates, and four caveats: cuts are not flight rules, Earth visibility is not a radio link budget, ice is not a volume, and there is no single score.
 
 ```
-python -m unittest tests.test_query tests.test_horizon tests.test_regions tests.test_export_web
+python -m unittest tests.test_query tests.test_horizon tests.test_regions tests.test_export_web tests.test_export_zoom
+```
+
+The web prototype has its own tests under `web/` (plain Node, no dependencies). `test_units.js` and `test_contrast.js` run with plain `node`; the others drive headless Chrome over the DevTools protocol and need `google-chrome` on `PATH` and `node --experimental-websocket`:
+
+```
+node web/test_units.js && node web/test_contrast.js
+for t in test_sunmarker test_play_button test_no_overflow test_playback_restart test_findings test_review2 test_close_github; do
+  node --experimental-websocket web/$t.js || break
+done
 ```
 
 ## Web prototype

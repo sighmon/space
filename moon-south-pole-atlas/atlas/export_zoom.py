@@ -6,15 +6,18 @@ Writes, into web/data/:
                         No terrain is involved, so it is the same kind of number for every region.
   zoom.json / zoom.js   a local north-up elevation chip (window.ZOOM_DATA), 16-bit heights, base64,
                         for every region that has a real LOLA elevation raster on disk (see DEM_SOURCES):
-                        5 m product-78 site DEMs (``*_surf.tif``) where a tile contains the point, and
-                        a window of the 5 m 87-90S mosaic (product 81) for Slater Plain, and windows of the 20 m LOLA polar DEM (LDEM_80S_20MPP_ADJ) for the rest. Also the
+                        5 m product-78 site DEMs (``*_surf.tif``) where a tile contains the point (six
+                        regions), a window of the 5 m 87-90S mosaic (product 81, interpolation fill-in) for
+                        Slater Plain, and windows of the 20 m LOLA polar DEM (LDEM_80S_20MPP_ADJ, product 90)
+                        for the other two (Peak near Cabeus B and Mons Mouton Plateau). Also the
                         terrain-aware hourly Sun/Earth visibility strips for each of those regions.
   zoom/<ID>.webp        a crop of the LOLA average-sunlight-visibility map (120 m) around each
                         point, north-up. The same raster as the home backdrop. Not terrain.
 
 Slope, slope-error and return-count tiles in data/raw cannot be hillshaded and are not used here.
 A region with no elevation raster would keep only the static sunlight crop; at present all nine
-regions have one (the three without a 5 m site tile use the 20 m polar DEM).
+regions have one: seven at 5 m (six product-78 site DEMs plus the product-81 mosaic window for Slater
+Plain) and two at 20 m (Peak near Cabeus B and Mons Mouton Plateau use the 20 m polar DEM).
 
     python -m atlas.export_zoom
 """
