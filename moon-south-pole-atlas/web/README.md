@@ -31,6 +31,10 @@ Earlier prototype rows mixed 18.6-year averages (NR101) with 14-day means (examp
 
 Cold-ground distance for all nine rows is searched inside one window (the nine points plus 40 km), so rows are comparable. The ± on it is one Diviner pixel (240 m), a resolution bound, not a statistical error.
 
+## Temperature units
+
+Data files stay in kelvin only. `units.js` is a small display helper: every temperature (region cards, comparison table, cold-ground dial, method layer, the 110 K cold-shadow threshold) is shown as kelvin first, then a lighter muted Celsius and Fahrenheit, for example `203 K · −70 °C · −94 °F`. The whole-kelvin value shown is converted (C = K − 273.15, F = C × 9/5 + 32), rounded to whole degrees, with a true minus sign. Check it with `node moon-south-pole-atlas/web/test_units.js` (also asserts the data files contain no C/F fields).
+
 ## Regenerate the data
 
 From `moon-south-pole-atlas/`, with the packages in `requirements.txt` and the rasters and kernels in `data/raw/` (checksums in `data/MANIFEST.tsv`; the Diviner host needs the TLS workaround in `docs/data-sources.md`):
@@ -45,10 +49,10 @@ This writes `web/data/regions.json` and `nr101.json` (canonical) plus `.js` twin
 
 ## Screenshots
 
-`web/screenshots/`: `home.png`, `nr101-card.png` (with timeline), `haworth-card.png`, `cabeus-card-no-slope.png` (slope not computed), `compare.png`, `method.png`. Taken with headless Chrome:
+`web/screenshots/`: `home.png`, `nr101-card.png` (with timeline), `haworth-card.png`, `cabeus-card-no-slope.png` (slope not computed), `compare.png`, `method.png`. Taken with headless Chrome (the long virtual-time budget lets the card open animation finish):
 
 ```
-google-chrome --headless=new --window-size=1440,1000 --virtual-time-budget=6000 \
+google-chrome --headless=new --window-size=1440,1000 --virtual-time-budget=15000 \
   --screenshot=web/screenshots/compare.png "file://$PWD/web/index.html#compare"
 ```
 

@@ -88,6 +88,10 @@ body.sheet-open .foot{opacity:0}
 .extra{border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:12px;color:var(--mute);line-height:1.45}
 .extra b{display:block;font-weight:300;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
 .extra .label{font-size:10px}
+.conv{color:var(--mute);font-weight:300}
+.extra b .conv{display:block;font-size:12px;margin-top:1px}
+.ring .val .u .conv{display:block;margin-top:1px;letter-spacing:.02em;font-size:10px}
+td .conv{display:block;font-size:12px;white-space:nowrap}
 .na{color:#ffc27a}
 .dial.missing .ring{opacity:.45}
 .dials{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
@@ -96,9 +100,9 @@ body.sheet-open .foot{opacity:0}
 .sheet.open .dial:nth-child(2){transition-delay:.06s}.sheet.open .dial:nth-child(3){transition-delay:.12s}.sheet.open .dial:nth-child(4){transition-delay:.18s}
 .dial:hover{border-color:var(--line2)}
 .dial .q{font-size:13px;color:var(--ink);margin-top:4px;font-weight:400}
-.ring{position:relative;width:116px;height:116px;margin:10px auto 4px}
+.ring{position:relative;width:160px;height:160px;margin:12px auto 8px}
 .ring svg{width:100%;height:100%;transform:rotate(135deg)}
-.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val{position:absolute;inset:0;padding:0 22px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .ring .val .n{font-size:34px;line-height:1}
 .ring .val .u{font-size:11px;color:var(--mute);margin-top:4px;letter-spacing:.06em}
 .ring circle{fill:none;stroke-linecap:round;transition:stroke-dasharray 1.1s var(--ease),stroke-dashoffset 1.1s var(--ease)}
@@ -199,7 +203,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   .nav .long{display:none}
   .brand .label{max-width:150px;line-height:1.4}
 }
-@media (max-width:520px){.dials,.extras{grid-template-columns:1fr}.ring{width:116px;height:116px}.nav button{padding:7px 11px}}
+@media (max-width:520px){.dials,.extras{grid-template-columns:1fr}.ring{width:172px;height:172px}.nav button{padding:7px 11px}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
 </style>
 </head>
@@ -287,7 +291,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
       <div class="box"><h4>Slope</h4><p>Slope in degrees at the 5&nbsp;m pixel containing the point, from the LOLA product-78 site DEM (Barker et al. 2021). The ± is one published RMS slope error for that pixel. Three regions have no 5&nbsp;m tile and show no slope; the 20&nbsp;m mosaic is not substituted. Where the LOLA return count at the pixel is 0, the slope is interpolated.</p></div>
       <div class="box"><h4>Sunlight</h4><p>18.6-year average fraction of hourly steps with any part of the Sun above the horizon, from the 75°S illumination map (Mazarico et al. 2011, 120&nbsp;m pixel, nearest pixel to the point). It is a long-term average, not the sunlight in a particular week, and has no published error bar.</p></div>
       <div class="box"><h4>Earth view</h4><p>Same map family and averaging period: the 18.6-year average fraction of hours with <em>any part</em> of Earth’s disc above the horizon. Disc visibility, not a DSN link budget. For NR101 only, the hourly timeline on its card is a separate 14-day product, and its window percentages are labelled as such.</p></div>
-      <div class="box"><h4>Cold ground</h4><p>Distance from the point to the nearest permanent-shadow pixel (120&nbsp;m) whose Diviner summer-maximum temperature is below 110&nbsp;K (Williams et al. 2019, 240&nbsp;m pixel). Searched within 40&nbsp;km beyond the nine points. The ± is one Diviner pixel, a resolution bound, not a statistical error. Proximity only; no ice-volume estimate.</p></div>
+      <div class="box"><h4>Cold ground</h4><p>Distance from the point to the nearest permanent-shadow pixel (120&nbsp;m) whose Diviner summer-maximum temperature is below <span data-kelvin="110"></span> (Williams et al. 2019, 240&nbsp;m pixel). Searched within 40&nbsp;km beyond the nine points. The ± is one Diviner pixel, a resolution bound, not a statistical error. Proximity only; no ice-volume estimate.</p></div>
     </div>
 
     <h3>What is computed in this build</h3>
@@ -333,6 +337,7 @@ body.layer-open .scrim{opacity:1;pointer-events:auto}
   </div>
 </section>
 
+<script src="units.js"></script>
 <script src="data/regions.js"></script>
 <script src="data/nr101.js"></script>
 <script>
@@ -501,10 +506,10 @@ const DEF={
  slope:{lab:'Slope',q:'Flat enough to land?',unit:'DEG · AT POINT',min:0,max:20,dec:1,suf:'°',def:'Slope at the 5 m pixel containing the point, with the Barker et al. RMS slope error',src:'LOLA 5 m site DEM · Barker et al. 2021',href:'https://pgda.gsfc.nasa.gov/products/78',cut:()=>cuts.on?{v:cuts.slope,t:'cut < '+cuts.slope+'°'}:null},
  sun:{lab:'Sunlight',q:'Lit enough to stay powered?',unit:'18.6-YR AVG',min:0,max:1,dec:2,suf:'',def:'18.6-year average fraction of hourly steps with any part of the Sun above the horizon (120 m map). Long-term average, not a particular week.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>cuts.on?{v:cuts.ill,t:'cut > '+cuts.ill.toFixed(2)}:null},
  earth:{lab:'Earth view',q:'In view of Earth?',unit:'18.6-YR AVG',min:0,max:100,dec:0,suf:'%',def:'18.6-year average, any part of the Earth disc above the horizon (120 m map). Disc visibility, not a link budget.',src:'Mazarico et al. 2011 · PGDA 69',href:'https://pgda.gsfc.nasa.gov/products/69',cut:()=>null},
- cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM · <110 K',min:0,max:15,dec:1,suf:'',def:'Distance to the nearest permanent-shadow pixel with Diviner summer max below 110 K. Proximity only, no ice volume.',src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',cut:()=>null}
+ cold:{lab:'Cold ground',q:'Near ground cold enough to hold ice?',unit:'KM · <110 K',unitHTML:()=>'KM · &lt;'+Units.kHTML(110),min:0,max:15,dec:1,suf:'',def:'Distance to the nearest permanent-shadow pixel with Diviner summer max below '+Units.kText(110)+'. Proximity only, no ice volume.',src:'Diviner · Williams et al. 2019',href:'https://doi.org/10.1029/2019JE006028',cut:()=>null}
 };
 const CIRC=2*Math.PI*58, ARC=CIRC*0.75;
-const NA_WHY={slope:s=>s.q.slope_source,sun:()=>'The 75°S illumination map has no value at this point.',earth:()=>'The 75°S illumination map has no value at this point.',cold:()=>'No permanent-shadow pixel below 110 K was found within the search window.'};
+const NA_WHY={slope:s=>s.q.slope_source,sun:()=>'The 75°S illumination map has no value at this point.',earth:()=>'The 75°S illumination map has no value at this point.',cold:()=>'No permanent-shadow pixel below '+Units.kText(110)+' was found within the search window.'};
 function renderDials(){
   const s=cur;
   for(const k of ['slope','sun','earth','cold']){const d=DEF[k],v=s[k],el=$(`.dial[data-k="${k}"]`);
@@ -524,7 +529,7 @@ function renderDials(){
     el.classList.remove('missing');
     const lo=Math.min(v.lo,v.hi),hi=Math.max(v.lo,v.hi);
     const f=x=>Math.max(0,Math.min(1,(x-d.min)/(d.max-d.min)));
-    el.querySelector('.n').textContent=v.v.toFixed(d.dec)+d.suf; el.querySelector('.u').textContent=d.unit;
+    el.querySelector('.n').textContent=v.v.toFixed(d.dec)+d.suf; el.querySelector('.u').innerHTML=d.unitHTML?d.unitHTML():d.unit;
     el.querySelector('.def').textContent=d.def;
     arc.style.strokeDasharray=`${ARC*f(v.v)} ${CIRC}`;
     unc.style.strokeDasharray=`0 ${ARC*f(lo)} ${ARC*(f(hi)-f(lo))} ${CIRC}`;
@@ -534,10 +539,10 @@ function renderDials(){
     const ends=el.querySelectorAll('.ends span'); ends[0].textContent=d.min+d.suf; ends[1].textContent=d.max+d.suf;
     let rt=v.unc;
     if(k==='slope')rt+=` (${lo.toFixed(1)}–${hi.toFixed(1)}°)`+(s.q.interpolated_gap?' · return count 0: interpolated, not measured':'');
-    if(k==='cold')rt+=` · summer max ${s.q.summer_max_temperature_k.toFixed(0)} K here`;
+    if(k==='cold')rt+=` · summer max ${Units.kHTML(s.q.summer_max_temperature_k)} here`;
     if(s.series&&k==='sun')rt+=` · NR101 14-day window, ${height} m: ${s.winSun.toFixed(0)}% of hours (separate product)`;
     if(s.series&&k==='earth')rt+=` · NR101 14-day window, ${height} m: ${s.winEarth.toFixed(0)}% of hours (separate product)`;
-    el.querySelector('.rng').textContent=rt;
+    el.querySelector('.rng').innerHTML=rt;
     tg.textContent='Computed · '+s.q.point_id; tg.style.color='#8fe3b0';
   }
   renderExtras();
@@ -545,7 +550,7 @@ function renderDials(){
 const pl=x=>x?x.replace(/\.0+ m/,' m'):x;
 function renderExtras(){
   const q=cur.q, ex=[];
-  ex.push(['Summer max temperature',q.summer_max_temperature_k==null?'n/a':q.summer_max_temperature_k.toFixed(0)+' K','Diviner, own '+(q.temperature_resolution_m||0).toFixed(0)+' m pixel; not a 5 m measurement']);
+  ex.push(['Summer max temperature',q.summer_max_temperature_k==null?'n/a':Units.kHTML(q.summer_max_temperature_k),'Diviner, own '+(q.temperature_resolution_m||0).toFixed(0)+' m pixel; not a 5 m measurement']);
   ex.push(['Permanent shadow',q.permanent_shadow==null?'n/a':q.permanent_shadow?'Inside':'Outside','75°S illumination map, '+pl(q.permanent_shadow_pixel_label)+' pixel']);
   ex.push(['LOLA returns in pixel',q.lola_return_count==null?'n/a':String(Math.round(q.lola_return_count)),q.lola_return_count==null?'Not computed: no 5 m tile contains this point':q.interpolated_gap?'0 = slope here is interpolated':'Measured returns at the 5 m pixel']);
   ex.push(['Slope DEM',pl(q.slope_dem_label)||'none','LOLA product 78; the 20 m mosaic is not substituted']);
@@ -653,7 +658,7 @@ function renderTable(){
     <td>${s.slope?s.slope.v.toFixed(1)+'°<small>±'+hs(s.slope).toFixed(1)+'</small>':na}</td>
     <td>${s.sun?s.sun.v.toFixed(2):na}</td>
     <td>${s.earth?s.earth.v.toFixed(0)+'%':na}</td>
-    <td>${s.q.summer_max_temperature_k==null?na:s.q.summer_max_temperature_k.toFixed(0)+' K'}</td>
+    <td>${s.q.summer_max_temperature_k==null?na:Units.kHTML(s.q.summer_max_temperature_k)}</td>
     <td>${s.cold?s.cold.v.toFixed(1)+' km<small>±'+hs(s.cold).toFixed(2)+'</small>':na}</td>
     <td style="font-size:12.5px">${cut}</td></tr>`;}).join('');
   $('#tbody').innerHTML=rows;
@@ -661,6 +666,7 @@ function renderTable(){
 }
 
 // ---------- init ----------
+$$("[data-kelvin]").forEach(e=>e.innerHTML=Units.kHTML(+e.dataset.kelvin));
 addEventListener('resize',()=>{layout();if(sel&&cur&&cur.series){sizeTL();setHour(hour);}segThumb();});
 layout(); shade(); draw(); segThumb(); syncCuts(); requestAnimationFrame(loop);
 const h=location.hash.slice(1);
