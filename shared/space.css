@@ -1,0 +1,222 @@
+/* space.css: the shared design system for the landing page and the space-weather page (the atlas keeps its own inline copy).
+   Provides: design tokens, reset and overflow guards, typography, top bar / nav / foot, chip, ghlink, the bottom sheet and
+   full-height layer panels with their scrim, buttons, play clock, dials, extras, range bars, notes, tables, reduced motion.
+   Constraints: no fonts, images, imports or requests (system font stack only). Pages must add only their own hero and content
+   rules, mark closed panels inert, and toggle body.sheet-open / body.layer-open (the scrim and dimming depend on them).
+   Pages that use it reference it by a relative path and must be served or opened from the repository root. */
+:root{
+  --bg:#050607; --ink:#f2f5f7; --mute:rgba(235,242,247,.68); --faint:rgba(235,242,247,.56);
+  --line:rgba(235,242,247,.10); --line2:rgba(235,242,247,.18);
+  --ice:#a9dcff; --ice-dim:rgba(169,220,255,.22); --ice-glow:rgba(169,220,255,.55);
+  --glass:rgba(14,17,20,.72); --glass2:rgba(20,24,28,.86);
+  --r:22px; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.16,1.08,.3,1);
+  --font:"SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Inter","Inter var","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+img,svg,canvas,video,table{max-width:100%}
+p,li,h1,h2,h3,h4,.small,.def,.box,.extra,.example-note,.disclaim,.meta,.src,.zinfo,.q,.label{overflow-wrap:anywhere}
+.dials>*,.extras>*,.zoom>*,.grid2>*,.card-head>*,.tl-head>*,.tl-read>*,.zread>*,.src>*,.example-note>*,.head-r>*,.meta>*,.lh>*,.sl>*{min-width:0}
+.sheet .panel,.layer .panel{overflow-x:hidden;overflow-y:auto;max-width:100%}
+.tl,.zoom,.dial,.extra,.box,.example-note{max-width:100%}
+.example-note>b{flex:none;min-width:auto}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+.num{font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.small{font-size:12px;color:var(--mute);line-height:1.5}
+
+/* ---------- top bar, nav ---------- */
+.top{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:28px 36px;z-index:5;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand .label{color:var(--ice)}
+.nav{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(18,22,26,.82);border:1px solid var(--line)}
+.nav button{white-space:nowrap;padding:8px 16px;border-radius:999px;font-size:13px;color:var(--mute);transition:all .3s var(--ease)}
+.nav button:hover{color:var(--ink)}
+.nav button.on{background:rgba(235,242,247,.1);color:var(--ink)}
+
+/* ---------- foot, chip ---------- */
+.foot{position:fixed;left:36px;right:36px;bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;z-index:3;pointer-events:none;transition:opacity .5s}
+body.sheet-open .foot .chip{display:none}
+.chip{max-width:58vw;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,200,120,.35);color:#ffd9a6;background:rgba(40,28,10,.7)}
+.chip i{width:6px;height:6px;border-radius:50%;background:#ffc27a;display:block}
+.compass{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mute);pointer-events:auto}
+.compass svg{width:44px;height:44px}
+
+/* ---------- sheet / panel / grab / x ---------- */
+/* ---------- sheet (region card) ---------- */
+.sheet{position:fixed;left:50%;bottom:0;width:min(1180px,100%);max-width:100%;transform:translate(-50%,104%);z-index:10;transition:transform .75s var(--spring);max-height:calc(100vh - 84px);display:flex;flex-direction:column}
+.sheet.open{transform:translate(-50%,0)}
+.sheet .panel{background:var(--glass);backdrop-filter:blur(28px) saturate(1.2);-webkit-backdrop-filter:blur(28px) saturate(1.2);border:1px solid var(--line);border-bottom:0;border-radius:var(--r) var(--r) 0 0;overflow:auto;padding:8px 32px 26px;box-shadow:0 -30px 80px rgba(0,0,0,.55)}
+.grab{display:block;position:relative;width:100%;height:44px;margin:0 0 4px;cursor:pointer;border-radius:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.grab:before{content:"";position:absolute;left:50%;top:50%;width:38px;height:4px;margin:-2px 0 0 -19px;border-radius:4px;background:var(--line2);transition:background .2s,width .2s,margin .2s}
+.grab:hover:before,.grab:focus-visible:before{background:var(--mute)}
+.grab:focus{outline:none}.grab:focus-visible{outline:2px solid var(--ice);outline-offset:-2px}
+/* Close button: always top right of the panel, same size/position in every card and layer; sticky so it never scrolls away */
+.xwrap{position:sticky;top:0;height:0;z-index:6;pointer-events:none}
+.xwrap .x{position:absolute;top:0;right:calc(10px - var(--px,32px));pointer-events:auto}
+.sheet .panel,.layer .panel{--px:32px;padding-top:8px}
+.ghlink{display:inline-flex;align-items:center;gap:7px;min-height:44px;margin:0 0 -10px;font-size:12px;color:var(--mute);text-decoration:none;letter-spacing:.02em;transition:color .25s}
+.ghlink:hover,.ghlink:focus-visible{color:var(--ice)}
+.ghlink svg{width:16px;height:16px;flex:none;fill:currentColor}
+.cites a.ghlink span{display:inline;margin:0;font-size:inherit;color:inherit;line-height:inherit}
+.cites a.ghlink{display:inline-flex;min-height:0;margin:0;color:var(--ice);font-size:12.5px}
+.card-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.card-head h2{font-size:34px;font-weight:300;letter-spacing:-.02em}
+.meta{display:flex;gap:22px;margin-top:8px;flex-wrap:wrap}
+.meta span{font-size:13px;color:var(--mute)} .meta b{font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+.head-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{padding:9px 15px;border-radius:999px;font-size:13px;border:1px solid var(--line2);color:var(--ink);transition:all .25s var(--ease)}
+.btn:hover{border-color:var(--ice);color:var(--ice)}
+.x{width:44px;height:44px;min-width:44px;flex:none;border-radius:50%;border:1px solid var(--line2);background:rgba(20,24,28,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;font-size:16px;color:var(--mute);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.x:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.x:hover{color:var(--ink);border-color:var(--ink)}
+.example-note{margin-top:16px;display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:12px;background:rgba(255,190,110,.07);border:1px solid rgba(255,190,110,.25);font-size:12.5px;color:#f3d3a8;line-height:1.5}
+.example-note b{font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:#ffc27a;white-space:nowrap;padding-top:1px}
+.example-note.real-note{background:rgba(143,227,176,.07);border-color:rgba(143,227,176,.28);color:#cfeedd}
+.real-note code,.box code{font-family:ui-monospace,monospace;font-size:11.5px;color:#a9dcff}
+
+.extras{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.extra{border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:12px;color:var(--mute);line-height:1.45}
+.extra b{display:block;font-weight:300;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.extra .label{font-size:10px}
+.conv{color:var(--mute);font-weight:300}
+.extra b .conv{display:block;font-size:12px;margin-top:1px}
+.ring .val .u{text-align:center}.ring .val .u .conv{display:block;margin-top:2px;letter-spacing:.02em;font-size:10px;white-space:nowrap}
+td .conv{display:block;font-size:12px;white-space:nowrap}
+.na{color:#ffc27a}
+
+/* ---------- dials, range bars, source rows ---------- */
+.dials{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.dial{border:1px solid var(--line);border-radius:18px;padding:14px 16px 12px;background:rgba(255,255,255,.015);opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .7s var(--spring),border-color .3s}
+.sheet.open .dial{opacity:1;transform:none}
+.sheet.open .dial:nth-child(2){transition-delay:.06s}.sheet.open .dial:nth-child(3){transition-delay:.12s}.sheet.open .dial:nth-child(4){transition-delay:.18s}
+.dial:hover{border-color:var(--line2)}
+.dial .q{font-size:13px;color:var(--ink);margin-top:4px;font-weight:400}
+.ring{position:relative;width:160px;height:160px;margin:12px auto 8px}
+.ring svg{width:100%;height:100%;transform:rotate(135deg)}
+.ring .val{position:absolute;inset:0;padding:0 22px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val .n{font-size:34px;line-height:1}
+.ring .val .u{font-size:11px;color:var(--mute);margin-top:4px;letter-spacing:.06em}
+.ring circle{fill:none;stroke-linecap:round;transition:stroke-dasharray 1.1s var(--ease),stroke-dashoffset 1.1s var(--ease)}
+.def{font-size:11.5px;color:var(--mute);text-align:center;line-height:1.45;min-height:34px}
+.rb{margin-top:14px}
+.rb .track{position:relative;height:18px}
+.rb .base{position:absolute;left:0;right:0;top:8px;height:2px;background:var(--line2);border-radius:2px}
+.rb .span{position:absolute;top:7px;height:4px;border-radius:4px;background:var(--ice-dim);box-shadow:0 0 10px rgba(169,220,255,.25);transition:left .9s var(--ease),width .9s var(--ease)}
+.rb .pt{position:absolute;top:3px;width:2px;height:12px;background:var(--ice);border-radius:2px;transform:translateX(-1px);transition:left .9s var(--ease);box-shadow:0 0 8px var(--ice)}
+.rb .cut{position:absolute;top:0;height:18px;border-left:1px dashed rgba(255,194,122,.7);transition:left .6s var(--ease)}
+.rb .cut span{position:absolute;top:-14px;left:3px;font-size:9.5px;color:#ffc27a;white-space:nowrap;letter-spacing:.04em}
+.rb .ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;margin-top:2px}
+.rb .rng{font-size:11.5px;color:var(--mute);margin-top:6px;font-variant-numeric:tabular-nums}
+.src{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px}
+.src a{color:var(--ice);text-decoration:none;opacity:.9}
+.src a:hover{opacity:1;text-decoration:underline}
+.src .tagx{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ffc27a}
+
+
+/* ---------- timeline controls, play clock ---------- */
+/* timeline */
+.tl{margin-top:16px;border:1px solid var(--line);border-radius:18px;padding:16px 18px 14px;background:rgba(255,255,255,.015)}
+.tl-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.seg{display:inline-flex;padding:3px;border-radius:999px;border:1px solid var(--line2);position:relative}
+.seg button{position:relative;z-index:1;padding:5px 14px;font-size:12px;color:var(--mute);border-radius:999px;transition:color .3s}
+.seg button.on{color:#061018}
+.seg .thumb{position:absolute;top:3px;bottom:3px;border-radius:999px;background:var(--ice);transition:left .45s var(--spring),width .45s var(--spring)}
+.play{width:38px;height:38px;min-width:38px;flex:none;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;padding:0;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;transition:border-color .2s,background-color .2s}
+.play svg{display:block;width:14px;height:14px;flex:none;pointer-events:none}
+.play:hover{border-color:var(--ice);background-color:rgba(169,220,255,.06)}
+/* Pressing only tints the button. No transform, no size, border or layout change: it must not move under the pointer. */
+.play:active{transform:none;border-color:var(--ice);background-color:rgba(169,220,255,.16)}
+.play:focus{outline:none}
+.play:focus-visible,.seg button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.seg button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.homectl{position:fixed;z-index:4;top:88px;right:36px;display:flex;align-items:center;gap:10px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(18,22,26,.82);border:1px solid var(--line);transition:opacity .5s}
+.homectl .stamp{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap;width:136px;overflow:hidden;text-overflow:ellipsis}
+body.sheet-open .homectl,body.layer-open .homectl{opacity:0;visibility:hidden;pointer-events:none}
+.tl-ctl{display:flex;gap:12px 14px;align-items:center;flex-wrap:wrap;flex:0 1 auto;min-width:0;max-width:100%}
+.rate{font-size:11.5px;color:var(--mute);display:inline-block;width:104px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.eye{display:flex;gap:10px;align-items:center}
+.disclaim{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.55}
+
+/* ---------- layers, boxes, citations, tables, scrim ---------- */
+/* ---------- layers (method / compare) ---------- */
+.layer{position:fixed;left:50%;bottom:0;width:min(1180px,100%);max-width:100%;height:calc(100vh - 70px);transform:translate(-50%,102%);z-index:20;transition:transform .8s var(--spring)}
+.layer.open{transform:translate(-50%,0)}
+.layer .panel{height:100%;background:var(--glass2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;overflow:auto;padding:8px 40px 50px;box-shadow:0 -40px 120px rgba(0,0,0,.7)}
+.layer h2{font-size:30px;font-weight:300;letter-spacing:-.02em}
+.layer h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500;margin:34px 0 14px}
+.lh{display:flex;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.box{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:rgba(255,255,255,.015)}
+.box h4{font-size:15px;font-weight:400;margin-bottom:6px}
+.box p{font-size:13px;color:var(--mute);line-height:1.55}
+.cites{list-style:none;counter-reset:c}
+.cites li{counter-increment:c;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:14px 0;border-top:1px solid var(--line);font-size:14px}
+.cites li:before{content:counter(c,decimal-leading-zero);color:var(--faint);font-variant-numeric:tabular-nums;font-size:12px}
+.cites li span{display:block;font-size:12.5px;color:var(--mute);margin-top:3px;line-height:1.5}
+.cites a{color:var(--ice);font-size:12.5px;text-decoration:none;white-space:nowrap}
+.cites a:hover{text-decoration:underline}
+.presets{display:flex;gap:10px;flex-wrap:wrap}
+.preset{padding:12px 16px;border-radius:14px;border:1px solid var(--line2);text-align:left;min-width:min(200px,100%);max-width:100%;transition:all .3s var(--ease)}
+.preset b{display:block;font-weight:400;font-size:14px}
+.preset span{font-size:12px;color:var(--mute)}
+.preset.on{border-color:var(--ice);background:rgba(169,220,255,.06)}
+.sl{display:grid;grid-template-columns:180px 1fr 70px;gap:16px;align-items:center;margin-top:14px;font-size:13px;color:var(--mute)}
+.sl output{color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line2);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--ice);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
+.nots{display:flex;flex-wrap:wrap;gap:8px}
+.nots span{font-size:12.5px;padding:7px 12px;border-radius:999px;border:1px solid var(--line2);color:var(--mute)}
+
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:500;text-align:right;padding:10px 9px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:12px 9px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:300;white-space:nowrap}
+td small{color:var(--faint);font-size:11.5px;margin-left:4px}
+tbody tr{cursor:pointer;transition:background .25s}
+tbody tr:hover{background:rgba(169,220,255,.04)}
+td .nm{font-weight:400}
+td .sid{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+.cutok{color:var(--ice)}.cutno{color:var(--faint)}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.swipe{display:none;font-size:11px;color:var(--ice);margin-top:12px;letter-spacing:.04em}
+
+.scrim{position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .5s}
+body.layer-open .scrim{opacity:1;pointer-events:auto}
+
+/* ---------- shared helpers ---------- */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.tl-read{display:flex;gap:10px 28px;align-items:baseline;flex-wrap:wrap}
+.tl-read .n{font-size:22px;display:inline-block;white-space:nowrap}
+.tl-read .k{font-size:11px;color:var(--mute);letter-spacing:.06em;margin-left:6px}
+.q{min-height:34px}
+
+/* ---------- responsive (same breakpoints as the atlas) ---------- */
+@media (max-width:900px){
+  .swipe{display:block}.tablewrap{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .top{padding:18px 18px}
+  .dials,.extras{grid-template-columns:1fr 1fr}
+  .sheet .panel{--px:18px;padding:8px 18px 22px}
+  .layer .panel{--px:20px;padding:8px 20px 40px}
+  .grid2{grid-template-columns:1fr}
+  .foot{left:18px;right:18px;bottom:18px}
+  .brand .t2{display:none}
+  .nav .long{display:none}
+  .brand .label{max-width:150px;line-height:1.4}
+  .homectl{top:74px;right:18px}
+}
+/* desktop: the open card / layer starts below the brand block, so it never covers the GitHub link */
+@media (min-width:901px){.sheet{max-height:calc(100vh - 112px)}.layer{height:calc(100vh - 112px)}}
+@media (max-width:520px){
+  .cites li{grid-template-columns:30px minmax(0,1fr)}.cites li a{grid-column:2;white-space:normal;overflow-wrap:anywhere}.cites a{white-space:normal;overflow-wrap:anywhere}
+  .tl-ctl{width:100%}.rate{width:auto;flex:1 1 60px;min-width:0}
+  .card-head h2{font-size:28px}.layer h2{font-size:26px}
+  .sheet .panel{--px:14px;padding:8px 14px 22px}.layer .panel{--px:14px;padding:8px 14px 40px}
+  .seg button{padding:5px 11px}.tl{padding:14px}
+  .chip .xl{display:none}.chip{font-size:11.5px}
+  .dials,.extras{grid-template-columns:1fr}
+  .nav button{padding:7px 11px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
