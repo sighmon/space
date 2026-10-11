@@ -26,13 +26,17 @@ Dose on the figure is the CRaTER-D1D2 column copied from the RadLab file. Dose w
 
 ## Regenerate
 
-From this directory, with Python 3.14 (the standard library is enough; `python` may be absent from `PATH`):
+From this directory, with Python 3 (3.12 or newer; the standard library is enough; `python` may be absent from `PATH`, so use `python3`):
 
 ```bash
-/usr/local/opt/python@3.14/bin/python3.14 -m weather
-/usr/local/opt/python@3.14/bin/python3.14 -m unittest tests.test_storm
+python3 -m weather
+python3 -m unittest tests.test_storm tests.test_export_web
 ```
 
-The entry point reads only the local files above and writes `output/september-2017.png` plus the three sentences on stdout. Two runs print the same text. The PNG carries that method note in a `tEXt` chunk named `method`.
+Fetch the files in `data/MANIFEST.tsv` into `data/raw/` first (check each `sha256`). The entry point reads only the local files above and writes `output/september-2017.png` plus the three sentences on stdout. Two runs print the same text. The PNG carries that method note in a `tEXt` chunk named `method`.
 
 A sample with no time, value, unit, product id, or source file is left off the figure.
+
+## Web view
+
+`web/index.html` is a replay of the same storm with three audience cards, a timeline, an alert ledger and a method layer. `python3 -m weather.export_web` writes `web/data/storm.json` and its script-tag twin `storm.js` from `build_report`. See [web/README.md](web/README.md) for how to open it, what is real and what is illustrative, and its limits.
