@@ -7,7 +7,8 @@ let n=0; const ok=(c,m)=>{n++;assert.ok(c,m);console.log('ok',m)};
 const MIN='\u2212', fmt=(v,d=0)=>(v<0&&+Math.abs(v).toFixed(d)!==0?MIN:'')+Math.abs(v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const def=(s,k,ls)=>M.deficits.find(d=>d.site===s&&d.scenario===k&&d.ls===ls);
 // display rule: fluxes to one decimal; shown deficit = shown dust flux minus shown clear flux (whole tenths)
-const t10=v=>Math.round(v*10), dsp=d=>{const s=M.series[d.site];return (t10(s[d.scenario].find(r=>r.ls===d.ls).flux)-t10(s.cold.find(r=>r.ls===d.ls).flux))/10};
+// displayed deficit = the STORED deficit (data/mars.json) rounded to 1 decimal with the same rule as fmt (toFixed on the magnitude); never flux minus flux
+const dsp=d=>(d.value<0?-1:1)*+Math.abs(d.value).toFixed(1), NOTE='Rounding: deficits are computed from unrounded values, so a difference of up to 0.1 W/m\u00b2 from the printed fluxes is display rounding.';
 async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,ms||700);}
 (async()=>{
   // ---- the project's own numbers, from mars.json
@@ -48,6 +49,7 @@ async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,
     ok(g.files.filter(f=>/^mcd62_/.test(f)).join()===wantFiles.join(),'  source files at this step: '+wantFiles.join(', '));
     ok(g.sv.length===4&&g.sv.every((t,k)=>(k===3&&!st)?/^n\/a/.test(t):t.startsWith(fmt(S[['cold','climatology','warm','storm'][k]][i].flux,1))),'  sparkline read-outs match the stored flux: '+g.sv.join(' | '));
   }
+  ok((await b.ev(`document.querySelector('#card [data-round-note]').textContent`))===NOTE,'site card carries the rounding note');
   // ---- compare layer: ranges equal the stored values, fixed order, nothing ranked
   await fresh(b,FILE+'#compare?paused',800);
   const cmp=await b.ev(`[...document.querySelectorAll('#cmp .box')].map(x=>({id:x.dataset.site,t:x.querySelector('h4').textContent,rng:[...x.querySelectorAll('.rng')].map(e=>e.textContent)}))`);
@@ -71,6 +73,7 @@ async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,
   await fresh(b,FILE+'#method?paused',800);
   const mt=await b.ev(`document.querySelector('#method').innerText`);
   for(const s of ['No power system was sized.','climatology average solar scenario','cold scenario (low dust, minimum solar)','warm scenario (dusty, maximum solar)','dust storm average solar scenario','exploration-zone candidates','not a specific year','not days','No conversion factor was applied.','No uncertainty is published','not daily energy','Storm never faked before Ls 180','No ranking of sites','No combined score','No claim of safe or unsafe','Modelled','Illustrative','Measured'])ok(mt.toLowerCase().includes(s.toLowerCase()),'method layer states: '+s);
+  ok(mt.includes(NOTE),'method layer carries the rounding note');
   ok(await b.ev(`document.querySelectorAll('#manifest li').length`)===261&&await b.ev(`document.querySelector('#cites').children.length>=5`)&&await b.ev(`!!document.querySelector('#method a[href="https://github.com/sighmon/space"]')`),'method layer lists 261 manifest entries, citations and the GitHub link');
   // ---- exhaustive: all 108 deficits, every place a flux and a deficit are shown (hero read-outs, card dials, sparkline read-outs)
   const num=t=>+String(t).replace(/\u2212/g,'-').replace(/,/g,'').match(/^-?[0-9.]+/)[0];
@@ -87,13 +90,15 @@ async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,
       const d=def(site,scn,i*30); if(!d)continue;
       const sc=scn==='warm'?card.warm:card.storm, spk=num(card.sv[scn==='warm'?2:3]);
       const cold=num(card.cold), hf=num(hero[scn].f), hd=num(hero[scn].df), hc=num(hero.cold.f);
-      const e1=Math.abs((spk-cold)-num(sc)), e2=Math.abs((hf-hc)-hd);
-      worst=Math.max(worst,Math.abs(num(sc)-d.value),Math.abs(hd-d.value));
-      ok(e1<1e-9&&e2<1e-9&&num(sc)===hd&&Math.abs(num(sc)-d.value)<0.1+1e-9&&(Math.abs(d.value)<0.1||Math.sign(num(sc))===Math.sign(d.value)),`${site}/${scn}/Ls ${i*30}: shown ${spk} - ${cold} = ${sc} (hero ${hf} - ${hc} = ${hd}); stored ${d.value.toFixed(3)}`);
+      const e1=Math.abs((spk-cold)-num(sc)), e2=Math.abs((hf-hc)-hd), want=dsp(d);
+      worst=Math.max(worst,e1,e2);
+      ok(num(sc)===want&&hd===want&&fmt(want,1)===sc&&(want===0||Math.sign(num(sc))===Math.sign(d.value))&&e1<0.1+1e-9&&e2<0.1+1e-9,`${site}/${scn}/Ls ${i*30}: shown deficit ${sc} (hero ${hd}) = stored ${d.value} rounded to ${fmt(want,1)}; printed fluxes ${spk} - ${cold} differ by ${e1.toFixed(1)}`);
       exh++;
     }
   }
-  ok(exh===108,'exhaustive check covered all 108 samples; largest gap to the stored deficit '+worst.toFixed(3)+' W/m2 (< 0.1)');
+  // known case from review: Opportunity Ls 180 storm stored -451.4248 shows -451.4, not -451.5
+  {const o=def('opportunity','storm',180); ok(Math.abs(o.value+451.4248)<1e-3&&fmt(dsp(o),1)===MIN+'451.4','Opportunity Ls 180 storm: stored '+o.value+' shows '+fmt(dsp(o),1)+' (not '+MIN+'451.5)');}
+  ok(exh===108,'exhaustive check covered all 108 samples; largest gap between the shown deficit and shown flux minus shown flux '+worst.toFixed(1)+' W/m2 (display rounding, <= 0.1)');
   // ---- coordinates: one formatter, N/S and E/W letters, never a signed number plus a letter
   const cf=(v,p,n)=>String(+Math.abs(v).toFixed(3))+'\u00b0 '+(v<0?n:p);
   await fresh(b,FILE+'#method?paused',800);
@@ -101,5 +106,14 @@ async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,
   for(const x of M.sites){const w=cf(x.lat,'N','S')+', '+cf(x.lon,'E','W');
     ok(mt2.t.includes(x.name+' ('+w+')')&&mt2.rows.includes(w),`${x.name}: method note and table both say ${w}`);}
   ok(mt2.t.includes('Mesopotamia (35.352\u00b0 S, 94.02\u00b0 E)')&&!/-\d[\d.]* ?\u00b0? ?[NSEW]\b/.test(mt2.t)&&!/-\d/.test(mt2.rows.join()),'southern sites read "35.352\u00b0 S", never "-35.352 N"');
+  // ---- the widest deficit text (Opportunity Ls 180 storm, -451.4) keeps clear of the dial ring stroke at every width
+  for(const w of [320,360,390,414,600,768,1024,1440]){
+    await b.viewport(w,w<500?740:900);
+    await fresh(b,FILE+'#site/opportunity?ls=180&scenario=storm&paused',700);
+    const r=await b.ev(`[...document.querySelectorAll('#card .dial')].map(d=>{const g=d.querySelector('.ring').getBoundingClientRect(),n=d.querySelector('.n').getBoundingClientRect(),u=d.querySelector('.u').getBoundingClientRect(),cx=g.left+g.width/2,cy=g.top+g.height/2,inner=g.width*0.35;
+      const far=Math.max(...[n,u].flatMap(q=>[[q.left,q.top],[q.right,q.top],[q.left,q.bottom],[q.right,q.bottom]]).map(p=>Math.hypot(p[0]-cx,p[1]-cy)));return {k:d.dataset.d,v:d.dataset.value,far:far/inner,half:Math.max(cx-n.left,n.right-cx)/inner}})`);
+    ok(r.every(x=>x.far<=1.0&&x.half<=0.9),`${w}px: dial text stays inside the ring stroke (${r.map(x=>x.v+' '+x.half.toFixed(2)+'/'+x.far.toFixed(2)).join(', ')})`);
+  }
+  await b.viewport(1440,900);
   ok(errs.length===0,'no console errors'); b.close(); console.log('values ok',n,'checks'); process.exit(0);
 })().catch(e=>{console.error('FAIL',e.message);process.exit(1)});

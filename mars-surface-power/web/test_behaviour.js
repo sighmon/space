@@ -146,6 +146,36 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   await fresh(b,FILE+'?ls=240&scenario=storm&site=mesopotamia&paused',600);
   ok(await b.ev(`__mars.step`)===8&&await b.ev(`__mars.state.scn`)==='storm'&&await b.ev(`__mars.state.site`)==='mesopotamia'&&await b.ev(`document.querySelector('#play').getAttribute('aria-label')`)==='Play replay','?ls=240&scenario=storm&site=mesopotamia&paused in the query string works');
   await fresh(b,FILE+'#?ls=100&paused',600); ok(await b.ev(`__mars.step`)===3,'?ls=100 snaps to the nearest 30 degree step (Ls 90)');
+  // ---- deficits shown are the STORED deficits rounded to 1 decimal (same rule as the page), for all 108 samples
+  const RNOTE='Rounding: deficits are computed from unrounded values, so a difference of up to 0.1 W/m\u00b2 from the printed fluxes is display rounding.';
+  const rd1=v=>(v<0?-1:1)*+Math.abs(v).toFixed(1), ff1=v=>(v<0&&+Math.abs(v).toFixed(1)!==0?'\u2212':'')+Math.abs(v).toFixed(1);
+  let seen108=0;
+  for(const site of M.sites.map(x=>x.id)){
+    await fresh(b,FILE+`#?site=${site}&scenario=warm&ls=0&paused`,500);
+    for(let i=0;i<12;i++){
+      await b.ev(`(()=>{const s=document.querySelector('#scrub');s.value=${i};s.dispatchEvent(new Event('input',{bubbles:true}))})()`);
+      for(const scn of ['warm','storm']){
+        await b.ev(`(()=>{const e=document.querySelector('#scn [data-s="${scn}"]');if(e&&!e.disabled)e.click()})()`); await sleep(40);
+        const d=M.deficits.find(x=>x.site===site&&x.scenario===scn&&x.ls===i*30); if(!d)continue;
+        const g=await b.ev(`document.querySelector('#r-def').textContent`);
+        ok(g===ff1(rd1(d.value)),`hero ${site}/${scn}/Ls ${i*30}: shows ${g}, stored ${d.value} rounds to ${ff1(rd1(d.value))}`); seen108++;
+      }
+    }
+  }
+  ok(seen108===108,'hero deficit read-out checked against the stored value for all 108 samples');
+  // rounding note present in the card, compare and method layers
+  await fresh(b,FILE+'#site/opportunity?ls=180&scenario=storm&paused',800);
+  const cardTxt=await b.ev(`document.querySelector('#card').innerText`);
+  ok(await b.ev(`document.querySelector('#card [data-round-note]').textContent`)===RNOTE&&cardTxt.includes(RNOTE),'site card shows the rounding note');
+  const sd=await b.ev(`(()=>{const d=document.querySelector('#card .dial[data-d="storm"]');return {v:d.dataset.value,a:d.getAttribute('aria-label')}})()`);
+  ok(sd.v==='\u2212451.4'&&sd.a.includes('\u2212451.4')&&!/451\.5/.test(cardTxt+sd.a),'Opportunity Ls 180 storm card shows \u2212451.4 (stored \u2212451.4248), never \u2212451.5, in the dial and its aria label: '+sd.a);
+  await fresh(b,FILE+'#compare?paused',700); ok((await b.ev(`document.querySelector('#cmp [data-round-note]').textContent`))===RNOTE,'compare layer shows the rounding note');
+  await fresh(b,FILE+'#method?paused',700); ok((await b.ev(`document.querySelector('#method').innerText`)).includes(RNOTE),'method layer shows the rounding note');
+  // the page must not recompute: change every stored deficit to an arbitrary value, keep the fluxes; the page must show the changed stored values
+  await b.send('Page.addScriptToEvaluateOnNewDocument',{source:`(()=>{let v;Object.defineProperty(window,'MARS',{configurable:true,get(){return v},set(x){for(const d of x.deficits)d.value=-(100+d.ls/10+0.04)-(d.scenario==='storm'?0.4:0);v=x}})})()`});
+  await fresh(b,FILE+'#site/curiosity?ls=240&scenario=warm&paused',800);
+  const tam=await b.ev(`({hero:document.querySelector('#r-def').textContent,dial:document.querySelector('#card .dial[data-d="warm"]').dataset.value,st:document.querySelector('#card .dial[data-d="storm"]').dataset.value})`);
+  ok(tam.hero==='\u2212'+(124+0).toFixed(1)&&tam.dial==='\u2212124.0'&&tam.st==='\u2212124.4','page shows the (altered) stored deficits, not a recomputation from displayed fluxes: '+JSON.stringify(tam));
   // ---- never show 0 for missing: null out the data and load
   await b.send('Page.addScriptToEvaluateOnNewDocument',{source:`(()=>{let v;Object.defineProperty(window,'MARS',{configurable:true,get(){return v},set(x){
     for(const s of Object.keys(x.series))for(const k of Object.keys(x.series[s]))for(const r of x.series[s][k]){r.flux=null;r.dod=null;r.file=null;r.sha256=null}

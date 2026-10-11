@@ -137,6 +137,8 @@ table.sc tbody tr{cursor:default}
 @media (max-width:900px) and (max-height:700px){.snote{display:none}.dock{gap:0 10px}.brand .small{display:none}}
 @media (min-width:901px) and (max-height:860px){.mapcap{display:none}}
 @media (min-width:901px) and (max-height:760px){.live .n{font-size:28px}.live{gap:6px 14px}}
+/* values of six or more characters (e.g. \u2212451.4) step down so they keep clear of the ring stroke */
+.ring .val .n.long{font-size:28px}
 </style>
 </head>
 <body>
@@ -244,7 +246,7 @@ table.sc tbody tr{cursor:default}
     <div class="box"><p>The deficit is the stored dusty flux minus the stored cold (clear, low-dust) flux at the same site and Ls: the dusty (warm) scenario and the dust-storm scenario against the cold baseline. Climatology is stored and shown but is not turned into a deficit. The dust storm is the interface's "average" scenario, not a specific year, and exists only for Ls 180 to 330; earlier requests are rejected by the interface, so those samples are absent, never zero. How long a deficit lasts is a count of seasonal samples, not days. No uncertainty is published, so none is drawn. The project says: <b id="nopower"></b></p></div>
 
     <h3>The method text from the project</h3>
-    <div class="box"><p class="mt" id="method-text"></p></div>
+    <div class="box"><p class="mt" id="method-text"></p><p class="small" id="round-note" data-round-note style="margin-top:10px"></p></div>
     <details><summary>The project's own sentences (<span id="nsent">0</span>)</summary><div id="sentences"></div></details>
     <details><summary>Data files (<span id="nman">0</span>, data/MANIFEST.tsv)</summary><ul class="cites" id="manifest"></ul></details>
 
@@ -292,12 +294,13 @@ var DEF={};(D.deficits||[]).forEach(function(d){DEF[d.site+'|'+d.scenario+'|'+d.
 function smp(sid,scn,i){var s=SER[sid]&&SER[sid][scn];return s&&s[i]?s[i]:null}
 function flux(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.flux)?r.flux:null}
 function dod(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.dod)?r.dod:null}
-/* Display rule: fluxes are shown to one decimal. A shown deficit is the shown dust flux minus the shown clear flux (whole tenths), so the arithmetic on screen is always exact; it is within 0.1 W/m2 of the stored subtraction. */
-function tenth(v){return Math.round(v*10)}
-function deficit(sid,scn,i){var d=DEF[sid+'|'+scn+'|'+LSV[i]],a=flux(sid,scn,i),c=flux(sid,'cold',i);return d&&ok(d.value)&&a!=null&&c!=null?(tenth(a)-tenth(c))/10:null}
+/* Display rule: the STORED deficit (unrounded dusty minus cold, from the frozen export) is rounded once to one decimal with the same rule as fnum, and every place uses that value. Never recompute from the displayed fluxes: a printed deficit can differ by up to 0.1 W/m2 from printed flux minus printed flux. */
+var ROUND_NOTE='Rounding: deficits are computed from unrounded values, so a difference of up to 0.1 W/m\u00b2 from the printed fluxes is display rounding.';
+function r1(v){var t=Math.abs(v).toFixed(1);return (v<0?-1:1)*+t}
+function deficit(sid,scn,i){var d=DEF[sid+'|'+scn+'|'+LSV[i]];return d&&ok(d.value)?r1(d.value):null}
 var FMAX=1,DMAX=1,DFMAX=1;
 Object.keys(SER).forEach(function(k){Object.keys(SER[k]).forEach(function(s){SER[k][s].forEach(function(r){if(ok(r.flux))FMAX=Math.max(FMAX,r.flux);if(ok(r.dod))DMAX=Math.max(DMAX,r.dod)})})});
-(D.deficits||[]).forEach(function(d){if(ok(d.value))DFMAX=Math.max(DFMAX,Math.abs(d.value))});
+(D.deficits||[]).forEach(function(d){if(ok(d.value))DFMAX=Math.max(DFMAX,Math.abs(r1(d.value)))});
 
 /* ---------------- state: one snapped season step feeds every readout, the scene and the rings ---------------- */
 var S={site:'curiosity',scn:'warm',step:0,base:0};
@@ -466,6 +469,7 @@ function renderCard(sid){
   h+='<div class="extras" style="grid-template-columns:repeat(2,1fr)">'
    +'<div class="extra"><span class="label">Deepest dusty deficit</span><b>'+(w.deep?fnum(w.deep.v,1)+' W/m\u00b2':NA)+'</b><span>'+(w.deep?'at Ls '+w.deep.ls+'\u00b0 \u00b7 negative on '+w.below+' of '+w.n+' seasonal samples':'')+'</span></div>'
    +'<div class="extra"><span class="label">Deepest storm deficit</span><b>'+(m.deep?fnum(m.deep.v,1)+' W/m\u00b2':NA)+'</b><span>'+(m.deep?'at Ls '+m.deep.ls+'\u00b0 \u00b7 negative on '+m.below+' of '+m.n+' seasonal samples (storm exists only for Ls 180 to 330)':'')+'</span></div></div>';
+  h+='<p class="disclaim" data-round-note>'+ROUND_NOTE+'</p>';
   h+='<div class="label" style="margin-top:20px">Noon flux through the year, one point per 30\u00b0 of Ls \u00b7 shared scale 0 to '+plain(fnum(FMAX))+' W/m\u00b2</div><div class="sparks">'+['cold','climatology','warm','storm'].map(function(k){return sparkHTML(k,sid)}).join('')+'</div>';
   h+='<p class="disclaim">The line joins the stored samples; there is no data between them. The storm has no samples before Ls 180. The white marker is the replay step.</p>';
   h+='<div class="box" style="margin-top:16px"><div class="label">Source files at this season</div><ul class="files" id="card-files"></ul><p class="small" style="margin-top:8px">Coordinate: '+esc(s.source)+' \u00b7 <code class="h">'+esc(s.source_file)+'</code> \u00b7 sha256 <code class="h">'+esc(s.source_sha256)+'</code></p></div>';
@@ -477,7 +481,7 @@ function renderCard(sid){
   $$('#card [data-open]').forEach(function(b){b.onclick=function(){openLayer(b.dataset.open)}});
 }
 function setDial(key,html,unit,frac,defTxt,aria){var d=$('#card .dial[data-d="'+key+'"]');if(!d)return;var n=$('.n',d),u=$('.u',d),f=$('.fill',d);
-  if(n._h!==html){n._h=html;n.innerHTML=html}u.textContent=frac==null?'':unit;f.setAttribute('stroke-dasharray',(Math.max(0,Math.min(1,frac||0))*179.07).toFixed(2)+' 300');f.style.display=frac==null?'none':'';
+  if(n._h!==html){n._h=html;n.innerHTML=html}n.classList.toggle('long',plain(html).length>=6);u.textContent=frac==null?'':unit;f.setAttribute('stroke-dasharray',(Math.max(0,Math.min(1,frac||0))*179.07).toFixed(2)+' 300');f.style.display=frac==null?'none':'';
   $('.def',d).textContent=defTxt||'';d.dataset.value=plain(html);d.setAttribute('role','group');d.setAttribute('aria-label',aria)}
 function setT2(id,txt){var e=$('#'+id);if(e&&e._h!==txt){e._h=txt;e.textContent=txt}}
 function cardRefresh(i){
@@ -533,7 +537,7 @@ function fillCompare(){
      +rb('Storm minus clear',storm,-axD,0,'W/m\u00b2',1,true,function(v){return neg(v)+' (Ls 180 to 330 only)'})
      +rb('Storm optical depth (database unit, own axis)',tau,0,Math.ceil(DMAX),'',2,false,function(v){return v.length+' samples'})
      +'<div style="margin-top:14px"><button class="btn" style="min-height:44px" data-site-open="'+esc(s.id)+'">Open site card</button></div></div>'});
-  $('#cmp').innerHTML=h;$$('#cmp [data-site-open]').forEach(function(b){b.onclick=function(){openSite(b.dataset.siteOpen)}});
+  h+='<p class="disclaim" data-round-note>'+ROUND_NOTE+'</p>';$('#cmp').innerHTML=h;$$('#cmp [data-site-open]').forEach(function(b){b.onclick=function(){openSite(b.dataset.siteOpen)}});
 }
 
 /* ---------------- Opportunity 2018: measured opacity and modelled optical depth, two separate axes ---------------- */
@@ -568,7 +572,7 @@ function fillOpp(){
 /* ---------------- method and sources ---------------- */
 function td(x){return '<td class="l">'+x+'</td>'}
 function fillMethod(){
-  $('#nopower').textContent=D.no_power||'';
+  $('#nopower').textContent=D.no_power||'';var rn=$('#round-note');if(rn)rn.textContent=ROUND_NOTE;
   $('#method-text').textContent=(D.method||'n/a').split('\n').filter(function(l){return !/^Plotted/.test(l)}).map(function(l){return /^Sites:/.test(l)&&SITES.length?'Sites: '+SITES.map(function(s){return s.name+' ('+latS(s.lat)+', '+lonS(s.lon)+')'}).join('; ')+'.':l}).join('\n')+'\n(The "Plotted" traces repeat every value with its source files; they are in data/mars.json.)';
   $('#tb-scn').innerHTML=SC.map(function(s){var a=s.ls_available||[];return '<tr>'+td(esc(s.label))+td(esc(s.interface_label))+td(esc(s.dust))+td(a.length+(a.length?' (Ls '+a[0]+' to '+a[a.length-1]+')':''))+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
   $('#tb-sites').innerHTML=SITES.map(function(s){return '<tr>'+td(esc(s.name))+td(latS(s.lat)+', '+lonS(s.lon))+td(esc(s.source))+td('<code class="h">'+esc(s.source_file)+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
