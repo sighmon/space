@@ -306,6 +306,7 @@ var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
 
 /* ---------------- data access (n/a-safe) ---------------- */
 function slotAt(t){return Math.max(0,Math.min(SLOTS-1,Math.round(t/STEP)))}
+function snap(t){return SLOTS?slotAt(t)*STEP:t} // every readout and the scene use the nearest 5-minute slot, never the raw clock
 function fluxAt(arr,t){if(!SLOTS)return null; var v=arr[slotAt(t)]; return ok(v)?v:null}
 function doseAt(t){ // last CRaTER sample at or before t; null if none within 2 h
   var lo=0,hi=DT.length-1,best=-1; while(lo<=hi){var m=(lo+hi)>>1; if(DT[m]<=t){best=m;lo=m+1}else hi=m-1}
@@ -328,11 +329,12 @@ function setSeg(){var s=clock.speed,bs=$$('#seg button'),on=bs.filter(function(b
 /* ---------------- readouts ---------------- */
 function setT(id,html){var e=$('#'+id); if(e._h!==html){e._h=html;e.innerHTML=html}}
 function readouts(t,pfx){
+  t=snap(t);
   var f10=fluxAt(G10,t), f100=fluxAt(G100,t), d=doseAt(t);
   var tm=iso(T0+slotAt(t)*STEP*1000);
   if(pfx==='r'){setT('r-time',SLOTS?tm:NA);setT('stamp',SLOTS?tm.replace('Z',' UTC'):'n/a');setT('r-dose-age',d?'· sample '+Math.round(d.age/60)+' min earlier':'');}
   else setT('t-time',SLOTS?tm:NA);
-  setT(pfx+'-f10',fnum(f10));setT(pfx+'-f100',fnum(f100));setT(pfx+'-dose',d?fnum(d.v):NA);
+  setT(pfx+'-f10',fnum(f10));setT(pfx+'-f100',fnum(f100));setT(pfx+'-dose',d?fnum(d.v,Math.abs(d.v)>=1000?2:null):NA);
 }
 var hoverT=null;
 function tick(t){
@@ -494,7 +496,7 @@ function substations(){var gp=LY.gp,out=[],n=7,wd=gp.r.r-gp.r.l-30;
   for(var i=0;i<n;i++){var x=gp.r.l+15+wd*(i+.5)/n+(rnd(i+70)-.5)*8; var y=limbY(x)+Math.max(10,gp.dy+8)+ (i%3)*9 + rnd(i+80)*8; out.push({x:x,y:Math.min(gp.r.b-8,y)})}
   return out}
 function drawHero(t){
-  if(!LY)return; var c=hc, ph=(REDUCED||STATIC)?.37:performance.now()/1000;
+  if(!LY)return; t=snap(t); var c=hc, ph=(REDUCED||STATIC)?.37:performance.now()/1000;
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,hw,hh);
   c.drawImage(layer,0,0,hw,hh);
   var f10=fluxAt(G10,t), f100=fluxAt(G100,t);
@@ -613,7 +615,7 @@ function gridGauge(t){
   n.b.dataset.value=have?String(cnt):'n/a';
   gset(n,'aria',state+rv,function(){n.b.setAttribute('aria-label','Power grid: '+(have?cnt+' of '+M.iss.length+' issued K at or above 7 alerts so far; '+(state==='alert'?'an alert is issued and a K at or above 7 warning is valid':state==='warning'?'a K at or above 7 warning is valid, no alert issued yet':state==='ended'?'the warning valid period has ended':'no K at or above 7 product yet')+'. These are issued products, not observed K.':'n/a, no issued products')+' Open the power grid card.')});
 }
-function gauges(t){gauge('crew',t);gauge('polar',t);gridGauge(t)}
+function gauges(t){t=snap(t);gauge('crew',t);gauge('polar',t);gridGauge(t)}
 
 /* ---------------- charts ---------------- */
 var CH={ml:44,mr:10};
@@ -730,7 +732,7 @@ function renderCard(key){
     var ds=A.dose||{};
     html+='<div class="box" style="margin-top:12px"><div class="label">Dose, side by side · not derived from flux</div><div class="extras" style="grid-template-columns:repeat(2,1fr);margin-top:10px">'
      +stat(0,'Lowest CRaTER dose rate',ok(ds.min)?fnum(ds.min,1)+' µGy/h':NA,ftime(ds.min_time))
-     +stat(0,'Highest CRaTER dose rate',ok(ds.max)?fnum(ds.max,0)+' µGy/h':NA,ftime(ds.max_time))+'</div>'
+     +stat(0,'Highest CRaTER dose rate',ok(ds.max)?fnum(ds.max,2)+' µGy/h':NA,ftime(ds.max_time))+'</div>'
      +'<p style="margin-top:10px">CRaTER-D1D2 absorbed dose rate, copied from RadLab ('+esc((DOSE.source_file)||'n/a')+'). Measured on LRO in lunar orbit: not at a flight altitude, in a crew vehicle or on the ground. The hour-scale CRaTER samples are not matched to the 5-minute flux; they are only shown together on the timeline, on separate axes.</p></div>';
   }
   html+='<div class="box sentence"><div class="label">The project’s own sentence</div><p style="margin-top:8px">'+esc(A.sentence||'')+(A.sentence?'':NA)+'</p></div>';
@@ -758,7 +760,7 @@ function syncInert(){var sh=$('#sheet');if(sh.classList.contains('open')){if(doc
 function openLayer(id,silent){ closeLayers(true); document.body.classList.add('layer-open'); panels.open($('#'+id),'[data-close]'); syncInert(); setNav(id);
   if(id==='timeline')requestAnimationFrame(function(){drawTimeline();readouts(clock.t,'t')});
   if(!silent)setHash(id)}
-function closeLayers(silent){ var any=$$('.layer.open').length; document.body.classList.remove('layer-open'); if(any&&LY)drawHero(clock.t); $$('.layer').forEach(function(l){panels.close(l,silent)}); syncInert(); setNav(null);
+function closeLayers(silent){ var any=$$('.layer.open').length; document.body.classList.remove('layer-open'); if(any&&LY)drawHero(clock.t); syncInert(); /* un-inert the card first so focus can return to a trigger inside it */ $$('.layer').forEach(function(l){panels.close(l,silent)}); syncInert(); setNav(null);
   if(!silent&&any)setHash(sel?'audience/'+sel:'')}
 $$('[data-close]').forEach(function(b){b.onclick=function(){closeLayers()}});
 $('#scrim').onclick=function(){closeLayers()};
