@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mars surface power: where the sunlight goes · Prototype</title>
+<meta name="description" content="One frozen Mars Climate Database v6.2 slice: the noon sunlight deficit in a dusty season and in a global dust storm at six sites. Modelled values, every number sourced. No power system was sized.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../shared/space.css">
+<style>
+/* page-specific rules only; tokens, panels, buttons, dials, range bars and the play clock come from shared/space.css */
+html,body{overflow:hidden}
+#hero{position:fixed;inset:0;width:100%;height:100%;display:block;transition:filter .9s var(--ease)}
+body.sheet-open #hero{filter:brightness(.6) saturate(.9)}
+body.layer-open #hero{filter:brightness(.32) blur(2px)}
+.top{flex-wrap:wrap;gap:10px 16px}
+.nav button{min-height:44px;padding:0 16px}
+.nav{padding:2px}
+.brand a.ghlink{margin-bottom:-6px}
+.hero-copy{position:fixed;left:36px;top:max(20vh,150px);max-width:440px;z-index:3;pointer-events:none;transition:opacity .6s var(--ease)}
+.hero-copy h1{font-size:clamp(32px,4vw,56px);font-weight:200;letter-spacing:-.03em;line-height:1.05}
+.hero-copy h1 em{font-style:normal;color:var(--ice)}
+.hero-copy p{margin-top:18px;font-size:15px;line-height:1.6;color:var(--mute);max-width:400px}
+body.sheet-open .hero-copy,body.layer-open .hero-copy,body.sheet-open .stage,body.layer-open .stage,body.sheet-open .live,body.layer-open .live{opacity:0;visibility:hidden;pointer-events:none}
+.stage{position:fixed;left:36px;bottom:26px;width:min(780px,calc(100vw - 72px));z-index:3;display:flex;flex-direction:column;gap:10px;transition:opacity .5s}
+.live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 16px;transition:opacity .5s}
+.live .it{min-width:0}
+.live .n{display:block;font-size:30px;line-height:1.1;white-space:nowrap}
+.live .n .na,.live .n .tx{font-size:20px}
+.live .k{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:3px;line-height:1.35}
+.live .u{font-size:.42em;color:var(--mute);letter-spacing:.04em;margin-left:3px;font-weight:300}
+.map{display:block;width:100%;margin-top:4px}
+.map svg{display:block;width:100%;height:auto;cursor:pointer}
+.mapcap{font-size:10.5px;color:var(--faint);line-height:1.4;margin-top:2px}
+.viz{font-size:11.5px;color:var(--faint);line-height:1.45}
+.viz b{font-weight:500;color:var(--mute)}
+.viz .vl{display:none}
+.ctl{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center}
+.seg{padding:0;max-width:100%}
+.seg button{min-height:44px;min-width:44px;padding:0 12px;position:relative;z-index:1;white-space:nowrap}
+.seg .thumb{top:0;bottom:0}
+.seg button[aria-disabled=true]{color:var(--faint);text-decoration:line-through;text-decoration-color:rgba(235,242,247,.4)}
+.seg button.on{color:#061018}
+.seg .short{display:none}
+.snote{font-size:11.5px;color:var(--mute);line-height:1.45;flex:1 1 200px;min-width:0}
+.snote.warn{color:#ffc27a}
+.rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.site{min-height:44px;min-width:0;padding:4px 6px;border-radius:14px;border:1px solid var(--line2);background:var(--glass);color:var(--ink);font-size:12.5px;line-height:1.2;text-align:center;transition:border-color .3s,background-color .3s;touch-action:manipulation;overflow-wrap:anywhere}
+.site:hover{border-color:var(--ice)}
+.site.on{border-color:var(--ice);background:rgba(169,220,255,.10);box-shadow:0 0 18px rgba(169,220,255,.18)}
+.site .s{display:none}
+.dock{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:6px 12px 6px 6px;border-radius:26px;background:rgba(18,22,26,.82);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.dock .scrub{flex:1 1 140px;min-width:0}
+.play{width:44px;height:44px;min-width:44px}
+.stamp{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums;margin-left:auto;white-space:nowrap}
+input[type=range]{display:block;height:44px;background:transparent;margin:0;-webkit-appearance:none;appearance:none;width:100%;cursor:pointer;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--line2);border-radius:3px}
+input[type=range]::-moz-range-track{height:3px;background:var(--line2);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7.5px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--ice);border:0}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0}
+input[type=range]:focus-visible{outline:2px solid var(--ice);outline-offset:-2px;border-radius:8px}
+.btn{min-height:44px;display:inline-flex;align-items:center}
+.cites a.ghlink{min-height:44px}
+.tag-r{color:#8fe3b0}.tag-i{color:#ffc27a}
+.cav{list-style:none;margin-top:12px;display:grid;gap:8px}
+.cav li{font-size:12.5px;color:var(--mute);line-height:1.55;padding-left:16px;position:relative}
+.cav li:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:#ffc27a}
+code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-wrap:anywhere}
+.sparks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.spark{border:1px solid var(--line);border-radius:14px;padding:10px 14px 8px;min-width:0}
+.spark svg{display:block;width:100%;height:auto;overflow:visible}
+.spark .label{font-size:10px}
+.spark .sv{font-size:12px;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+.sp-line{fill:none;stroke:var(--ice);stroke-width:1.4}
+.sp-dot{fill:var(--ice)}
+.sp-cur{stroke:#fff;stroke-width:1;opacity:.85}
+.sp-grid{stroke:rgba(235,242,247,.12);stroke-width:1}
+.sp-t{fill:rgba(235,242,247,.68);font-size:9px}
+.files{list-style:none;margin-top:8px;display:grid;gap:6px}
+.files li{font-size:11.5px;color:var(--mute);line-height:1.5;min-width:0}
+.files li span{color:var(--ink)}
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+.cmp .box h4 small{font-size:11.5px;color:var(--faint);font-weight:400;margin-left:6px}
+.cmp .rb{margin-top:16px}
+.cmp .rb .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.rb .span{background:rgba(169,220,255,.5)}
+.rb .zero{position:absolute;right:0;top:0;height:18px;border-right:1px dashed rgba(255,194,122,.7)}
+.chart{margin-top:14px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart.narrow svg{max-width:240px;margin:0 auto}
+.ax{stroke:rgba(235,242,247,.18);stroke-width:1}.gl{stroke:rgba(235,242,247,.07);stroke-width:1}
+.at{fill:rgba(235,242,247,.7);font-size:10.5px}
+.ad{fill:var(--ice)}.am{fill:#ffc27a}
+.big{display:flex;gap:6px 28px;flex-wrap:wrap;margin-top:14px;align-items:baseline}
+.big .num{font-size:34px}
+.big .k{font-size:11.5px;color:var(--mute);display:block;max-width:34ch;line-height:1.4}
+details{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:0 16px}
+details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:13px;color:var(--ice)}
+details[open] summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+details p{font-size:12px;color:var(--mute);line-height:1.6;margin:8px 0;overflow-wrap:anywhere}
+.mt{white-space:pre-line}
+td.l,th.l{text-align:left}
+table.sc{width:100%;border-collapse:collapse;font-size:13px}
+table.sc td,table.sc th{text-align:left;white-space:normal;vertical-align:top;padding:10px 9px}
+table.sc th{white-space:normal}
+table.sc tbody tr{cursor:default}
+@media (max-width:900px){
+  .hero-copy{display:none}
+  .stage{left:18px;right:18px;bottom:14px;width:auto;gap:8px}
+  .live .n{font-size:22px}.live .n .na,.live .n .tx{font-size:16px}
+  .live{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 10px}
+  .live .k{font-size:9.5px;letter-spacing:.04em}
+  .site .l{display:none}.site .s{display:inline}
+  .cmp{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sparks{grid-template-columns:1fr}
+  .live .mapwrap{grid-column:1/-1}
+}
+@media (min-width:901px){
+  .live{position:fixed;right:36px;top:max(20vh,150px);width:270px;grid-template-columns:1fr 1fr;gap:12px 14px}
+  .live .n{font-size:34px}
+  .live .mapwrap{grid-column:1/-1}
+  .viz .vl{display:inline}
+}
+@media (max-width:520px){
+  .top{padding:14px 14px}
+  .nav{width:100%}
+  .nav button{flex:1 1 0;padding:0 6px}
+  .stage{left:14px;right:14px}
+  .seg button{padding:0 9px;font-size:12px}
+  .seg .long{display:none}.seg .short{display:inline}
+  .dock{padding:4px 10px 4px 4px}
+  .stamp{display:none}
+  .cmp{grid-template-columns:1fr}
+  .live .n{font-size:19px}.live .k{font-size:9px}
+}
+@media (max-width:900px) and (max-height:760px){.mapcap{display:none}}
+@media (max-width:900px) and (max-height:700px){.snote{display:none}.dock{gap:0 10px}.brand .small{display:none}}
+@media (min-width:901px) and (max-height:860px){.mapcap{display:none}}
+@media (min-width:901px) and (max-height:760px){.live .n{font-size:28px}.live{gap:6px 14px}}
+</style>
+</head>
+<body>
+<canvas id="hero" role="img" aria-label="Illustrative drawing, real values: a procedurally drawn Martian horizon for the selected site and scenario. The sky haze follows the real dust column optical depth, the Sun disc is scaled by the real noon flux, and a small lander or rover stands on the horizon."></canvas>
+
+<header class="top">
+  <div class="brand"><div class="label">Mars surface power · MCD v6.2</div><div class="small t2" style="margin-top:4px">Sunlight deficit, not a power system · prototype v0.1</div>
+  <div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></div></div>
+  <nav class="nav" aria-label="Views">
+    <button data-v="compare">Compare</button>
+    <button data-v="opportunity">Opportunity<span class="long"> 2018</span></button>
+    <button data-v="method">Method<span class="long"> &amp; sources</span></button>
+  </nav>
+</header>
+
+<section class="hero-copy">
+  <h1>Where the <br>sunlight goes. <br><em>Every number sourced.</em></h1>
+  <p>One frozen slice of the Mars Climate Database v6.2: the noon sunlight at six sites through the year, in a clear sky, a dusty season and a global dust storm. Modelled values. No power system was sized.</p>
+</section>
+
+<div class="stage" id="stage">
+  <div class="live" id="live" role="group" aria-label="Readouts at the selected season (modelled values)">
+    <div class="it"><span class="num n" id="r-ls">n/a</span><span class="k">Season, Ls</span></div>
+    <div class="it"><span class="num n" id="r-flux">n/a</span><span class="k">Noon flux, W/m²</span></div>
+    <div class="it"><span class="num n" id="r-dod">n/a</span><span class="k">Dust optical depth</span></div>
+    <div class="it"><span class="num n" id="r-def">n/a</span><span class="k" id="r-defk">Dusty minus clear, W/m²</span></div>
+    <div class="mapwrap"><div class="map" id="map"></div><div class="mapcap">Stylised strip, not a map: the six sites by their real latitude and longitude.</div></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" id="scn" role="group" aria-label="Scenario"><span class="thumb"></span>
+      <button data-s="cold" aria-label="Clear sky baseline, the interface's cold scenario">Clear</button>
+      <button data-s="climatology" aria-label="Climatology average"><span class="long">Climatology</span><span class="short" aria-hidden="true">Clim.</span></button>
+      <button data-s="warm" aria-label="Dusty season, the interface's warm scenario">Dusty</button>
+      <button data-s="storm" aria-label="Global dust storm"><span class="long">Dust storm</span><span class="short" aria-hidden="true">Storm</span></button>
+    </div>
+    <div class="snote" id="snote" aria-live="polite"></div>
+  </div>
+  <div class="rail" id="rail" role="group" aria-label="Sites: each opens its site card"></div>
+  <div class="dock" id="dock" role="group" aria-label="Season replay">
+    <button class="play js-play" id="play" type="button" aria-label="Pause replay"><svg viewBox="0 0 10 12" aria-hidden="true"><path class="playp" d="M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z" fill="#fff"/></svg></button>
+    <div class="seg js-seg" id="seg" role="group" aria-label="Replay speed"><span class="thumb"></span><button data-s="1" aria-label="Speed 1x">1×</button><button data-s="2" class="on" aria-label="Speed 2x">2×</button><button data-s="4" aria-label="Speed 4x">4×</button></div>
+    <span class="stamp" id="stamp">n/a</span>
+    <div class="scrub"><label class="sr" for="scrub">Season, 12 steps of 30 degrees of Ls</label><input type="range" id="scrub" min="0" max="11" step="1" value="0"></div>
+  </div>
+  <div class="viz"><b>Illustrative drawing, real values.</b><span class="vl"> Sky haze follows the real dust optical depth, the Sun disc the real noon flux. The lander, horizon and dust motes are decoration. Modelled output, one frozen database slice.</span></div>
+</div>
+
+<!-- Site card -->
+<section class="sheet" id="sheet" aria-hidden="true" inert aria-label="Site card">
+  <div class="panel">
+    <div class="xwrap"><button class="x" id="close" aria-label="Close card">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close card" data-grab="sheet"></div>
+    <div id="card"></div>
+  </div>
+</section>
+
+<!-- Compare layer -->
+<section class="layer" id="compare" aria-hidden="true" inert aria-label="Compare the six sites">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close compare">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close compare" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Stored values · modelled · not ranked</div><h2>Six sites side by side</h2></div></div>
+    <div class="example-note"><b>Modelled</b><span>Each bar spans the stored values over the seasonal samples (every 30° of Ls) at local noon, 0 m, on a horizontal surface. Sites are in fixed order, not ranked and not scored. A bar is a range of samples, not an uncertainty: none is published. Deficit is dusty minus clear (cold scenario), not minus climatology.</span></div>
+    <div class="cmp" id="cmp"></div>
+    <p class="disclaim">The dust-storm scenario exists only for Ls 180 to 330 (6 samples); the dusty scenario has all 12. "Samples" are seasonal steps, not days. Optical depth bars use the database's own unit on their own axis. No crew or load model: nothing here says whether any site is usable. No power system was sized.</p>
+  </div>
+</section>
+
+<!-- Opportunity layer -->
+<section class="layer" id="opportunity" aria-hidden="true" inert aria-label="Opportunity 2018 measured opacity">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close Opportunity 2018">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close Opportunity 2018" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Measured · PDS Pancam · 2018</div><h2>Opportunity, June 2018</h2></div></div>
+    <div class="example-note real-note"><b style="color:#8fe3b0">Measured</b><span>The left panel is a measurement: Opportunity's Pancam atmospheric opacity at 880 nm, 61 points copied from one PDS table. The right panel is model output: the database's monthly mean dust column visible optical depth for its dust-storm scenario. They are different quantities in different units, each on its own axis. No conversion factor was applied.</span></div>
+    <div class="grid2" id="oppgrid"></div>
+    <div class="big" id="oppbig"></div>
+    <p class="disclaim" id="oppnote"></p>
+  </div>
+</section>
+
+<!-- Method layer -->
+<section class="layer" id="method" aria-hidden="true" inert aria-label="Method and sources">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close method and sources">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close method and sources" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Pull-up layer</div><h2>Method and sources</h2></div></div>
+
+    <h3>Real, modelled and illustrative</h3>
+    <div class="grid2">
+      <div class="box"><h4><span class="tag-i">Modelled</span> · every flux and optical depth</h4><p>Everything except Opportunity's opacity is Mars Climate Database v6.2 output, read from saved interface responses by the repository's own parser and exported unchanged. Incident solar flux on a horizontal surface at local true solar time 12 h and 0 m above the surface, and the monthly mean dust column visible optical depth. This is not daily energy and not panel output.</p></div>
+      <div class="box"><h4><span class="tag-r">Measured</span> · Opportunity 2018 opacity</h4><p>61 Pancam atmospheric opacity values at 880 nm, sols 5066.54 to 5105.61, Ls 165.6 to 187.9, from PDS product 1tau880_5106_20181207a. Opacity and the database's optical depth are different units. They never share an axis and no conversion factor was applied.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · the hero scene</h4><p>A drawing with real values: sky haze follows 1 − e^(−τ/2) of the real dust optical depth τ; the Sun disc radius follows the square root of the real noon flux against the largest flux in the slice. The horizon, rocks, lander or rover silhouette and the drifting dust motes are decoration. It is not a picture of any site or storm.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · replay and strip</h4><p>The replay steps through 12 seasonal samples; there is nothing between them and no interpolation. 1× is 1.6 seconds per sample. The Mars strip is stylised; only the marker positions are real latitudes and longitudes.</p></div>
+    </div>
+
+    <h3>Scenarios (the interface's own names)</h3>
+    <div class="tablewrap"><table class="sc"><thead><tr><th class="l">Page label</th><th class="l">Interface label</th><th class="l">dust</th><th class="l">Ls samples</th></tr></thead><tbody id="tb-scn"></tbody></table></div>
+
+    <h3>Sites</h3>
+    <div class="tablewrap"><table class="sc"><thead><tr><th class="l">Site</th><th class="l">Latitude, longitude</th><th class="l">Where the coordinate is written</th><th class="l">Source file</th></tr></thead><tbody id="tb-sites"></tbody></table></div>
+    <p class="disclaim">The three landing sites (Deuteronilus Mensae, Protonilus Mensae, Mesopotamia) are exploration-zone candidates from 2015 abstracts, not selected sites. The rover coordinates are the database web page's presets.</p>
+
+    <h3>How to read it</h3>
+    <div class="box"><p>The deficit is the stored dusty flux minus the stored cold (clear, low-dust) flux at the same site and Ls: the dusty (warm) scenario and the dust-storm scenario against the cold baseline. Climatology is stored and shown but is not turned into a deficit. The dust storm is the interface's "average" scenario, not a specific year, and exists only for Ls 180 to 330; earlier requests are rejected by the interface, so those samples are absent, never zero. How long a deficit lasts is a count of seasonal samples, not days. No uncertainty is published, so none is drawn. The project says: <b id="nopower"></b></p></div>
+
+    <h3>The method text from the project</h3>
+    <div class="box"><p class="mt" id="method-text"></p></div>
+    <details><summary>The project's own sentences (<span id="nsent">0</span>)</summary><div id="sentences"></div></details>
+    <details><summary>Data files (<span id="nman">0</span>, data/MANIFEST.tsv)</summary><ul class="cites" id="manifest"></ul></details>
+
+    <h3>Citations</h3>
+    <ul class="cites" id="cites"></ul>
+
+    <h3>Code</h3>
+    <ul class="cites">
+      <li><div>This project on GitHub<span>Source code, exporter and tests (sighmon/space, mars-surface-power).</span></div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></li>
+    </ul>
+
+    <h3>What this page will not do</h3>
+    <div class="nots"><span>No power system sized</span><span>No claim of safe or unsafe</span><span>No combined score</span><span>No ranking of sites</span><span>Climatology not turned into a deficit</span><span>No opacity to optical depth conversion</span><span>No interpolation between seasons</span><span>No daily energy or panel output</span><span>No error bars invented</span><span>Storm never faked before Ls 180</span></div>
+  </div>
+</section>
+<div class="scrim" id="scrim"></div>
+
+<script src="../../shared/space.js"></script>
+<script src="data/mars.js"></script>
+<script>
+(function(){
+'use strict';
+var D=window.MARS||{};
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var STATIC=/[?&#]static\b/.test(location.href);
+var NA='<span class="na">n/a</span>';
+var LSV=D.ls||[], NSTEP=LSV.length||12, SITES=D.sites||[], SC=D.scenarios||[], SER=D.series||{}, OPP=D.opportunity||{};
+var SCNAME={cold:'Clear',climatology:'Climatology',warm:'Dusty',storm:'Dust storm'};
+SC.forEach(function(s){SCNAME[s.key]=s.label});
+function ok(v){return typeof v==='number'&&isFinite(v)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function plain(h){return String(h).replace(/<[^>]*>/g,'')}
+function commas(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function fnum(v,d){if(!ok(v))return NA;var t=Math.abs(v).toFixed(d==null?0:d),q=t.split('.');return (v<0&&+t!==0?'\u2212':'')+commas(q[0])+(q[1]?'.'+q[1]:'')}
+function coord(v,pos,neg,d){return plain(fnum(Math.abs(v),d||3)).replace(/\.?0+$/,'')+'\u00b0 '+(v<0?neg:pos)}
+function site(id){for(var i=0;i<SITES.length;i++)if(SITES[i].id===id)return SITES[i];return null}
+function siteIdx(id){for(var i=0;i<SITES.length;i++)if(SITES[i].id===id)return i;return -1}
+
+/* ---------------- data access (n/a-safe: a missing value is null, never 0) ---------------- */
+var DEF={};(D.deficits||[]).forEach(function(d){DEF[d.site+'|'+d.scenario+'|'+d.ls]=d});
+function smp(sid,scn,i){var s=SER[sid]&&SER[sid][scn];return s&&s[i]?s[i]:null}
+function flux(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.flux)?r.flux:null}
+function dod(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.dod)?r.dod:null}
+function deficit(sid,scn,i){var d=DEF[sid+'|'+scn+'|'+LSV[i]];return d&&ok(d.value)?d.value:null}
+var FMAX=1,DMAX=1,DFMAX=1;
+Object.keys(SER).forEach(function(k){Object.keys(SER[k]).forEach(function(s){SER[k][s].forEach(function(r){if(ok(r.flux))FMAX=Math.max(FMAX,r.flux);if(ok(r.dod))DMAX=Math.max(DMAX,r.dod)})})});
+(D.deficits||[]).forEach(function(d){if(ok(d.value))DFMAX=Math.max(DFMAX,Math.abs(d.value))});
+
+/* ---------------- state: one snapped season step feeds every readout, the scene and the rings ---------------- */
+var S={site:'curiosity',scn:'warm',step:0,base:0};
+var RATE=1/1.6;   /* 1x = one seasonal sample per 1.6 s */
+var panels=Space.panels(), sel=null, wasPlaying=false;
+function clampStep(i){return Math.max(0,Math.min(NSTEP-1,Math.round(i)))}
+function stepAt(t){return clampStep(t+S.base)}
+var clock=Space.clock({length:NSTEP-1,rate:RATE,speed:2,fps:30,playing:false,onTick:tick,onState:setPlayUI});
+var scrub=$('#scrub'), userSeek=false;
+function stormOK(i){return ok(LSV[i])&&LSV[i]>=180}
+/* with the storm selected the replay loops over its six samples (Ls 180 to 330) only */
+function applyRange(){S.base=(S.scn==='storm'&&S.step>=6)?6:0;clock.length=NSTEP-1-S.base;scrub.min=S.base}
+function setPlayUI(on){var b=$('#play');b.setAttribute('aria-label',on?'Pause replay':'Play replay');$('.playp',b).setAttribute('d',on?'M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z':'M1 0L10 6L1 12Z')}
+function setSeg(id){var seg=$(id),on=$$('button',seg).filter(function(b){return b.classList.contains('on')})[0],th=$('.thumb',seg);if(on&&on.offsetWidth){th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px'}}
+function setT(id,html){var e=$('#'+id);if(e&&e._h!==html){e._h=html;e.innerHTML=html}}
+
+/* ---------------- readouts ---------------- */
+function readouts(i){
+  var f=flux(S.site,S.scn,i),t=dod(S.site,S.scn,i),df=null,k,dtxt;
+  setT('r-ls',ok(LSV[i])?LSV[i]+'<span class="u">\u00b0</span>':NA);
+  setT('r-flux',fnum(f));setT('r-dod',fnum(t,2));
+  if(S.scn==='warm'){df=deficit(S.site,'warm',i);dtxt=fnum(df);k='Dusty minus clear, W/m\u00b2'}
+  else if(S.scn==='storm'){df=deficit(S.site,'storm',i);dtxt=fnum(df);k='Storm minus clear, W/m\u00b2'}
+  else if(S.scn==='cold'){dtxt='<span class="tx">baseline</span>';k='This is the clear baseline'}
+  else{dtxt='<span class="tx">no deficit</span>';k='Climatology is not turned into a deficit'}
+  setT('r-def',dtxt);setT('r-defk',k);
+  setT('stamp',ok(LSV[i])?'Ls '+LSV[i]+'\u00b0 \u00b7 step '+(i+1)+' of '+NSTEP:'n/a');
+  var live=$('#live');live.dataset.step=i;live.dataset.ls=ok(LSV[i])?LSV[i]:'n/a';live.dataset.scenario=S.scn;live.dataset.site=S.site;
+  var sc=SC.filter(function(s){return s.key===S.scn})[0],lab='Interface label: '+(sc?sc.interface_label:'n/a')+' (dust '+(sc?sc.dust:'n/a')+').',txt,warn=false;
+  if(S.scn==='storm'&&!stormOK(i)){txt='No dust-storm sample before Ls 180: the interface rejects those requests, so nothing is shown here.';warn=true}
+  else if(!stormOK(i))txt='Dust storm exists only for Ls 180 to 330 in this interface, so it is off at Ls '+LSV[i]+'. '+lab;
+  else txt=lab;
+  var e=$('#snote');if(e._h!==txt){e._h=txt;e.textContent=txt}e.classList.toggle('warn',warn);
+  $('#scn [data-s="storm"]').setAttribute('aria-disabled',stormOK(i)?'false':'true');
+}
+
+/* ---------------- hero scene (procedural; illustrative drawing, real values) ----------------
+   Sky haze: 1 - exp(-tau/2) of the real dust column optical depth tau.  Sun disc radius: sqrt(noon flux / largest flux in the slice).
+   Dust motes: count and drift follow tau.  Horizon, rocks and the lander/rover are decoration.  Missing value: neutral sky, dashed Sun ring. */
+var SCENE={step:null,flux:null,dod:null,haze:0,sunR:null,site:null,scn:null};
+var hero=$('#hero'), hc=hero.getContext('2d'), hw=0, hh=0, dpr=1, LAY=null, layer=null, layerKey='';
+function rnd(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function mix(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+function rgb(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function sizeHero(){dpr=Math.min(2,window.devicePixelRatio||1);hw=innerWidth;hh=innerHeight;hero.width=Math.round(hw*dpr);hero.height=Math.round(hh*dpr);layoutScene()}
+function layoutScene(){
+  var wide=hw>900, top=$('.top').getBoundingClientRect().bottom+6, st=$('.stage').getBoundingClientRect();
+  if(wide)top=Math.max(top,90);
+  var bot=Math.max(top+70,st.top-8);
+  var hy=top+(bot-top)*(wide?.8:.8); if(wide)hy=Math.min(hy,hh*.68);
+  LAY={wide:wide,top:top,bot:bot,hy:hy,sx:hw*.5,R:Math.max(12,Math.min(wide?74:56,(hy-top)*.3)),hx:hw*(wide?.42:.3),hs:Math.max(18,Math.min(wide?56:42,(bot-top)*.2))};
+  LAY.sy=hy-(hy-top)*.5;
+  var k=[hw,hh,Math.round(hy),Math.round(top),S.site].join();
+  if(k!==layerKey||!layer||layer.width!==hero.width){layerKey=k;buildLayer()}
+}
+function groundY(x){return LAY.hy+3+Math.sin(x*.012+1.3)*3+Math.sin(x*.031)*1.8+(x>hw*.7?(x-hw*.7)*.025:0)}
+function buildLayer(){
+  var cv=layer||(layer=document.createElement('canvas'));cv.width=hero.width;cv.height=hero.height;
+  var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  var g=c.createLinearGradient(0,LAY.hy,0,hh);g.addColorStop(0,'#1a0f0a');g.addColorStop(.35,'#0d0807');g.addColorStop(1,'#050607');
+  c.fillStyle=g;c.beginPath();c.moveTo(0,hh);for(var x=0;x<=hw;x+=4)c.lineTo(x,groundY(x));c.lineTo(hw,hh);c.closePath();c.fill();
+  c.strokeStyle='rgba(255,200,150,.22)';c.lineWidth=1;c.beginPath();for(x=0;x<=hw;x+=4){x?c.lineTo(x,groundY(x)):c.moveTo(x,groundY(x))}c.stroke();
+  var seed=siteIdx(S.site)*97+3;   /* rocks are seeded per site: decoration */
+  for(var i=0;i<26;i++){var rx=rnd(i+seed)*hw,ry=groundY(rx)+4+Math.pow(rnd(i*3+seed),1.6)*(hh-LAY.hy)*.5,rs=1.5+rnd(i*5+seed)*4*(1+(ry-LAY.hy)/80);
+    c.fillStyle='rgba(8,5,4,.9)';c.strokeStyle='rgba(255,190,140,.14)';c.beginPath();c.ellipse(rx,ry,rs*1.6,rs*.8,0,0,6.2832);c.fill();c.stroke()}
+  var vg=c.createLinearGradient(0,hh*.75,0,hh);vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.7)');c.fillStyle=vg;c.fillRect(0,hh*.75,hw,hh*.25);
+}
+function drawRover(c,x,y,s){
+  c.save();c.translate(x,y);c.scale(s/22,s/22);c.lineJoin='round';c.fillStyle='rgba(5,4,4,.96)';c.strokeStyle='rgba(235,242,247,.72)';c.lineWidth=1.1;
+  c.beginPath();c.rect(-16,-14,32,9);c.fill();c.stroke();c.beginPath();c.moveTo(8,-14);c.lineTo(8,-26);c.stroke();c.beginPath();c.rect(4,-30,9,4);c.fill();c.stroke();
+  c.beginPath();c.moveTo(-12,-5);c.lineTo(-10,-1);c.moveTo(0,-5);c.lineTo(0,-1);c.moveTo(12,-5);c.lineTo(10,-1);c.stroke();
+  [-13,0,13].forEach(function(wx){c.beginPath();c.arc(wx,2,4.2,0,6.2832);c.fill();c.stroke()});c.restore();
+}
+function drawLander(c,x,y,s){
+  c.save();c.translate(x,y);c.scale(s/22,s/22);c.lineJoin='round';c.fillStyle='rgba(5,4,4,.96)';c.strokeStyle='rgba(235,242,247,.72)';c.lineWidth=1.1;
+  c.beginPath();c.moveTo(-9,-16);c.lineTo(9,-16);c.lineTo(13,-8);c.lineTo(-13,-8);c.closePath();c.fill();c.stroke();
+  c.beginPath();c.moveTo(-11,-8);c.lineTo(-19,1);c.moveTo(11,-8);c.lineTo(19,1);c.moveTo(0,-8);c.lineTo(0,1);c.stroke();
+  [-19,0,19].forEach(function(lx){c.beginPath();c.ellipse(lx,1.5,3.5,1.3,0,0,6.2832);c.fill();c.stroke()});
+  c.beginPath();c.moveTo(0,-16);c.lineTo(0,-22);c.stroke();c.beginPath();c.ellipse(0,-23,6,2.2,-.4,0,6.2832);c.fill();c.stroke();c.restore();
+}
+function drawHero(i){
+  if(!LAY||!layer)return;i=clampStep(i);var c=hc,ph=(REDUCED||STATIC)?.37:performance.now()/1000;
+  var f=flux(S.site,S.scn,i),t=dod(S.site,S.scn,i),have=f!=null&&t!=null;
+  c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,hw,hh);
+  var haze=have?1-Math.exp(-t/2):0;
+  SCENE.step=i;SCENE.flux=f;SCENE.dod=t;SCENE.haze=haze;SCENE.sunR=f!=null?Math.max(3,LAY.R*Math.sqrt(Math.max(0,f)/FMAX)):null;SCENE.site=S.site;SCENE.scn=S.scn;
+  var topC=mix([5,6,7],[40,25,18],haze),midC=mix([13,20,28],[92,58,40],haze),horC=mix([34,52,70],[158,102,66],haze);
+  var sky=c.createLinearGradient(0,0,0,LAY.hy);sky.addColorStop(0,rgb(topC));sky.addColorStop(.55,rgb(midC));sky.addColorStop(1,rgb(horC));
+  c.fillStyle=sky;c.fillRect(0,0,hw,LAY.hy+4);
+  var ns=Math.round(Math.min(90,hw*hh/9000)*(1-haze*.9)),q;for(q=0;q<ns;q++){c.fillStyle='rgba(220,235,255,'+(.05+.3*rnd(q+9)*(1-haze)).toFixed(3)+')';c.fillRect(rnd(q*2+1)*hw,rnd(q*2+2)*LAY.hy*.9,1.2,1.2)}
+  var R0=LAY.R;
+  if(f!=null){var fr=Math.sqrt(Math.max(0,f)/FMAX),r=Math.max(3,R0*fr),al=.35+.65*fr,gr=r*(2.6+2*fr);
+    var gl=c.createRadialGradient(LAY.sx,LAY.sy,r*.6,LAY.sx,LAY.sy,gr);gl.addColorStop(0,'rgba(255,236,205,'+(.5*al).toFixed(3)+')');gl.addColorStop(1,'rgba(255,220,180,0)');c.fillStyle=gl;c.beginPath();c.arc(LAY.sx,LAY.sy,gr,0,6.2832);c.fill();
+    c.fillStyle='rgba(255,246,228,'+al.toFixed(3)+')';c.beginPath();c.arc(LAY.sx,LAY.sy,r,0,6.2832);c.fill()}
+  else{c.save();c.setLineDash([3,5]);c.strokeStyle='rgba(235,242,247,.35)';c.lineWidth=1;c.beginPath();c.arc(LAY.sx,LAY.sy,R0*.6,0,6.2832);c.stroke();c.restore()}
+  if(have){var n=Math.round(Math.min(120,t*14)),spd=.01+.012*Math.min(1,t/6);c.lineWidth=1;
+    for(q=0;q<n;q++){var mx=((rnd(q+500)+ph*spd*(.5+rnd(q+700)))%1)*hw,my=LAY.top*.4+rnd(q+900)*(LAY.hy-LAY.top*.4),ln=4+10*rnd(q+1100)*Math.min(1,t/4);
+      c.strokeStyle='rgba(235,190,140,'+(.05+.14*rnd(q+1300)*haze).toFixed(3)+')';c.beginPath();c.moveTo(mx,my);c.lineTo(mx-ln,my+ln*.1);c.stroke()}}
+  c.drawImage(layer,0,0,hw,hh);
+  if(haze>0){var vl=c.createLinearGradient(0,LAY.hy-30,0,LAY.hy+60);vl.addColorStop(0,rgb(horC,0));vl.addColorStop(.4,rgb(horC,.28*haze));vl.addColorStop(1,rgb(horC,0));c.fillStyle=vl;c.fillRect(0,LAY.hy-30,hw,90)}
+  var st=site(S.site),hx=LAY.hx,hy=groundY(hx)+4;
+  if(st&&st.kind==='rover')drawRover(c,hx,hy,LAY.hs);else drawLander(c,hx,hy,LAY.hs);
+}
+
+/* ---------------- Mars strip (stylised; marker positions are the real latitude and longitude) ---------------- */
+function mxp(lon){return 12+lon/360*276}
+function myp(lat){return 50-lat/90*34}
+function buildMap(){
+  var h='<svg viewBox="0 0 300 100" role="img" aria-label="Stylised strip of Mars, longitude 0 to 360 east, with six site markers at their real latitude and longitude. Not a map." focusable="false">'
+   +'<defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a1a14"/><stop offset=".5" stop-color="#3a2216"/><stop offset="1" stop-color="#241711"/></linearGradient></defs>'
+   +'<rect x="12" y="10" width="276" height="80" rx="14" fill="url(#mg)" stroke="rgba(235,242,247,.2)"/>';
+  [-60,-30,0,30,60].forEach(function(l){h+='<line x1="12" x2="288" y1="'+myp(l)+'" y2="'+myp(l)+'" stroke="rgba(235,242,247,.10)" stroke-dasharray="'+(l?'2 4':'1 0')+'"/>'});
+  [90,180,270].forEach(function(l){h+='<line y1="10" y2="90" x1="'+mxp(l)+'" x2="'+mxp(l)+'" stroke="rgba(235,242,247,.10)" stroke-dasharray="2 4"/>'});
+  SITES.forEach(function(s){var cx=mxp(s.lon).toFixed(1),cy=myp(s.lat).toFixed(1);h+='<g class="mk" data-site="'+esc(s.id)+'"><circle class="mk-r" cx="'+cx+'" cy="'+cy+'" r="9" fill="none" stroke="#a9dcff" stroke-width="1.2" opacity="0"/><circle class="mk-c" cx="'+cx+'" cy="'+cy+'" r="3.6" fill="'+(s.kind==='rover'?'#ffd9a6':'#a9dcff')+'"/></g>'});
+  h+='<text id="mk-t" x="150" y="99" text-anchor="middle" font-size="9" fill="rgba(235,242,247,.78)"></text></svg>';
+  $('#map').innerHTML=h;
+  $('#map svg').addEventListener('click',function(e){var r=this.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*300,y=(e.clientY-r.top)/r.height*100,best=null,bd=1e9;
+    SITES.forEach(function(s){var d=Math.pow(mxp(s.lon)-x,2)+Math.pow(myp(s.lat)-y,2);if(d<bd){bd=d;best=s}});if(best&&bd<30*30)openSite(best.id)});
+}
+function mapSel(){$$('#map .mk').forEach(function(g){var on=g.dataset.site===S.site;$('.mk-r',g).setAttribute('opacity',on?1:0);$('.mk-c',g).setAttribute('r',on?5:3.6)});var s=site(S.site),t=$('#mk-t');
+  if(s&&t){t.textContent=s.name;t.setAttribute('x',Math.max(40,Math.min(260,mxp(s.lon))))}}
+
+/* ---------------- site rail ---------------- */
+var SHORT={deuteronilus:'Deut.',protonilus:'Prot.',mesopotamia:'Meso.',curiosity:'Curi.',perseverance:'Pers.',opportunity:'Opp.'};
+function buildRail(){$('#rail').innerHTML=SITES.map(function(s){return '<button class="site" type="button" data-site="'+esc(s.id)+'" aria-label="'+esc(s.name)+': open the site card"><span class="l">'+esc(s.name)+'</span><span class="s" aria-hidden="true">'+esc(SHORT[s.id]||s.name)+'</span></button>'}).join('');
+  $$('#rail .site').forEach(function(b){b.onclick=function(){openSite(b.dataset.site)}})}
+function railSel(){$$('#rail .site').forEach(function(b){b.classList.toggle('on',b.dataset.site===S.site);b.setAttribute('aria-pressed',b.dataset.site===S.site?'true':'false')})}
+
+/* ---------------- the one tick ---------------- */
+function tick(t){
+  var i=stepAt(t);S.step=i;
+  if(!userSeek&&+scrub.value!==i)scrub.value=i;
+  readouts(i);
+  if(!document.body.classList.contains('layer-open'))drawHero(i);
+  if(sel)cardRefresh(i);
+  hero.dataset.step=i;
+}
+function setScenario(k,fromLink){
+  if(k==='storm'&&!stormOK(S.step)&&!fromLink){$('#snote').classList.add('warn');return}   /* disabled: the explanation is shown, a storm is never faked */
+  S.scn=k;$$('#scn button').forEach(function(b){b.classList.toggle('on',b.dataset.s===k);b.setAttribute('aria-pressed',b.dataset.s===k?'true':'false')});
+  applyRange();setSeg('#scn');clock.seek(S.step-S.base);
+}
+
+/* ---------------- site card ---------------- */
+function dialHTML(key,label,q){return '<div class="dial" data-d="'+key+'"><div class="label">'+label+'</div><div class="q">'+q+'</div><div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="38" stroke="rgba(235,242,247,.16)" stroke-width="6" stroke-dasharray="179.07 300"/><circle class="fill" cx="50" cy="50" r="38" stroke="#a9dcff" stroke-width="6" stroke-dasharray="0 300"/></svg><div class="val"><span class="num n">n/a</span><span class="u"></span></div></div><div class="def"></div></div>'}
+function sparkHTML(scn,sid){
+  var xs=function(i){return 10+i*(220/(NSTEP-1))},ys=function(v){return 6+(1-v/FMAX)*44};
+  var pts=[],lab=[];for(var i=0;i<NSTEP;i++){var v=flux(sid,scn,i);pts.push(v==null?null:[xs(i),ys(v)]);if(v!=null)lab.push('Ls '+LSV[i]+' '+Math.round(v))}
+  var g='<svg viewBox="0 0 240 64" role="img" aria-label="'+esc(SCNAME[scn]+' noon flux, W/m2, one point per 30 degrees of Ls, not interpolated: '+(lab.join('; ')||'n/a'))+'" focusable="false"><line class="sp-grid" x1="10" x2="230" y1="50" y2="50"/><line class="sp-grid" x1="10" x2="230" y1="6" y2="6"/>';
+  var d='',pen=false;pts.forEach(function(p){if(!p){pen=false;return}d+=(pen?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);pen=true});
+  g+='<path class="sp-line" d="'+d+'"/>';pts.forEach(function(p){if(p)g+='<circle class="sp-dot" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.2"/>'});
+  g+='<line class="sp-cur" data-cur y1="2" y2="52" x1="10" x2="10"/><text class="sp-t" x="10" y="62">Ls 0</text><text class="sp-t" x="230" y="62" text-anchor="end">Ls 330</text></svg>';
+  return '<div class="spark" data-sp="'+scn+'"><div class="label">'+esc(SCNAME[scn])+' \u00b7 noon flux, W/m\u00b2</div>'+g+'<div class="sv"></div></div>'}
+function stats(sid,scn){var n=0,below=0,deep=null;for(var i=0;i<NSTEP;i++){var v=deficit(sid,scn,i);if(v!=null){n++;if(v<0)below++;if(deep==null||v<deep.v)deep={v:v,ls:LSV[i]}}}return {n:n,below:below,deep:deep}}
+function renderCard(sid){
+  var s=site(sid),w=stats(sid,'warm'),m=stats(sid,'storm');
+  var h='<div class="card-head"><div><div class="label">Site card \u00b7 '+(s.kind==='rover'?'rover preset':'exploration-zone candidate')+'</div><h2>'+esc(s.name)+'</h2>'
+   +'<div class="meta"><span>Position <b>'+coord(s.lat,'N','S')+', '+coord(s.lon,'E','W')+'</b></span><span>Sample <b>local noon, 0 m, horizontal</b></span><span>Basis <b>modelled, MCD v6.2</b></span></div></div>'
+   +'<div class="head-r"><button class="btn" data-open="compare">Compare \u2191</button><button class="btn" data-open="opportunity">Opportunity 2018 \u2191</button><button class="btn" data-open="method">Method &amp; sources \u2191</button></div></div>';
+  h+='<div class="example-note"><b>Modelled</b><span>Every value on this card is Mars Climate Database v6.2 output at local true solar time 12 h, 0 m above the surface, in 30\u00b0 steps of Ls, none between. Not daily energy, not panel output. No uncertainty is published, so none is drawn. No power system was sized.</span></div>';
+  h+='<div class="label" style="margin-top:18px" id="card-ls"></div><div class="dials">'
+   +dialHTML('cold','Clear noon flux','Noon sunlight on the ground in the clear (cold) scenario')
+   +dialHTML('warm','Dusty deficit','Dusty (warm) minus clear flux, same Ls')
+   +dialHTML('storm','Storm deficit','Dust storm minus clear flux, same Ls')
+   +dialHTML('tau','Storm optical depth','Dust column visible optical depth, dust storm')+'</div>';
+  h+='<div class="extras" style="grid-template-columns:repeat(2,1fr)">'
+   +'<div class="extra"><span class="label">Deepest dusty deficit</span><b>'+(w.deep?fnum(w.deep.v)+' W/m\u00b2':NA)+'</b><span>'+(w.deep?'at Ls '+w.deep.ls+'\u00b0 \u00b7 negative on '+w.below+' of '+w.n+' seasonal samples':'')+'</span></div>'
+   +'<div class="extra"><span class="label">Deepest storm deficit</span><b>'+(m.deep?fnum(m.deep.v)+' W/m\u00b2':NA)+'</b><span>'+(m.deep?'at Ls '+m.deep.ls+'\u00b0 \u00b7 negative on '+m.below+' of '+m.n+' seasonal samples (storm exists only for Ls 180 to 330)':'')+'</span></div></div>';
+  h+='<div class="label" style="margin-top:20px">Noon flux through the year, one point per 30\u00b0 of Ls \u00b7 shared scale 0 to '+plain(fnum(FMAX))+' W/m\u00b2</div><div class="sparks">'+['cold','climatology','warm','storm'].map(function(k){return sparkHTML(k,sid)}).join('')+'</div>';
+  h+='<p class="disclaim">The line joins the stored samples; there is no data between them. The storm has no samples before Ls 180. The white marker is the replay step.</p>';
+  h+='<div class="box" style="margin-top:16px"><div class="label">Source files at this season</div><ul class="files" id="card-files"></ul><p class="small" style="margin-top:8px">Coordinate: '+esc(s.source)+' \u00b7 <code class="h">'+esc(s.source_file)+'</code> \u00b7 sha256 <code class="h">'+esc(s.source_sha256)+'</code></p></div>';
+  var cav=['Modelled output of one frozen database slice, not a measurement at this site.','Flux is local noon on a horizontal surface at 0 m only. It is not daily energy, panel output or any power-system size.','Seasonal samples are 30\u00b0 of Ls apart (a database month). "How long" is a count of samples, not days.','The deficit is dusty minus clear (cold), not minus climatology. The dust storm is the interface\u2019s average scenario, not a specific year.','No crew or load model: this card does not say whether the site is safe or unsafe, and sites are not ranked.'];
+  if(s.kind==='candidate')cav.push('The coordinate is an exploration-zone candidate from a 2015 abstract, not a selected landing site.');
+  if(s.id==='opportunity')cav.push('Opportunity is also the opacity-check site: its measured Pancam opacity is a different unit from the model\u2019s optical depth. No conversion factor was applied.');
+  h+='<div class="label" style="margin-top:18px">Caveats</div><ul class="cav">'+cav.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul>';
+  $('#card').innerHTML=h;
+  $$('#card [data-open]').forEach(function(b){b.onclick=function(){openLayer(b.dataset.open)}});
+}
+function setDial(key,html,unit,frac,defTxt,aria){var d=$('#card .dial[data-d="'+key+'"]');if(!d)return;var n=$('.n',d),u=$('.u',d),f=$('.fill',d);
+  if(n._h!==html){n._h=html;n.innerHTML=html}u.textContent=frac==null?'':unit;f.setAttribute('stroke-dasharray',(Math.max(0,Math.min(1,frac||0))*179.07).toFixed(2)+' 300');f.style.display=frac==null?'none':'';
+  $('.def',d).textContent=defTxt||'';d.dataset.value=plain(html);d.setAttribute('role','group');d.setAttribute('aria-label',aria)}
+function setT2(id,txt){var e=$('#'+id);if(e&&e._h!==txt){e._h=txt;e.textContent=txt}}
+function cardRefresh(i){
+  if(!sel)return;var sid=sel,lsl=ok(LSV[i])?'Ls '+LSV[i]+'\u00b0':'n/a';
+  setT2('card-ls','Replay step \u00b7 '+lsl+' \u00b7 the four dials and the white markers show this one step');
+  var c=flux(sid,'cold',i),w=deficit(sid,'warm',i),m=deficit(sid,'storm',i),t=dod(sid,'storm',i),noStorm=!stormOK(i);
+  setDial('cold',fnum(c),'W/m\u00b2',c==null?null:c/FMAX,'noon, clear sky, '+lsl,'Clear noon flux at '+lsl+': '+(c==null?'n/a':Math.round(c)+' watts per square metre'));
+  setDial('warm',fnum(w),'W/m\u00b2',w==null?null:Math.abs(w)/DFMAX,'dusty minus clear, '+lsl,'Dusty deficit at '+lsl+': '+(w==null?'n/a':Math.round(w)+' watts per square metre'));
+  setDial('storm',fnum(m),'W/m\u00b2',m==null?null:Math.abs(m)/DFMAX,noStorm?'no dust-storm sample before Ls 180':'storm minus clear, '+lsl,'Dust storm deficit at '+lsl+': '+(m==null?'n/a':Math.round(m)+' watts per square metre'));
+  setDial('tau',fnum(t,2),'optical depth',t==null?null:t/DMAX,noStorm?'no dust-storm sample before Ls 180':'database unit, dust storm, '+lsl,'Dust storm optical depth at '+lsl+': '+(t==null?'n/a':t.toFixed(2)));
+  $$('#card .spark').forEach(function(sp){var k=sp.dataset.sp,v=flux(sid,k,i),cur=$('[data-cur]',sp),x=10+i*(220/(NSTEP-1));cur.setAttribute('x1',x);cur.setAttribute('x2',x);cur.style.display=v==null?'none':'';
+    var sv=$('.sv',sp),tx=v==null?'n/a'+(k==='storm'?' \u00b7 no storm sample before Ls 180':''):plain(fnum(v))+' W/m\u00b2 at '+lsl;if(sv._h!==tx){sv._h=tx;sv.textContent=tx}});
+  var files=['cold','climatology','warm','storm'].map(function(k){var r=smp(sid,k,i);return '<li>'+esc(SCNAME[k])+': '+(r&&r.file?'<span><code class="h">'+esc(r.file)+'</code></span> \u00b7 sha256 <code class="h">'+esc(r.sha256)+'</code>':'<span class="na">n/a</span> \u00b7 no file at this Ls')+'</li>'}).join('');
+  var ul=$('#card-files');if(ul&&ul._h!==files){ul._h=files;ul.innerHTML=files}
+}
+function openSite(sid,silent){
+  closeLayers(true);sel=sid;S.site=sid;railSel();mapSel();layoutScene();renderCard(sid);
+  wasPlaying=clock.playing;if(wasPlaying)clock.setPlaying(false);
+  document.body.classList.add('sheet-open');panels.open($('#sheet'),'#close');cardRefresh(S.step);drawHero(S.step);
+  if(!silent)setHash('site/'+sid);
+}
+function closeSite(){if(!sel)return;var b=$('#rail .site[data-site="'+sel+'"]');if(b&&!panels.trigger.get($('#sheet')))panels.trigger.set($('#sheet'),b);sel=null;document.body.classList.remove('sheet-open');panels.close($('#sheet'));setHash('');
+  if(wasPlaying){wasPlaying=false;clock.setPlaying(true)}}
+$('#close').onclick=closeSite;
+
+/* ---------------- layers ---------------- */
+function layerOpen(id){var e=$('#'+id);return e&&e.classList.contains('open')}
+function setNav(v){$$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+function syncInert(){var sh=$('#sheet');if(sh.classList.contains('open')){if(document.body.classList.contains('layer-open'))sh.setAttribute('inert','');else sh.removeAttribute('inert')}}
+function openLayer(id,silent){closeLayers(true);document.body.classList.add('layer-open');panels.open($('#'+id),'[data-close]');syncInert();setNav(id);if(!silent)setHash(id)}
+function closeLayers(silent){var any=$$('.layer.open').length;document.body.classList.remove('layer-open');if(any&&LAY)drawHero(S.step);syncInert();$$('.layer').forEach(function(l){panels.close(l,silent)});syncInert();setNav(null);if(!silent&&any)setHash(sel?'site/'+sel:'')}
+$$('[data-close]').forEach(function(b){b.onclick=function(){closeLayers()}});
+$('#scrim').onclick=function(){closeLayers()};
+$$('.nav button').forEach(function(b){b.onclick=function(){var v=b.dataset.v;if(layerOpen(v))closeLayers();else openLayer(v)}});
+$$('[data-grab]').forEach(function(g){var f=function(){if(g.dataset.grab==='sheet')closeSite();else closeLayers()};g.onclick=f;g.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}}});
+addEventListener('keydown',function(e){if(e.key==='Escape'){if(document.body.classList.contains('layer-open'))closeLayers();else if(sel)closeSite()}});
+function setHash(h){try{history.replaceState(null,'','#'+h)}catch(e){}}
+
+/* ---------------- compare (stored values, fixed site order, unranked) ---------------- */
+function rb(label,vals,lo,hi,unit,dec,zero,note){
+  var v=vals.filter(ok);if(!v.length)return '<div class="rb"><div class="lbl">'+label+'</div><div class="rng">'+NA+'</div></div>';
+  var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v),L=(mn-lo)/(hi-lo)*100,W=Math.max(1.2,(mx-mn)/(hi-lo)*100);
+  return '<div class="rb"><div class="lbl">'+label+'</div><div class="track"><div class="base"></div><div class="span" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%"></div>'+(zero?'<div class="zero"></div>':'')+'</div>'
+   +'<div class="ends"><span>'+plain(fnum(lo,dec))+'</span><span>'+plain(fnum(hi,dec))+'</span></div><div class="rng">'+fnum(mn,dec)+' to '+fnum(mx,dec)+(unit?' '+unit:'')+(note?' \u00b7 '+note(v):'')+'</div></div>'}
+function fillCompare(){
+  var h='',axD=Math.ceil(DFMAX/50)*50;
+  SITES.forEach(function(s){
+    var cold=[],warm=[],storm=[],tau=[];for(var i=0;i<NSTEP;i++){cold.push(flux(s.id,'cold',i));warm.push(deficit(s.id,'warm',i));storm.push(deficit(s.id,'storm',i));tau.push(dod(s.id,'storm',i))}
+    var neg=function(v){return 'below zero on '+v.filter(function(x){return x<0}).length+' of '+v.length+' samples'};
+    h+='<div class="box" data-site="'+esc(s.id)+'"><h4>'+esc(s.name)+'<small>'+(s.kind==='rover'?'rover preset':'candidate')+'</small></h4><p class="small">'+coord(s.lat,'N','S')+', '+coord(s.lon,'E','W')+' \u00b7 stored values</p>'
+     +rb('Clear noon flux',cold,0,Math.ceil(FMAX/100)*100,'W/m\u00b2',0,false,function(v){return v.length+' seasonal samples'})
+     +rb('Dusty minus clear',warm,-axD,0,'W/m\u00b2',0,true,neg)
+     +rb('Storm minus clear',storm,-axD,0,'W/m\u00b2',0,true,function(v){return neg(v)+' (Ls 180 to 330 only)'})
+     +rb('Storm optical depth (database unit, own axis)',tau,0,Math.ceil(DMAX),'',2,false,function(v){return v.length+' samples'})
+     +'<div style="margin-top:14px"><button class="btn" style="min-height:44px" data-site-open="'+esc(s.id)+'">Open site card</button></div></div>'});
+  $('#cmp').innerHTML=h;$$('#cmp [data-site-open]').forEach(function(b){b.onclick=function(){openSite(b.dataset.siteOpen)}});
+}
+
+/* ---------------- Opportunity 2018: measured opacity and modelled optical depth, two separate axes ---------------- */
+function fillOpp(){
+  var pts=(OPP.points||[]).filter(function(p){return ok(p.ls)&&ok(p.value)});
+  var x0=164,x1=190,W=460,H=250,ml=44,mr=12,mt=10,mb=34,ym=2.5;
+  function X(v){return ml+(v-x0)/(x1-x0)*(W-ml-mr)}function Y(v){return mt+(1-v/ym)*(H-mt-mb)}
+  var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Measured Pancam atmospheric opacity at 880 nm against Ls, '+pts.length+' points" focusable="false">';
+  [0,.5,1,1.5,2,2.5].forEach(function(v){g+='<line class="gl" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text class="at" x="'+(ml-6)+'" y="'+(Y(v)+3.5)+'" text-anchor="end">'+v.toFixed(1)+'</text>'});
+  [165,170,175,180,185,190].forEach(function(v){g+='<line class="gl" y1="'+mt+'" y2="'+(H-mb)+'" x1="'+X(v)+'" x2="'+X(v)+'"/><text class="at" x="'+X(v)+'" y="'+(H-mb+16)+'" text-anchor="middle">'+v+'</text>'});
+  g+='<line class="ax" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+(H-mb)+'" y2="'+(H-mb)+'"/><text class="at" x="'+((ml+W-mr)/2)+'" y="'+(H-3)+'" text-anchor="middle">Ls, degrees</text>';
+  pts.forEach(function(p){g+='<circle class="ad" data-p="1" cx="'+X(p.ls).toFixed(1)+'" cy="'+Y(p.value).toFixed(1)+'" r="3"/>'});
+  g+='</svg>';
+  var mv=pts.map(function(p){return p.value}),mn=mv.length?Math.min.apply(null,mv):null,mxv=mv.length?Math.max.apply(null,mv):null;
+  var lo=pts.length?Math.min.apply(null,pts.map(function(p){return p.sol})):null,hi=pts.length?Math.max.apply(null,pts.map(function(p){return p.sol})):null;
+  var left='<div class="box" id="oppL"><div class="label">Measured \u00b7 Pancam atmospheric opacity, 880 nm</div><div class="chart">'+g+'</div><p class="small">'+(pts.length?pts.length+' points, sol '+lo+' to '+hi+'.':'n/a')+' Axis: opacity as published, its own unit.</p></div>';
+  var i180=LSV.indexOf(180),m0=dod('opportunity','storm',i180);
+  var W2=220,ym2=8;function Y2(v){return mt+(1-v/ym2)*(H-mt-mb)}
+  var g2='<svg viewBox="0 0 '+W2+' '+H+'" role="img" aria-label="Modelled dust storm optical depth at Ls 180 on its own axis" focusable="false">';
+  [0,2,4,6,8].forEach(function(v){g2+='<line class="gl" x1="'+ml+'" x2="'+(W2-mr)+'" y1="'+Y2(v)+'" y2="'+Y2(v)+'"/><text class="at" x="'+(ml-6)+'" y="'+(Y2(v)+3.5)+'" text-anchor="end">'+v+'</text>'});
+  var cx=(ml+W2-mr)/2;
+  g2+='<line class="ax" x1="'+ml+'" x2="'+(W2-mr)+'" y1="'+(H-mb)+'" y2="'+(H-mb)+'"/><text class="at" x="'+cx+'" y="'+(H-mb+16)+'" text-anchor="middle">Ls 180</text><text class="at" x="'+cx+'" y="'+(H-3)+'" text-anchor="middle">dust storm scenario</text>';
+  if(m0!=null)g2+='<rect class="am" data-m="1" x="'+(cx-14)+'" y="'+Y2(m0).toFixed(1)+'" width="28" height="'+(H-mb-Y2(m0)).toFixed(1)+'" rx="4" opacity=".85"/>';
+  g2+='</svg>';
+  var right='<div class="box" id="oppR"><div class="label">Modelled \u00b7 MCD dust column visible optical depth</div><div class="chart narrow">'+g2+'</div><p class="small">Axis: the database\'s own unit, a different quantity. Never the same axis as the left panel.</p></div>';
+  $('#oppgrid').innerHTML=left+right;
+  $('#oppbig').innerHTML='<div><span class="num" id="o-meas">'+(mn==null?NA:fnum(mn,3)+' to '+fnum(mxv,3))+'</span><span class="k">measured Pancam atmospheric opacity at 880 nm, Opportunity, Ls 165.6 to 187.9</span></div>'
+   +'<div><span class="num" id="o-mod">'+fnum(m0,2)+'</span><span class="k">modelled dust storm column visible optical depth at Opportunity, Ls 180 (database unit)</span></div>';
+  $('#oppnote').textContent=(D.no_conversion||'No conversion factor was applied.')+' Source: '+(OPP.source_file||'n/a')+' (PDS Pancam atmospheric opacity), label '+(OPP.label_file||'n/a')+'. The window is every measured row within 40 sols of the table\'s last sol, copied unchanged. The round "about 4.9" figure quoted elsewhere is not in the table, so it is not plotted. No error bars: none are published.';
+}
+
+/* ---------------- method and sources ---------------- */
+function td(x){return '<td class="l">'+x+'</td>'}
+function fillMethod(){
+  $('#nopower').textContent=D.no_power||'';
+  $('#method-text').textContent=(D.method||'n/a').split('\n').filter(function(l){return !/^Plotted/.test(l)}).join('\n')+'\n(The "Plotted" traces repeat every value with its source files; they are in data/mars.json.)';
+  $('#tb-scn').innerHTML=SC.map(function(s){var a=s.ls_available||[];return '<tr>'+td(esc(s.label))+td(esc(s.interface_label))+td(esc(s.dust))+td(a.length+(a.length?' (Ls '+a[0]+' to '+a[a.length-1]+')':''))+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
+  $('#tb-sites').innerHTML=SITES.map(function(s){return '<tr>'+td(esc(s.name))+td(coord(s.lat,'N','S')+', '+coord(s.lon,'E','W'))+td(esc(s.source))+td('<code class="h">'+esc(s.source_file)+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
+  var man=D.manifest||[];$('#nman').textContent=man.length;
+  $('#manifest').innerHTML=man.map(function(m){return '<li><div>'+esc(m.filename)+'<span>'+esc(m.what||'')+'</span><span>fetched '+esc(m.fetched_utc||'n/a')+' \u00b7 '+(ok(m.bytes)?commas(String(m.bytes)):'n/a')+' bytes</span><span>sha256 <code class="h">'+esc(m.sha256||'n/a')+'</code></span></div><a href="'+esc(m.url||'#')+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>'}).join('')||'<li><div>'+NA+'</div></li>';
+  var sn=D.sentences||[];$('#nsent').textContent=sn.length;$('#sentences').innerHTML=sn.map(function(t){return '<p>'+esc(t)+'</p>'}).join('')||'<p>'+NA+'</p>';
+  var seen={},cit=[];SITES.forEach(function(s){if(!seen[s.source_file]&&s.kind==='candidate'){seen[s.source_file]=1;cit.push('<li><div>'+esc(s.source)+'<span>'+esc(s.name)+' coordinate \u00b7 <code class="h">'+esc(s.source_file)+'</code></span></div><a href="'+esc(s.source_url||'#')+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>')}});
+  var f=function(re){return man.filter(function(m){return re.test(m.filename)})[0]};
+  var m1=f(/interface\.html$/),m2=f(/\.lbl$/),m3=f(/manual/);
+  if(m1)cit.push('<li><div>Mars Climate Database v6.2, web interface<span>All 252 samples and the rover presets \u00b7 <code class="h">'+esc(m1.filename)+'</code></span></div><a href="'+esc(m1.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
+  if(m3)cit.push('<li><div>MCD user manual (version 6.1)<span>Each month covers 30\u00b0 of Ls \u00b7 <code class="h">'+esc(m3.filename)+'</code></span></div><a href="'+esc(m3.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
+  if(m2)cit.push('<li><div>PDS Pancam atmospheric opacity (MER)<span>Opportunity, 1tau880_5106_20181207a \u00b7 <code class="h">'+esc(m2.filename)+'</code></span></div><a href="'+esc(m2.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
+  $('#cites').innerHTML=cit.join('')||'<li><div>'+NA+'</div></li>';
+}
+
+/* ---------------- controls ---------------- */
+$('#play').onclick=function(){if(!clock.playing&&S.scn==='storm'&&S.step<6){S.step=6;applyRange();clock.seek(0)}clock.setPlaying(!clock.playing)};
+$$('#seg button').forEach(function(b){b.onclick=function(){clock.speed=+b.dataset.s;$$('#seg button').forEach(function(x){x.classList.toggle('on',x===b)});setSeg('#seg')}});
+$$('#scn button').forEach(function(b){b.onclick=function(){setScenario(b.dataset.s)}});
+scrub.addEventListener('input',function(){userSeek=true;clock.setPlaying(false);S.step=clampStep(+scrub.value);applyRange();clock.seek(S.step-S.base);userSeek=false});
+addEventListener('resize',function(){sizeHero();drawHero(S.step);setSeg('#seg');setSeg('#scn')});
+
+/* ---------------- start ---------------- */
+function start(){
+  buildRail();buildMap();fillCompare();fillOpp();fillMethod();
+  var hs=location.hash.slice(1),qpos=hs.indexOf('?'),path=qpos>=0?hs.slice(0,qpos):hs;
+  var q=new URLSearchParams(location.search.slice(1)),hq=new URLSearchParams(qpos>=0?hs.slice(qpos+1):'');
+  function has(k){return hq.has(k)||q.has(k)}function get(k){return hq.has(k)?hq.get(k):q.get(k)}
+  var s0=get('site');if(s0&&site(s0))S.site=s0;
+  var pm=path.match(/^site\/([a-z]+)$/);if(pm&&site(pm[1]))S.site=pm[1];
+  var i0=0;if(has('ls')){var lv=parseFloat(get('ls'));if(isFinite(lv))i0=clampStep(lv/30)}
+  var sc0=get('scenario');if(!(sc0&&SCNAME[sc0]))sc0='warm';
+  var play=!(REDUCED||has('paused'));
+  S.scn=sc0;S.step=i0;
+  if(sc0==='storm'&&i0<6&&play){S.step=i0=6}   /* a playing storm replay starts on its first sample */
+  $$('#scn button').forEach(function(b){b.classList.toggle('on',b.dataset.s===sc0);b.setAttribute('aria-pressed',b.dataset.s===sc0?'true':'false')});
+  applyRange();clock.t=Math.max(0,i0-S.base);scrub.value=i0;
+  var sp=get('speed');if(sp&&/^(1|2|4)$/.test(sp)){clock.speed=+sp;$$('#seg button').forEach(function(b){b.classList.toggle('on',b.dataset.s===sp)})}
+  clock.playing=play;setPlayUI(play);railSel();mapSel();sizeHero();setSeg('#seg');setSeg('#scn');tick(clock.t);
+  if(play)clock.start();
+  if(pm&&site(pm[1]))openSite(pm[1],true);
+  else if(path==='compare'||path==='opportunity'||path==='method')openLayer(path,true);
+  requestAnimationFrame(function(){setSeg('#seg');setSeg('#scn');layoutScene();drawHero(S.step)});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){layoutScene();drawHero(S.step)});
+  addEventListener('load',function(){layoutScene();drawHero(S.step)});
+  if(window.ResizeObserver){var rq=0,ro=new ResizeObserver(function(){if(rq)return;rq=requestAnimationFrame(function(){rq=0;layoutScene();drawHero(S.step)})});['.stage','.top'].forEach(function(s){ro.observe($(s))})}
+}
+window.__mars={scene:SCENE,get t(){return clock.t},get step(){return S.step},state:S,clock:clock,NSTEP:NSTEP,draw:function(){drawHero(S.step)},layout:function(){return LAY}};
+start();
+})();
+</script>
+</body>
+</html>
