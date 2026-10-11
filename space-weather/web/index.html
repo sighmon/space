@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Space weather, three audiences — September 2017 · Prototype</title>
+<meta name="description" content="One archived solar radiation storm, September 2017, read three ways: a crew beyond low Earth orbit, a polar flight, and a power grid. Past observation, every number sourced.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../shared/space.css">
+<style>
+/* page-specific rules only; tokens, panels, buttons and the play clock come from shared/space.css */
+html,body{overflow:hidden}
+#hero{position:fixed;inset:0;width:100%;height:100%;display:block;transition:filter .9s var(--ease)}
+body.sheet-open #hero{filter:brightness(.6) saturate(.9)}
+body.layer-open #hero{filter:brightness(.32) blur(2px)}
+.top{flex-wrap:wrap;gap:10px 16px}
+.nav button{min-height:44px;padding:0 16px}
+.nav{padding:2px}
+.brand a.ghlink{margin-bottom:-6px}
+
+.hero-copy{position:fixed;left:36px;top:max(20vh,150px);max-width:440px;z-index:3;transition:opacity .6s var(--ease),transform .8s var(--ease)}
+body.sheet-open .hero-copy,body.layer-open .hero-copy,body.sheet-open .stage,body.layer-open .stage,body.sheet-open .live,body.layer-open .live{opacity:0;visibility:hidden;pointer-events:none}
+.hero-copy h1{font-size:clamp(32px,4vw,56px);font-weight:200;letter-spacing:-.03em;line-height:1.05}
+.hero-copy h1 em{font-style:normal;color:var(--ice)}
+.hero-copy p{margin-top:18px;font-size:15px;line-height:1.6;color:var(--mute);max-width:400px}
+.hero-copy .hint{margin-top:18px;font-size:12px;color:var(--faint);letter-spacing:.04em}
+
+.stage{position:fixed;left:36px;bottom:26px;width:min(780px,calc(100vw - 72px));z-index:3;display:flex;flex-direction:column;gap:12px;transition:opacity .5s}
+.live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 16px;transition:opacity .5s}
+.live .it{min-width:0}
+.live .n{display:block;font-size:30px;line-height:1.1;white-space:nowrap}
+.live .n .na{font-size:24px}
+#r-time{font-size:26px}
+.live .k{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:3px;line-height:1.35}
+.viz{font-size:11.5px;color:var(--faint);line-height:1.45}
+.auds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.aud{min-height:56px;text-align:left;padding:10px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:border-color .25s,background-color .25s;min-width:0}
+.aud:hover{border-color:var(--ice);background:rgba(169,220,255,.07)}
+.aud b{display:block;font-weight:400;font-size:15px;line-height:1.25}
+.aud span{display:block;font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.3}
+.dock{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:8px 14px 8px 8px;border-radius:26px;background:rgba(18,22,26,.82);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.dock .scrub{flex:1 1 100%;order:5}
+.play{width:44px;height:44px;min-width:44px}
+.seg{padding:0}
+.seg button{min-height:44px;min-width:44px;padding:0 12px;position:relative;z-index:1}
+.seg .thumb{top:0;bottom:0}
+.stamp{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums;margin-left:auto}
+input[type=range]{display:block;height:44px;background:transparent;margin:0;-webkit-appearance:none;appearance:none;width:100%;cursor:pointer;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--line2);border-radius:3px}
+input[type=range]::-moz-range-track{height:3px;background:var(--line2);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7.5px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--ice);border:0}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0}
+input[type=range]:focus-visible{outline:2px solid var(--ice);outline-offset:-2px;border-radius:8px}
+
+.lead{margin-top:10px;font-size:13px;color:var(--mute);line-height:1.55;max-width:70ch}
+.sentence{margin-top:16px}
+.sentence p{font-size:13px;line-height:1.6;color:var(--ink)}
+.cav{list-style:none;margin-top:12px;display:grid;gap:8px}
+.cav li{font-size:12.5px;color:var(--mute);line-height:1.55;padding-left:16px;position:relative}
+.cav li:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:#ffc27a}
+.mini{margin-top:16px}
+.cwrap{position:relative;touch-action:pan-y}
+.cwrap canvas{display:block;width:100%}
+.hd{position:absolute;top:0;bottom:0;left:0;width:1px;background:#fff;box-shadow:0 0 10px var(--ice);pointer-events:none;will-change:transform}
+.hv{position:absolute;top:0;bottom:0;left:0;width:0;border-left:1px dashed var(--ice);pointer-events:none;display:none}
+#tlwrap{cursor:crosshair;margin-top:14px}
+.nu{text-transform:none}
+.cl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:16px 0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+td.l,th.l{text-align:left}
+td.w{white-space:normal;min-width:150px}
+code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-wrap:anywhere}
+.rv{width:100%;border-collapse:collapse;font-size:13px}
+.rv td,.rv th{text-align:left;white-space:normal;vertical-align:top;padding:10px 9px}
+.rv th{white-space:normal}
+.tag-r{color:#8fe3b0}.tag-i{color:#ffc27a}
+@media (max-width:900px){
+  .hero-copy{left:18px;right:18px;top:140px;max-width:none}
+  .hero-copy h1{font-size:32px}
+  .hero-copy p,.hero-copy .hint{display:none}
+  .stage{left:18px;right:18px;bottom:16px;width:auto;gap:10px}
+  .live{position:static}
+  .live .n{font-size:24px}.live .n .na{font-size:19px}
+  #r-time{font-size:19px}
+  .live{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:901px){
+  .live{position:fixed;right:36px;top:max(20vh,150px);width:270px;grid-template-columns:1fr;gap:16px}
+  .live .n{font-size:40px}
+  .live .viz{display:block}
+}
+@media (max-width:900px) and (max-height:700px){.viz{display:none}}
+@media (max-width:520px){
+  .top{padding:14px 14px}
+  .nav{width:100%}
+  .nav button{flex:1 1 0;padding:0 8px}
+  .hero-copy{top:166px;left:14px;right:14px}
+  .hero-copy h1{font-size:28px}
+  .stage{left:14px;right:14px}
+  .aud{padding:8px 10px}.aud b{font-size:14px}.aud span{font-size:11px}
+  .dock{padding:6px 10px 6px 6px}
+  .stamp{display:none}
+  .live .k{font-size:10px}
+  .viz{font-size:10.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="hero" aria-label="Visualization: a procedurally drawn halo whose radius and brightness follow the logarithm of the real GOES-13 proton flux at the replay time"></canvas>
+
+<header class="top">
+  <div class="brand"><div class="label">Space weather · September 2017</div><div class="small t2" style="margin-top:4px">Three audiences, one archived storm · prototype v0.1</div>
+  <div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></div></div>
+  <nav class="nav" aria-label="Views">
+    <button data-v="timeline">Timeline</button>
+    <button data-v="alerts">Alerts</button>
+    <button data-v="method">Method<span class="long"> &amp; sources</span></button>
+  </nav>
+</header>
+
+<section class="hero-copy">
+  <h1>One storm.<br>Three audiences.<br><em>Every number sourced.</em></h1>
+  <p>NOAA region 2673, 4 to 15 September 2017. A replay of what the public record says about one solar radiation storm for a crew beyond low Earth orbit, a polar flight and a power grid. A past observation, not a forecast.</p>
+  <div class="hint">Open an audience card, or press play and watch the halo follow the real flux</div>
+</section>
+
+<div class="stage" id="stage">
+  <div class="live" id="live" role="group" aria-label="Readouts at the replay time (past observation)">
+    <div class="it"><span class="num n" id="r-time">n/a</span><span class="k">Replay time, UTC</span></div>
+    <div class="it"><span class="num n" id="r-f10">n/a</span><span class="k">≥10 MeV protons, pfu</span></div>
+    <div class="it"><span class="num n" id="r-f100">n/a</span><span class="k">&gt;100 MeV protons, pfu</span></div>
+    <div class="it"><span class="num n" id="r-dose">n/a</span><span class="k">CRaTER dose rate on LRO, <span style="text-transform:none">µGy/h</span> <span id="r-dose-age" style="text-transform:none"></span></span></div>
+    <div class="viz" style="grid-column:1/-1">Visualization: halo radius and brightness follow log₁₀ of the real GOES-13 flux at the replay time. Dose is shown beside the flux, never computed from it.</div>
+  </div>
+  <div class="auds" role="group" aria-label="Audience cards">
+    <button class="aud" data-aud="crew"><b>Crew</b><span>beyond low Earth orbit</span></button>
+    <button class="aud" data-aud="polar"><b>Polar flight</b><span>≥10 MeV · S2</span></button>
+    <button class="aud" data-aud="grid"><b>Power grid</b><span>K alerts · G3</span></button>
+  </div>
+  <div class="dock" id="dock" role="group" aria-label="Replay of the 11-day window">
+    <button class="play js-play" id="play" type="button" aria-label="Pause replay"><svg viewBox="0 0 10 12" aria-hidden="true"><path class="playp" d="M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z" fill="#fff"/></svg></button>
+    <div class="seg js-seg" id="seg" role="group" aria-label="Replay speed"><span class="thumb"></span><button data-s="1" aria-label="Speed 1x">1×</button><button data-s="4" class="on" aria-label="Speed 4x">4×</button><button data-s="16" aria-label="Speed 16x">16×</button></div>
+    <span class="stamp" id="stamp">n/a</span>
+    <div class="scrub"><label class="sr" for="scrub">Replay time, 2017-09-04 to 2017-09-15</label><input type="range" id="scrub" min="0" max="3167" step="1" value="0"></div>
+  </div>
+</div>
+
+<!-- Audience card -->
+<section class="sheet" id="sheet" aria-hidden="true" inert aria-label="Audience card">
+  <div class="panel">
+    <div class="xwrap"><button class="x" id="close" aria-label="Close card">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close card" data-grab="sheet"></div>
+    <div id="card"></div>
+  </div>
+</section>
+
+<!-- Timeline layer -->
+<section class="layer" id="timeline" aria-hidden="true" inert aria-label="Timeline">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close timeline">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close timeline" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Past observation · UTC · log axes</div><h2>Timeline</h2></div></div>
+    <div class="example-note real-note"><b style="color:#8fe3b0">Real</b><span>Both GOES-13 channels share one axis because they share a unit. The CRaTER dose rate has its own axis and is never merged with flux. Gaps are samples with a quality flag or no value; they are not zero. No error bars: the files publish none.</span></div>
+    <div class="tl-read" style="margin-top:14px" aria-live="off">
+      <div><span class="num n" id="t-time">n/a</span></div>
+      <div><span class="num n" id="t-f10">n/a</span><span class="k">≥10 MeV pfu</span></div>
+      <div><span class="num n" id="t-f100">n/a</span><span class="k">&gt;100 MeV pfu</span></div>
+      <div><span class="num n" id="t-dose">n/a</span><span class="k">µGy/h (LRO, CRaTER)</span></div>
+    </div>
+    <div class="cwrap" id="tlwrap">
+      <div class="cl">GOES-13 integral proton flux, <span class="nu">p/(cm² s sr)</span> read as pfu · log axis</div>
+      <canvas id="c-flux" role="img" aria-label="Log-axis chart of ≥10 MeV and >100 MeV proton flux with the 100 pfu and 1 pfu published thresholds"></canvas>
+      <div class="cl">CRaTER-D1D2 dose rate on LRO in lunar orbit, <span class="nu">µGy/hour</span> · its own log axis</div>
+      <canvas id="c-dose" role="img" aria-label="Log-axis chart of the CRaTER dose rate, a separate axis from flux"></canvas>
+      <div class="cl">Threshold written on each SWPC proton alert, pfu · a threshold, not flux</div>
+      <canvas id="c-alert" role="img" aria-label="Markers for the 29 SWPC proton alerts at the pfu threshold written on each"></canvas>
+      <div class="cl">Geomagnetic: issued K≥7 alerts (ticks) and warning valid periods (bars, not observed K)</div>
+      <canvas id="c-grid" role="img" aria-label="Issued K at or above 7 alerts as ticks, and warning valid periods as bars"></canvas>
+      <div class="hd" id="hd"></div><div class="hv" id="hv"></div>
+    </div>
+    <div class="legend"><span><i style="background:#a9dcff"></i>≥10 MeV</span><span><i style="background:#d9c2ff"></i>&gt;100 MeV</span><span><i style="background:#ffc27a"></i>CRaTER dose rate</span><span><i style="background:#fff"></i>replay time</span></div>
+    <p class="disclaim">Hover or drag to read values at a time; dragging pauses the replay. GOES-13 is geostationary. Dose is measured by CRaTER on LRO in lunar orbit, not at flight altitude, in a crew vehicle or on the ground, and is not derived from the flux. Dashed lines are published thresholds, not rules.</p>
+  </div>
+</section>
+
+<!-- Alerts layer -->
+<section class="layer" id="alerts" aria-hidden="true" inert aria-label="Alert ledger">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close alert ledger">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close alert ledger" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Issued products · copied from the PRF PDFs</div><h2>Alert ledger</h2></div></div>
+    <div class="example-note real-note"><b style="color:#8fe3b0">Issued</b><span>These are products NOAA SWPC issued, not measurements. The pfu on a proton alert is the threshold written on that alert, not the flux. A warning's valid period is not observed K. Times are the event times written in the product, in UTC.</span></div>
+    <div class="swipe" aria-hidden="true">Swipe the tables sideways for all columns →</div>
+    <h3 id="h-proton">Proton alerts</h3>
+    <div class="tablewrap"><table class="rv"><thead><tr><th class="l">Kind</th><th class="l">Channel and threshold</th><th class="l">Start</th><th class="l">End</th><th class="l">Product</th><th class="l">Source file</th></tr></thead><tbody id="tb-proton"></tbody></table></div>
+    <h3>Geomagnetic K alerts, K ≥ 7 (issued at the time written)</h3>
+    <div class="tablewrap"><table class="rv"><thead><tr><th class="l">Kind</th><th class="l">K</th><th class="l">Time</th><th class="l">Product</th><th class="l">Source file</th></tr></thead><tbody id="tb-grid"></tbody></table></div>
+    <h3>Geomagnetic warnings, K ≥ 7 (valid period, not observed K)</h3>
+    <div class="tablewrap"><table class="rv"><thead><tr><th class="l">Kind</th><th class="l">K</th><th class="l">Valid from</th><th class="l">Valid to</th><th class="l">Hours valid</th><th class="l">Product</th><th class="l">Source file</th></tr></thead><tbody id="tb-warn"></tbody></table></div>
+    <p class="disclaim" id="alert-note"></p>
+  </div>
+</section>
+
+<!-- Method layer -->
+<section class="layer" id="method" aria-hidden="true" inert aria-label="Method and sources">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close method and sources">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close method and sources" data-grab="layer"></div>
+    <div class="lh"><div><div class="label">Pull-up layer</div><h2>Method and sources</h2></div></div>
+
+    <h3>Real, copied and illustrative</h3>
+    <div class="grid2">
+      <div class="box"><h4><span class="tag-r">Real</span> · flux, alerts, dose</h4><p>GOES-13 flux samples, the SWPC alerts and warnings, and the CRaTER dose rate are read from the archived files below by the repository's own code and exported unchanged. Samples with a non-zero quality flag or no value are gaps.</p></div>
+      <div class="box"><h4><span class="tag-r">Real</span> · hours, first and last, peaks</h4><p>Counted from the exported series at 5-minute samples: “at or above” the published threshold. First to last is a span, not a continuous stretch; the number of separate stretches is shown beside it.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · hero halo</h4><p>A procedural drawing. Radius and brightness follow log₁₀ of the real flux at the replay time; the rays are decoration. It is not an image of radiation or of the magnetosphere.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · replay speed</h4><p>1× is 3 hours of storm per second, 4× is 12, 16× is 48. The replay loops over the 11 days. No latency is measured: the data are archives.</p></div>
+    </div>
+
+    <h3>How to read it</h3>
+    <div class="box"><p>GOES-13 is a geostationary satellite. Its unit, p/(cm² s sr), is read as pfu only to compare with published thresholds. CRaTER flew on the Lunar Reconnaissance Orbiter in lunar orbit: its dose rate is not the dose at flight altitude, in a crew vehicle or on the ground, and it is copied from RadLab, not derived from flux. The two are shown side by side only. There are no error bars because none are published in these files. Published scales and definitions are shown with their source; they are not flight rules, aviation limits or grid limits.</p></div>
+
+    <h3>The method text from the project</h3>
+    <div class="box"><p id="method-text" style="white-space:pre-line"></p></div>
+
+    <h3>Data files (data/MANIFEST.tsv)</h3>
+    <ul class="cites" id="manifest"></ul>
+
+    <h3>Thresholds and their sources</h3>
+    <ul class="cites" id="thr-list"></ul>
+
+    <h3>Code</h3>
+    <ul class="cites">
+      <li><div>This project on GitHub<span>Source code, exporter and tests (sighmon/space, space-weather).</span></div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></li>
+    </ul>
+
+    <h3>What this page will not do</h3>
+    <div class="nots"><span>Not a forecast</span><span>One storm only</span><span>No combined score</span><span>No ranking of audiences</span><span>Never says “safe”</span><span>Alert ≠ measurement</span><span>Warning period ≠ observed K</span><span>Dose not derived from flux</span><span>No error bars invented</span><span>Scales ≠ rules</span></div>
+  </div>
+</section>
+<div class="scrim" id="scrim"></div>
+
+<script src="../../shared/space.js"></script>
+<script src="data/storm.js"></script>
+<script>
+(function(){
+'use strict';
+var D=window.STORM||{};
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var S=D.series||{}, STEP=S.step_seconds||300, SLOTS=S.slots||0;
+var G10=(S.gt10&&S.gt10.values)||[], G100=(S.gt100&&S.gt100.values)||[];
+var DOSE=S.dose||{}, DT=DOSE.t_seconds||[], DV=DOSE.values||[];
+var AUD=D.audiences||{}, ALERTS=D.alerts||{}, TH=D.thresholds||{};
+var T0=S.t0?Date.parse(S.t0):0, LEN=Math.max(0,(SLOTS-1)*STEP), SPAN=SLOTS*STEP;
+var NA='<span class="na">n/a</span>';
+function ok(v){return typeof v==='number'&&isFinite(v)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function commas(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function fnum(v,d){if(!ok(v))return NA; var a=Math.abs(v); var p=d!=null?d:(a>=1000?0:a>=100?0:a>=10?1:a>=1?2:3); var t=v.toFixed(p); var q=t.split('.'); return commas(q[0])+(q[1]?'.'+q[1]:'')}
+function two(n){return (n<10?'0':'')+n}
+function iso(ms){var d=new Date(ms);return d.getUTCFullYear()+'-'+two(d.getUTCMonth()+1)+'-'+two(d.getUTCDate())+' '+two(d.getUTCHours())+':'+two(d.getUTCMinutes())+'Z'}
+function ftime(s){var ms=s?Date.parse(s):NaN; return isFinite(ms)?iso(ms):NA}
+function plain(h){return h.replace(/<[^>]*>/g,'')}
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ---------------- data access (n/a-safe) ---------------- */
+function slotAt(t){return Math.max(0,Math.min(SLOTS-1,Math.round(t/STEP)))}
+function fluxAt(arr,t){if(!SLOTS)return null; var v=arr[slotAt(t)]; return ok(v)?v:null}
+function doseAt(t){ // last CRaTER sample at or before t; null if none within 2 h
+  var lo=0,hi=DT.length-1,best=-1; while(lo<=hi){var m=(lo+hi)>>1; if(DT[m]<=t){best=m;lo=m+1}else hi=m-1}
+  if(best<0||t-DT[best]>7200||!ok(DV[best]))return null; return {v:DV[best],age:t-DT[best]};
+}
+
+/* ---------------- clock ---------------- */
+var RATE=3*3600; // 1x = 3 storm hours per second
+var panels=Space.panels();
+var clock=Space.clock({length:LEN,rate:RATE,speed:4,fps:30,playing:false,onTick:tick,onState:setPlayUI});
+var userSeek=false;
+var head=$('#hd'), hv=$('#hv'), scrub=$('#scrub');
+scrub.max=Math.max(0,SLOTS-1);
+
+function setPlayUI(on){var b=$('#play');b.setAttribute('aria-label',on?'Pause replay':'Play replay');
+  $('.playp',b).setAttribute('d',on?'M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z':'M1 0L10 6L1 12Z');}
+function setSeg(){var s=clock.speed,bs=$$('#seg button'),on=bs.filter(function(b){return +b.dataset.s===s})[0]; bs.forEach(function(b){b.classList.toggle('on',b===on)});
+  var th=$('#seg .thumb'); if(on){th.style.left=on.offsetLeft+'px';th.style.width=on.offsetWidth+'px'}}
+
+/* ---------------- readouts ---------------- */
+function setT(id,html){var e=$('#'+id); if(e._h!==html){e._h=html;e.innerHTML=html}}
+function readouts(t,pfx){
+  var f10=fluxAt(G10,t), f100=fluxAt(G100,t), d=doseAt(t);
+  var tm=iso(T0+slotAt(t)*STEP*1000);
+  if(pfx==='r'){setT('r-time',SLOTS?tm:NA);setT('stamp',SLOTS?tm.replace('Z',' UTC'):'n/a');setT('r-dose-age',d?'· sample '+Math.round(d.age/60)+' min earlier':'');}
+  else setT('t-time',SLOTS?tm:NA);
+  setT(pfx+'-f10',fnum(f10));setT(pfx+'-f100',fnum(f100));setT(pfx+'-dose',d?fnum(d.v):NA);
+}
+var hoverT=null;
+function tick(t){
+  if(!userSeek&&+scrub.value!==slotAt(t))scrub.value=slotAt(t);
+  readouts(t,'r'); readouts(hoverT!=null?hoverT:t,'t');
+  moveHead(t); drawHero(t);
+  if(sel)moveMini(t);
+}
+
+/* ---------------- hero (procedural, data-driven) ---------------- */
+var hero=$('#hero'), hc=hero.getContext('2d'), hw=0, hh=0, dpr=1;
+function sizeHero(){dpr=Math.min(2,window.devicePixelRatio||1);hw=innerWidth;hh=innerHeight;hero.width=Math.round(hw*dpr);hero.height=Math.round(hh*dpr);}
+function rnd(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+var L10=Math.log10;
+function haloR(v,lo,hi,r0,r1){return r0+(Math.max(0,Math.min(1,(L10(v)-L10(lo))/(L10(hi)-L10(lo)))))*(r1-r0)}
+function drawHero(t){
+  var c=hc; c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,hw,hh);
+  var bg=c.createRadialGradient(hw*.6,hh*.45,0,hw*.6,hh*.45,Math.max(hw,hh)*.8); bg.addColorStop(0,'#0a1017');bg.addColorStop(1,'#050607'); c.fillStyle=bg;c.fillRect(0,0,hw,hh);
+  var wide=hw>900, cx=wide?hw*.56:hw*.5, cy=wide?hh*.48:hh*.40, m=Math.min(hw*(wide?.5:.5),hh*.5);
+  var r0=m*.16, r1=m*.92;
+  var f10=fluxAt(G10,t), f100=fluxAt(G100,t);
+  var p=t/ (LEN||1);
+  // threshold rings: published thresholds drawn at the radius the same scale gives them
+  c.save();c.setLineDash([3,6]);c.lineWidth=1;
+  var tr=[[100,0.1,2000,'rgba(169,220,255,.34)','100 pfu · ≥10 MeV'],[1,0.01,100,'rgba(217,194,255,.34)','1 pfu · >100 MeV']];
+  tr.forEach(function(q,i){var r=haloR(q[0],q[1],q[2],r0,r1); if(i===1)r=haloR(q[0],q[1],q[2],r0,r1*.62);
+    c.strokeStyle=q[3];c.beginPath();c.arc(cx,cy,r,0,6.2832);c.stroke();});
+  c.restore();
+  function halo(v,lo,hi,rmax,rgb,seed,n){
+    if(!ok(v)){return;}
+    var r=haloR(v,lo,hi,r0,rmax), k=(L10(v)-L10(lo))/(L10(hi)-L10(lo)); k=Math.max(0,Math.min(1,k));
+    var g=c.createRadialGradient(cx,cy,r0*.6,cx,cy,r*1.25);
+    g.addColorStop(0,'rgba('+rgb+','+(.10+.32*k).toFixed(3)+')');g.addColorStop(.55,'rgba('+rgb+','+(.06+.16*k).toFixed(3)+')');g.addColorStop(1,'rgba('+rgb+',0)');
+    c.fillStyle=g;c.beginPath();c.arc(cx,cy,r*1.25,0,6.2832);c.fill();
+    c.lineWidth=1.2;
+    for(var i=0;i<n;i++){
+      var a=i/n*6.2832+seed+p*1.8, ln=r*(.55+.5*rnd(i+seed*7)), ph=Math.sin(p*60+i*.7+seed)*.5+.5;
+      var a0=r0*1.05, a1=Math.min(r*1.2,a0+(ln-a0)*(.7+.3*ph));
+      if(a1<=a0)continue;
+      c.strokeStyle='rgba('+rgb+','+((.06+.38*k)*(.35+.65*rnd(i*3+seed))).toFixed(3)+')';
+      c.beginPath();c.moveTo(cx+Math.cos(a)*a0,cy+Math.sin(a)*a0);c.lineTo(cx+Math.cos(a)*a1,cy+Math.sin(a)*a1);c.stroke();
+    }
+  }
+  halo(f10,0.1,2000,r1,'169,220,255',1,120);
+  halo(f100,0.01,100,r1*.62,'217,194,255',5,70);
+  var core=c.createRadialGradient(cx,cy,0,cx,cy,r0);core.addColorStop(0,'#05070a');core.addColorStop(.85,'#070a0e');core.addColorStop(1,'rgba(7,10,14,.0)');
+  c.fillStyle=core;c.beginPath();c.arc(cx,cy,r0,0,6.2832);c.fill();
+  c.strokeStyle='rgba(235,242,247,.16)';c.lineWidth=1;c.beginPath();c.arc(cx,cy,r0*.82,0,6.2832);c.stroke();
+}
+
+/* ---------------- charts ---------------- */
+var CH={ml:44,mr:10};
+function setup(cv,h){var w=cv.parentNode.clientWidth;cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);return {c:c,w:w,h:h,pw:w-CH.ml-CH.mr}}
+function xOf(g,t){return CH.ml+(t/SPAN)*g.pw}
+function axisX(g,ticks){var c=g.c;c.font='10.5px '+getComputedStyle(document.body).fontFamily;c.fillStyle='rgba(235,242,247,.68)';c.textAlign='center';
+  var every=g.w<500?2:1; for(var d=0;d<=11;d++){var x=xOf(g,d*86400); c.strokeStyle='rgba(235,242,247,.07)';c.beginPath();c.moveTo(x,0);c.lineTo(x,g.h-(ticks?16:0));c.stroke();
+    if(ticks&&d%every===0&&d<11){var dt=new Date(T0+d*86400000);c.fillText(MON[dt.getUTCMonth()]+' '+dt.getUTCDate(),Math.min(g.w-14,Math.max(CH.ml,x)),g.h-3)}}}
+function logY(g,v,lo,hi,top,bot){return top+(1-(L10(v)-L10(lo))/(L10(hi)-L10(lo)))*(bot-top)}
+function axisY(g,lo,hi,top,bot,decs,fmt){var c=g.c;c.font='10.5px '+getComputedStyle(document.body).fontFamily;c.textAlign='right';c.fillStyle='rgba(235,242,247,.68)';
+  decs.forEach(function(v){var y=logY(g,v,lo,hi,top,bot);c.strokeStyle='rgba(235,242,247,.08)';c.beginPath();c.moveTo(CH.ml,y);c.lineTo(g.w-CH.mr,y);c.stroke();c.fillText(fmt(v),CH.ml-5,y+3.5)})}
+function pathSeries(g,vals,times,lo,hi,top,bot,color,lw,minGapSlots){var c=g.c;c.strokeStyle=color;c.lineWidth=lw;c.beginPath();var pen=false,lastT=null;
+  for(var i=0;i<vals.length;i++){var v=vals[i];var t=times?times[i]:i*STEP;
+    if(!ok(v)||v<=0){pen=false;lastT=null;continue}
+    if(pen&&lastT!=null&&t-lastT>minGapSlots)pen=false;
+    var x=xOf(g,t),y=logY(g,Math.max(lo,Math.min(hi,v)),lo,hi,top,bot); if(pen)c.lineTo(x,y);else{c.moveTo(x,y);pen=true}lastT=t}
+  c.stroke()}
+function hline(g,v,lo,hi,top,bot,color,label){var c=g.c,y=logY(g,v,lo,hi,top,bot);c.save();c.setLineDash([5,5]);c.strokeStyle=color;c.lineWidth=1;c.beginPath();c.moveTo(CH.ml,y);c.lineTo(g.w-CH.mr,y);c.stroke();c.restore();
+  c.fillStyle=color;c.textAlign='left';c.font='10.5px '+getComputedStyle(document.body).fontFamily;c.fillText(label,CH.ml+4,y-4)}
+function drawFlux(cv,opts){opts=opts||{};var g=setup(cv,opts.h||220),lo=0.01,hi=3000,top=8,bot=g.h-(opts.noAxis?4:18);
+  axisX(g,!opts.noAxis);axisY(g,lo,hi,top,bot,[0.01,0.1,1,10,100,1000],function(v){return v>=1?String(v):String(v)});
+  if(!opts.only||opts.only==='gt10')pathSeries(g,G10,null,lo,hi,top,bot,'#a9dcff',1.3,STEP*1.5);
+  if(!opts.only||opts.only==='gt100')pathSeries(g,G100,null,lo,hi,top,bot,'#d9c2ff',1.3,STEP*1.5);
+  if(!opts.only||opts.only==='gt10')hline(g,100,lo,hi,top,bot,'rgba(169,220,255,.9)','100 pfu · NOAA S2 (≥10 MeV)');
+  if(!opts.only||opts.only==='gt100')hline(g,1,lo,hi,top,bot,'rgba(217,194,255,.95)','1 pfu · NASA SRAG (>100 MeV)');
+  return g}
+function drawDose(cv){var g=setup(cv,150),lo=8,hi=40000,top=8,bot=g.h-18;axisX(g,true);axisY(g,lo,hi,top,bot,[10,100,1000,10000],function(v){return String(v)});
+  pathSeries(g,DV,DT,lo,hi,top,bot,'#ffc27a',1.4,7500);
+  var c=g.c;c.fillStyle='#ffc27a';DV.forEach(function(v,i){if(ok(v)&&v>0&&DV.length<400){c.beginPath();c.arc(xOf(g,DT[i]),logY(g,Math.max(lo,Math.min(hi,v)),lo,hi,top,bot),1.6,0,6.2832);c.fill()}});return g}
+function drawAlerts(cv){var g=setup(cv,96),lo=0.5,hi=3000,top=8,bot=g.h-18;axisX(g,true);axisY(g,lo,hi,top,bot,[1,10,100,1000],function(v){return String(v)});var c=g.c;
+  (ALERTS.proton||[]).forEach(function(a){var s=Date.parse(a.start),e=a.end?Date.parse(a.end):null; if(!isFinite(s)||!ok(a.value))return;
+    var x=xOf(g,(s-T0)/1000),y=logY(g,a.value,lo,hi,top,bot),col=a.channel==='100MeV'?'#d9c2ff':'#a9dcff';
+    if(e&&isFinite(e)){c.strokeStyle=col;c.globalAlpha=.45;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(xOf(g,(e-T0)/1000),y);c.stroke();c.globalAlpha=1}
+    c.fillStyle=col;c.beginPath();c.moveTo(x,y-4);c.lineTo(x+4,y);c.lineTo(x,y+4);c.lineTo(x-4,y);c.closePath();c.fill()});return g}
+function drawGrid(cv){var g=setup(cv,78),top=6,bot=g.h-18;axisX(g,true);var c=g.c;
+  (ALERTS.grid_warnings||[]).forEach(function(w,i){var s=Date.parse(w.start),e=Date.parse(w.end);if(!isFinite(s)||!isFinite(e))return;var y=top+6+i*11;
+    c.fillStyle=w.longest_in_sentence?'rgba(255,194,122,.55)':'rgba(255,194,122,.28)';c.fillRect(xOf(g,(s-T0)/1000),y,Math.max(2,xOf(g,(e-T0)/1000)-xOf(g,(s-T0)/1000)),7)});
+  (ALERTS.grid_issued||[]).forEach(function(a){var s=Date.parse(a.start);if(!isFinite(s))return;var x=xOf(g,(s-T0)/1000);c.strokeStyle='#fff';c.lineWidth=1.2;c.beginPath();c.moveTo(x,top+2);c.lineTo(x,bot);c.stroke()});
+  c.fillStyle='rgba(235,242,247,.68)';c.font='10.5px '+getComputedStyle(document.body).fontFamily;c.textAlign='right';c.fillText('K≥7',CH.ml-5,bot-2);return g}
+function drawTimeline(){drawFlux($('#c-flux'));drawDose($('#c-dose'));drawAlerts($('#c-alert'));drawGrid($('#c-grid'));moveHead(clock.t)}
+
+/* replay-time head + hover line over the timeline stack */
+function moveHead(t){var w=$('#tlwrap');if(!w||!layerOpen('timeline'))return;var cw=w.clientWidth,pw=cw-CH.ml-CH.mr;head.style.transform='translateX('+(CH.ml+(slotAt(t)*STEP/SPAN)*pw)+'px)'}
+function layerOpen(id){var e=$('#'+id);return e&&e.classList.contains('open')}
+var tlw=$('#tlwrap');
+function tFromEvent(e){var r=tlw.getBoundingClientRect(),x=e.clientX-r.left-CH.ml,pw=r.width-CH.ml-CH.mr;return Math.max(0,Math.min(LEN,x/pw*SPAN))}
+tlw.addEventListener('pointermove',function(e){var t=tFromEvent(e);hoverT=t;var r=tlw.getBoundingClientRect();hv.style.display='block';hv.style.transform='translateX('+(CH.ml+(slotAt(t)*STEP/SPAN)*(r.width-CH.ml-CH.mr))+'px)';readouts(t,'t');
+  if(e.buttons&&e.pointerType!=='touch'||dragging){clock.setPlaying(false);clock.seek(t)}});
+tlw.addEventListener('pointerdown',function(e){dragging=true;try{tlw.setPointerCapture(e.pointerId)}catch(x){}var t=tFromEvent(e);clock.setPlaying(false);clock.seek(t)});
+var dragging=false;
+addEventListener('pointerup',function(){dragging=false});
+tlw.addEventListener('pointercancel',function(){dragging=false});
+tlw.addEventListener('pointerleave',function(){if(!dragging){hoverT=null;hv.style.display='none';readouts(clock.t,'t')}});
+
+/* ---------------- audience cards ---------------- */
+var sel=null, miniG=null;
+var AUDS={
+  crew:{title:'Crew beyond low Earth orbit',kicker:'Audience card · crew',ch:'gt100',chlabel:'>100 MeV protons · GOES-13 ZPGT100E',th:'crew',unit:'pfu',
+    caveats:[
+      'This counts samples of one past storm. It is not a forecast and not advice for any mission or crew.',
+      'GOES-13 is in geostationary orbit, at Earth. It is not a measurement of what a crew beyond low Earth orbit would have received.',
+      'The dose rate beside it was measured by CRaTER on the Lunar Reconnaissance Orbiter in lunar orbit. It is copied from RadLab, not derived from flux, and shown side by side only.',
+      'The 1 pfu figure is NASA SRAG’s published definition of an energetic solar particle event. It is not a crew limit or a flight rule.',
+      'No uncertainty is published in these files, so none is drawn.']},
+  polar:{title:'Polar flight',kicker:'Audience card · polar flight',ch:'gt10',chlabel:'≥10 MeV protons · GOES-13 ZPGT10E',th:'polar',unit:'pfu',
+    caveats:[
+      'This counts samples of one past storm. It is not a forecast and not guidance for any flight or route.',
+      'GOES-13 measures protons at geostationary orbit, not at flight altitude. This page shows no dose for a flight; the CRaTER dose on the crew card is from lunar orbit and does not apply here.',
+      'S2 is NOAA’s published radiation storm level. It is a scale, not an aviation limit or a rule for crews or airlines.',
+      'No uncertainty is published in these files, so none is drawn.']},
+  grid:{title:'Power grid',kicker:'Audience card · grid operators',ch:null,chlabel:'Issued SWPC geomagnetic K products',th:'grid',unit:'K',
+    caveats:[
+      'These are products NOAA SWPC issued, not measurements of K. The K alerts mark the time each was issued.',
+      'The warning’s valid period is the span the warning covered, not a stretch of observed K at or above 7.',
+      'G3 (Kp = 7) is NOAA’s published geomagnetic storm level. It is a scale, not a grid limit or an operating rule.',
+      'This page draws no proton flux or dose for the grid, and shows nothing about any particular grid.',
+      'No uncertainty is published in these files, so none is drawn.']}
+};
+function stat(k,label,html,sub){return '<div class="extra"><span class="label">'+label+'</span><b>'+html+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</div>'}
+function srcLine(th){if(!th)return NA; return esc(th.source||'')+(th.url?' <a class="ghlink" style="min-height:0;margin:0;font-size:12.5px;color:var(--ice)" href="'+esc(th.url)+'" target="_blank" rel="noopener">source page ↗</a>':' <span class="small">(no public link recorded)</span>')}
+function renderCard(key){
+  var a=AUDS[key], A=AUD[key]||{}, st=A.stats||{}, th=TH[a.th]||null, html='';
+  var thLabel=th?(a.th==='grid'?'Kp = 7':fnum(th.value,0)+' pfu'):'';
+  html+='<div class="card-head"><div><div class="label">'+a.kicker+'</div><h2>'+esc(a.title)+'</h2>'
+   +'<div class="meta"><span>Series <b>'+esc(a.chlabel)+'</b></span><span>Window <b>2017-09-04 → 2017-09-15 UTC</b></span><span>Basis <b>past observation, one storm</b></span></div></div>'
+   +'<div class="head-r"><button class="btn" data-open="timeline">Timeline ↑</button><button class="btn" data-open="alerts">Alert ledger ↑</button><button class="btn" data-open="method">Method &amp; sources ↑</button></div></div>';
+  html+='<div class="example-note real-note"><b style="color:#8fe3b0">'+(key==='grid'?'Issued':'Real')+'</b><span>'+(key==='grid'?'Issued SWPC alerts and warnings copied from the PRF PDFs. Not a forecast; not observed K.':'Counted from archived GOES-13 samples with the published threshold below. Not a forecast.')+'</span></div>';
+  if(key==='grid'){
+    var hk=null,hkT=null;(ALERTS.grid_issued||[]).forEach(function(x){if(ok(x.value)&&(hk==null||x.value>hk)){hk=x.value;hkT=x.start}});
+    html+='<div class="extras">'
+     +stat(0,'K ≥ 7 alerts issued',ok(st.issued_alerts_k_at_or_above_7)?String(st.issued_alerts_k_at_or_above_7):NA,'in the window, from PRF 2193')
+     +stat(0,'First alert',ftime(st.first_alert),'time written on the alert')
+     +stat(0,'Last alert',ftime(st.last_alert),'time written on the alert')
+     +stat(0,'Highest K in an alert',ok(hk)?fnum(hk,0):NA,hkT?'first issued '+ftime(hkT):'')
+     +'</div>';
+    html+='<div class="extras" style="grid-template-columns:repeat(2,1fr)">'
+     +stat(0,'Warning valid period',ok(st.warning_hours_valid)?fnum(st.warning_hours_valid,0)+' h':NA,'valid period of the longest K ≥ 7 warning, <b>not</b> observed K')
+     +stat(0,'Valid from → to',ftime(st.warning_valid_from)+'<br>'+ftime(st.warning_valid_to),'issued product; not a measurement')+'</div>';
+  }else{
+    var uc=a.ch==='gt10'?'≥10 MeV':'>100 MeV';
+    var thr=a.th==='crew'?'1 pfu':'100 pfu';
+    html+='<div class="extras">'
+     +stat(0,'Hours at or above '+thr,ok(st.hours_at_or_above)?fnum(st.hours_at_or_above,1)+' h':NA,ok(st.samples_at_or_above)?fnum(st.samples_at_or_above,0)+' five-minute samples ('+fnum(st.minutes_at_or_above,0)+' min)':'')
+     +stat(0,'First at or above',ftime(st.first_at_or_above),'')
+     +stat(0,'Last at or above',ftime(st.last_at_or_above),ok(st.separate_stretches)?'not continuous: '+st.separate_stretches+' separate stretches in between':'')
+     +stat(0,'Peak '+uc,ok(st.peak)?fnum(st.peak)+' pfu':NA,ftime(st.peak_time))
+     +'</div>';
+    html+='<div class="mini"><div class="label">'+uc+' flux, log axis · dashed line is the published threshold</div><div class="cwrap" id="mwrap"><canvas id="c-mini" role="img" aria-label="Log-axis flux with the threshold line for this audience"></canvas><div class="hd" id="mhd"></div></div></div>';
+  }
+  if(th){
+    html+='<div class="box" style="margin-top:16px"><div class="label">Published threshold</div><p style="margin-top:6px;color:var(--ink);font-size:15px"><span class="num" style="font-size:26px">'+esc(thLabel)+'</span> &nbsp;'+esc(th.label||'')+'</p><p style="margin-top:6px">'+esc(th.comparison||'')+'</p><p style="margin-top:8px">Source: '+srcLine(th)+'</p><p class="small" style="margin-top:6px">'+esc(TH.not_rules||'')+'</p></div>';
+  }
+  if(key==='crew'){
+    var ds=A.dose||{};
+    html+='<div class="box" style="margin-top:12px"><div class="label">Dose, side by side · not derived from flux</div><div class="extras" style="grid-template-columns:repeat(2,1fr);margin-top:10px">'
+     +stat(0,'Lowest CRaTER dose rate',ok(ds.min)?fnum(ds.min,1)+' µGy/h':NA,ftime(ds.min_time))
+     +stat(0,'Highest CRaTER dose rate',ok(ds.max)?fnum(ds.max,0)+' µGy/h':NA,ftime(ds.max_time))+'</div>'
+     +'<p style="margin-top:10px">CRaTER-D1D2 absorbed dose rate, copied from RadLab ('+esc((DOSE.source_file)||'n/a')+'). Measured on LRO in lunar orbit: not at a flight altitude, in a crew vehicle or on the ground. The hour-scale CRaTER samples are not matched to the 5-minute flux; they are only shown together on the timeline, on separate axes.</p></div>';
+  }
+  html+='<div class="box sentence"><div class="label">The project’s own sentence</div><p style="margin-top:8px">'+esc(A.sentence||'')+(A.sentence?'':NA)+'</p></div>';
+  html+='<div class="label" style="margin-top:18px">Caveats</div><ul class="cav">'+a.caveats.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul>';
+  $('#card').innerHTML=html;
+  $$('#card [data-open]').forEach(function(b){b.onclick=function(){openLayer(b.dataset.open)}});
+}
+function drawMini(){var cv=$('#c-mini');if(!cv)return;var a=AUDS[sel];miniG=drawFlux(cv,{h:150,only:a.ch});miniHead=$('#mhd');moveMini(clock.t)}
+var miniHead=null;
+function moveMini(t){if(!miniHead||!miniG)return;miniHead.style.transform='translateX('+(CH.ml+(slotAt(t)*STEP/SPAN)*miniG.pw)+'px)'}
+function openAud(key,silent){
+  closeLayers(true); sel=key; renderCard(key);
+  document.body.classList.add('sheet-open'); panels.open($('#sheet'),'#close');
+  $$('.aud').forEach(function(b){b.classList.toggle('on',b.dataset.aud===key)});
+  requestAnimationFrame(function(){drawMini()});
+  if(!silent)setHash('audience/'+key);
+}
+function closeAud(){ if(!sel)return; var b=$('.aud[data-aud="'+sel+'"]'); if(b&&!panels.trigger.get($('#sheet')))panels.trigger.set($('#sheet'),b); sel=null; document.body.classList.remove('sheet-open'); panels.close($('#sheet')); setHash('')}
+$('#close').onclick=closeAud;
+$$('.aud').forEach(function(b){b.onclick=function(){openAud(b.dataset.aud)}});
+
+/* ---------------- layers ---------------- */
+function setNav(v){$$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+function syncInert(){var sh=$('#sheet');if(sh.classList.contains('open')){if(document.body.classList.contains('layer-open'))sh.setAttribute('inert','');else sh.removeAttribute('inert')}}
+function openLayer(id,silent){ closeLayers(true); document.body.classList.add('layer-open'); panels.open($('#'+id),'[data-close]'); syncInert(); setNav(id);
+  if(id==='timeline')requestAnimationFrame(function(){drawTimeline();readouts(clock.t,'t')});
+  if(!silent)setHash(id)}
+function closeLayers(silent){ var any=$$('.layer.open').length; document.body.classList.remove('layer-open'); $$('.layer').forEach(function(l){panels.close(l,silent)}); syncInert(); setNav(null);
+  if(!silent&&any)setHash(sel?'audience/'+sel:'')}
+$$('[data-close]').forEach(function(b){b.onclick=function(){closeLayers()}});
+$('#scrim').onclick=function(){closeLayers()};
+$$('.nav button').forEach(function(b){b.onclick=function(){var v=b.dataset.v; if(layerOpen(v))closeLayers(); else openLayer(v)}});
+$$('[data-grab]').forEach(function(g){var f=function(){if(g.dataset.grab==='sheet')closeAud();else closeLayers()}; g.onclick=f; g.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}}});
+addEventListener('keydown',function(e){if(e.key==='Escape'){if(document.body.classList.contains('layer-open'))closeLayers();else if(sel)closeAud()}});
+function setHash(h,q){try{history.replaceState(null,'','#'+h)}catch(e){}}
+
+/* ---------------- ledger and method ---------------- */
+function td(x,c){return '<td class="l'+(c?' '+c:'')+'">'+x+'</td>'}
+function fillLedger(){
+  var pr=(ALERTS.proton||[]).map(function(a){return '<tr>'+td(esc(a.role||'alert'))+td((a.channel==='100MeV'?'&gt;100 MeV':'≥10 MeV')+' '+esc(a.comparator||'')+' '+fnum(a.value,0)+' pfu <span class="small">(threshold written on the alert)</span>','w')+td(ftime(a.start))+td(a.end?ftime(a.end):'—')+td(esc(a.product_id||''))+td('<code class="h">'+esc(a.source_file||'')+'</code>')+'</tr>'}).join('');
+  $('#tb-proton').innerHTML=pr||'<tr><td class="l" colspan="6">'+NA+'</td></tr>';
+  $('#h-proton').textContent='Proton alerts and warnings ('+(ALERTS.proton||[]).length+' in the window)';
+  $('#tb-grid').innerHTML=(ALERTS.grid_issued||[]).map(function(a){return '<tr>'+td('issued alert')+td('K = '+fnum(a.value,0))+td(ftime(a.start))+td(esc(a.product_id||''))+td('<code class="h">'+esc(a.source_file||'')+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="5">'+NA+'</td></tr>';
+  $('#tb-warn').innerHTML=(ALERTS.grid_warnings||[]).map(function(a){return '<tr>'+td(esc(a.role||'warning')+(a.longest_in_sentence?' <span class="small">(the one in the project sentence)</span>':''),'w')+td('K '+esc(a.comparator||'')+' '+fnum(a.value,0))+td(ftime(a.start))+td(ftime(a.end))+td(ok(a.hours_valid)?fnum(a.hours_valid,0)+' h':NA)+td(esc(a.product_id||''))+td('<code class="h">'+esc(a.source_file||'')+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="7">'+NA+'</td></tr>';
+  $('#alert-note').textContent=ALERTS.note||'';
+}
+function fillMethod(){
+  $('#method-text').textContent=D.method||'n/a';
+  $('#manifest').innerHTML=(D.manifest||[]).map(function(m){return '<li><div>'+esc(m.filename)+'<span>'+esc(m.what||'')+'</span><span>fetched '+esc(m.fetched_utc||'n/a')+' · '+(ok(m.bytes)?commas(String(m.bytes)):'n/a')+' bytes</span><span>sha256 <code class="h">'+esc(m.sha256||'n/a')+'</code></span></div><a href="'+esc(m.url||'#')+'" target="_blank" rel="noopener">source ↗</a></li>'}).join('')||'<li><div>'+NA+'</div></li>';
+  var rows=['crew','polar','grid'].map(function(k){var t=TH[k];if(!t)return '';return '<li><div>'+esc(t.label)+' · '+esc(t.comparison)+'<span>'+esc(t.source)+'</span></div>'+(t.url?'<a href="'+esc(t.url)+'" target="_blank" rel="noopener">source ↗</a>':'<span class="small">no link</span>')+'</li>'}).join('');
+  $('#thr-list').innerHTML=rows||'<li><div>'+NA+'</div></li>';
+}
+
+/* ---------------- controls ---------------- */
+$('#play').onclick=function(){clock.setPlaying(!clock.playing)};
+$$('#seg button').forEach(function(b){b.onclick=function(){clock.speed=+b.dataset.s;setSeg()}});
+scrub.addEventListener('input',function(){userSeek=true;clock.setPlaying(false);clock.seek(+scrub.value*STEP);userSeek=false});
+addEventListener('resize',function(){sizeHero();drawHero(clock.t);setSeg();if(layerOpen('timeline'))drawTimeline();if(sel)drawMini()});
+
+/* ---------------- start ---------------- */
+function start(){
+  fillLedger();fillMethod();sizeHero();
+  var hs=location.hash.slice(1), qpos=hs.indexOf('?'), qs=new URLSearchParams((qpos>=0?hs.slice(qpos+1):'')||location.search.slice(1)), path=qpos>=0?hs.slice(0,qpos):hs;
+  var h0=0; if(qs.has('h')){var hv0=parseFloat(qs.get('h')); if(isFinite(hv0))h0=Math.max(0,Math.min(LEN,hv0*3600));}
+  clock.t=h0; scrub.value=slotAt(h0);
+  var play=!(REDUCED||qs.has('paused')); clock.playing=play; setPlayUI(play); setSeg(); tick(clock.t);
+  if(play)clock.start();
+  if(path.indexOf('audience/')===0&&AUDS[path.split('/')[1]])openAud(path.split('/')[1],true);
+  else if(path==='timeline'||path==='alerts'||path==='method')openLayer(path,true);
+  requestAnimationFrame(function(){setSeg()});
+}
+window.__weather={clock:clock,slotAt:slotAt,SLOTS:SLOTS,get t(){return clock.t}};
+start();
+})();
+</script>
+</body>
+</html>
