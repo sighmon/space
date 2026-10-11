@@ -34,10 +34,30 @@ body.sheet-open .hero-copy,body.layer-open .hero-copy,body.sheet-open .stage,bod
 .live .k{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:3px;line-height:1.35}
 .viz{font-size:11.5px;color:var(--faint);line-height:1.45}
 .auds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.aud{min-height:56px;text-align:left;padding:10px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:border-color .25s,background-color .25s;min-width:0}
-.aud:hover{border-color:var(--ice);background:rgba(169,220,255,.07)}
+.aud{--c:var(--ice);min-height:56px;text-align:left;padding:10px 12px;border-radius:16px;border:1px solid var(--line2);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:border-color .35s,background-color .35s,box-shadow .5s;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px 12px;color:var(--ink)}
+.aud[data-aud=crew]{--c:#d9c2ff;--cr:217,194,255}.aud[data-aud=polar]{--c:#a9dcff;--cr:169,220,255}.aud[data-aud=grid]{--c:#ffc27a;--cr:255,194,122}
+.aud:hover{border-color:var(--c);background:rgba(var(--cr),.07)}
+.aud:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.aud.hot{border-color:rgba(var(--cr),.7);box-shadow:0 0 28px rgba(var(--cr),.28),inset 0 0 22px rgba(var(--cr),.1)}
 .aud b{display:block;font-weight:400;font-size:15px;line-height:1.25}
-.aud span{display:block;font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.3}
+.aud .t span{display:block;font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.3}
+.aud .t .st{color:var(--ink);font-size:12px;margin-top:4px}
+.aud.hot .t .st{color:var(--c)}
+.gg{position:relative;display:block;width:84px;height:84px;flex:none}
+.gg svg{display:block;width:100%;height:100%;overflow:visible;transition:filter .5s}
+.aud.hot .gg svg{filter:drop-shadow(0 0 5px rgba(var(--cr),.85)) drop-shadow(0 0 14px rgba(var(--cr),.5))}
+.gg .rv{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:19px;line-height:1;white-space:nowrap;text-align:center;max-width:62%}
+.gg .rv .na{font-size:15px}
+.rg-track{fill:none;stroke:rgba(235,242,247,.16);stroke-width:6;stroke-linecap:round}
+.rg-fill{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;opacity:.85}
+.aud.hot .rg-fill{opacity:1;stroke-width:7}
+.rg-mk{stroke:#fff;stroke-width:2;fill:#fff}
+.rg-day{fill:none;stroke:rgba(235,242,247,.3);stroke-width:2}
+.rg-band{fill:none;stroke:var(--c);stroke-width:8;opacity:.4}
+.rg-band.on{opacity:.95}
+.rg-al{stroke:rgba(235,242,247,.4);stroke-width:2}.rg-al.on{stroke:#fff;stroke-width:2.5}
+.rg-head{fill:#fff;stroke:#050607;stroke-width:1.5}
+.aud[data-state=na] .rg-fill,.aud[data-state=na] .rg-band,.aud[data-state=na] .rg-head,.aud[data-state=na] .rg-mk,.aud[data-state=na] .rg-al{display:none}
 .dock{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:8px 14px 8px 8px;border-radius:26px;background:rgba(18,22,26,.82);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .dock .scrub{flex:1 1 100%;order:5}
 .play{width:44px;height:44px;min-width:44px}
@@ -90,7 +110,9 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
   .live .n{font-size:40px}
   .live .viz{display:block}
 }
-@media (max-width:900px) and (max-height:700px){.viz{display:none}}
+@media (max-width:900px){.aud{padding:8px 6px;grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;gap:4px}.gg{width:72px;height:72px}.gg .rv{font-size:16px}.aud .t .opt{display:none}}
+@media (max-width:900px) and (max-height:700px){.viz{display:none}.aud .t .m{display:none}}
+@media (max-width:900px) and (max-height:780px){.live .it:has(#r-f10),.live .it:has(#r-f100){display:none}.live{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.live .it:has(#r-time){grid-column:1/-1}}
 @media (max-width:520px){
   .top{padding:14px 14px}
   .nav{width:100%}
@@ -98,12 +120,14 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
   .hero-copy{top:166px;left:14px;right:14px}
   .hero-copy h1{font-size:28px}
   .stage{left:14px;right:14px}
-  .aud{padding:8px 10px}.aud b{font-size:14px}.aud span{font-size:11px}
+  .gg{width:64px;height:64px}.gg .rv{font-size:14px}.gg .rv .na{font-size:12px}
+  .aud{padding:8px 4px}.aud b{font-size:14px}.aud .t span{font-size:10.5px}.aud .t .st{font-size:10.5px;margin-top:3px}
   .dock{padding:6px 10px 6px 6px}
   .stamp{display:none}
   .live .k{font-size:10px}
   .viz{font-size:10.5px}
 }
+@media (max-width:900px) and (max-height:700px){.gg{width:54px;height:54px}.gg .rv{font-size:12px}.gg .rv .na{font-size:11px}.aud{padding:6px 4px;gap:2px}.aud .t .st{margin-top:2px}.stage{gap:8px}}
 </style>
 </head>
 <body>
@@ -122,7 +146,7 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
 <section class="hero-copy">
   <h1>One storm.<br>Three audiences.<br><em>Every number sourced.</em></h1>
   <p>NOAA region 2673, 4 to 15 September 2017. A replay of what the public record says about one solar radiation storm for a crew beyond low Earth orbit, a polar flight and a power grid. A past observation, not a forecast.</p>
-  <div class="hint">Open an audience card, or press play and watch the halo follow the real flux</div>
+  <div class="hint">Open an audience card, or press play and watch the three rings follow the real data</div>
 </section>
 
 <div class="stage" id="stage">
@@ -131,12 +155,12 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
     <div class="it"><span class="num n" id="r-f10">n/a</span><span class="k">≥10 MeV protons, pfu</span></div>
     <div class="it"><span class="num n" id="r-f100">n/a</span><span class="k">&gt;100 MeV protons, pfu</span></div>
     <div class="it"><span class="num n" id="r-dose">n/a</span><span class="k">CRaTER dose rate on LRO, <span style="text-transform:none">µGy/h</span> <span id="r-dose-age" style="text-transform:none"></span></span></div>
-    <div class="viz" style="grid-column:1/-1">Visualization: halo radius and brightness follow log₁₀ of the real GOES-13 flux at the replay time. Dose is shown beside the flux, never computed from it.</div>
+    <div class="viz" style="grid-column:1/-1">Visualization, real values: crew and polar rings fill with log₁₀ of the real GOES-13 flux against the published threshold (marker). The grid ring is a different kind: the 11-day window as a dial; band = issued K≥7 warning valid period, ticks = issued K≥7 alerts, dot = replay time. Not observed K. Dose is on its own axis, in no ring.</div>
   </div>
-  <div class="auds" role="group" aria-label="Audience cards">
-    <button class="aud" data-aud="crew"><b>Crew</b><span>beyond low Earth orbit</span></button>
-    <button class="aud" data-aud="polar"><b>Polar flight</b><span>≥10 MeV · S2</span></button>
-    <button class="aud" data-aud="grid"><b>Power grid</b><span>K alerts · G3</span></button>
+  <div class="auds" role="group" aria-label="Audience gauges: each opens its card">
+    <button class="aud" type="button" data-aud="crew" data-state="na"><span class="gg"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle class="rg-track" cx="50" cy="50" r="38" stroke-dasharray="179.07 300" transform="rotate(135 50 50)"/><circle class="rg-fill" cx="50" cy="50" r="38" stroke-dasharray="0 300" transform="rotate(135 50 50)"/><g class="rg-mk"><line x1="82" y1="50" x2="94" y2="50"/><circle cx="95.5" cy="50" r="3.2"/></g></svg><span class="rv num">n/a</span></span><span class="t"><b>Crew</b><span class="opt">beyond low Earth orbit</span><span class="m">>100 MeV · pfu</span><span class="st">n/a</span></span></button>
+    <button class="aud" type="button" data-aud="polar" data-state="na"><span class="gg"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle class="rg-track" cx="50" cy="50" r="38" stroke-dasharray="179.07 300" transform="rotate(135 50 50)"/><circle class="rg-fill" cx="50" cy="50" r="38" stroke-dasharray="0 300" transform="rotate(135 50 50)"/><g class="rg-mk"><line x1="82" y1="50" x2="94" y2="50"/><rect x="92" y="47" width="6" height="6"/></g></svg><span class="rv num">n/a</span></span><span class="t"><b>Polar flight</b><span class="opt">S2 · NOAA</span><span class="m">≥10 MeV · pfu</span><span class="st">n/a</span></span></button>
+    <button class="aud" type="button" data-aud="grid" data-state="na"><span class="gg"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle class="rg-day" cx="50" cy="50" r="38"/><g class="rg-bands"></g><g class="rg-als"></g><g class="rg-hd"><circle class="rg-head" cx="50" cy="12" r="4"/></g></svg><span class="rv num">n/a</span></span><span class="t"><b>Power grid</b><span class="opt">K alerts · G3</span><span class="m">K≥7 alerts issued</span><span class="st">n/a</span></span></button>
   </div>
   <div class="dock" id="dock" role="group" aria-label="Replay of the 11-day window">
     <button class="play js-play" id="play" type="button" aria-label="Pause replay"><svg viewBox="0 0 10 12" aria-hidden="true"><path class="playp" d="M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z" fill="#fff"/></svg></button>
@@ -213,7 +237,7 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
     <div class="grid2">
       <div class="box"><h4><span class="tag-r">Real</span> · flux, alerts, dose</h4><p>GOES-13 flux samples, the SWPC alerts and warnings, and the CRaTER dose rate are read from the archived files below by the repository's own code and exported unchanged. Samples with a non-zero quality flag or no value are gaps.</p></div>
       <div class="box"><h4><span class="tag-r">Real</span> · hours, first and last, peaks</h4><p>Counted from the exported series at 5-minute samples: “at or above” the published threshold. First to last is a span, not a continuous stretch; the number of separate stretches is shown beside it.</p></div>
-      <div class="box"><h4><span class="tag-i">Illustrative</span> · hero halo</h4><p>A procedural drawing. Radius and brightness follow log₁₀ of the real flux at the replay time; the rays are decoration. It is not an image of radiation or of the magnetosphere.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · hero halo and rings</h4><p>The three audience rings (crew and polar fill with log₁₀ of the real flux against the published threshold marker; the grid ring is an 11-day dial of issued K≥7 alerts and the warning valid period, not observed K) and the procedural halo are drawings with real values. Radius and brightness follow log₁₀ of the real flux at the replay time; the rays are decoration. It is not an image of radiation or of the magnetosphere.</p></div>
       <div class="box"><h4><span class="tag-i">Illustrative</span> · replay speed</h4><p>1× is 3 hours of storm per second, 4× is 12, 16× is 48. The replay loops over the 11 days. No latency is measured: the data are archives.</p></div>
     </div>
 
@@ -298,7 +322,7 @@ var hoverT=null;
 function tick(t){
   if(!userSeek&&+scrub.value!==slotAt(t))scrub.value=slotAt(t);
   readouts(t,'r'); readouts(hoverT!=null?hoverT:t,'t');
-  moveHead(t); drawHero(t);
+  moveHead(t); drawHero(t); gauges(t);
   if(sel)moveMini(t);
 }
 
@@ -342,6 +366,71 @@ function drawHero(t){
   c.fillStyle=core;c.beginPath();c.arc(cx,cy,r0,0,6.2832);c.fill();
   c.strokeStyle='rgba(235,242,247,.16)';c.lineWidth=1;c.beginPath();c.arc(cx,cy,r0*.82,0,6.2832);c.stroke();
 }
+
+
+/* ---------------- audience gauges (three rings, one per audience; real values, illustrative styling) ---------------- */
+var RING_C=2*Math.PI*38, RING_SW=0.75*RING_C;
+var GA={
+  crew:{arr:G100,th:'crew',lo:0.01,hi:100,unit:'pfu',ch:'>100 MeV',name:'Crew beyond low Earth orbit'},
+  polar:{arr:G10,th:'polar',lo:0.1,hi:2000,unit:'pfu',ch:'≥10 MeV',name:'Polar flight'}};
+var GB={}; // cached nodes and last-written values: the DOM is written only when a value changes (low CPU)
+function gnode(k){if(!GB[k]){var b=$('.aud[data-aud="'+k+'"]');GB[k]={b:b,rv:$('.rv',b),st:$('.st',b),fill:$('.rg-fill',b),mk:$('.rg-mk',b),last:{}}}return GB[k]}
+function gset(n,key,val,fn){if(n.last[key]!==val){n.last[key]=val;fn(val)}}
+function fracOf(v,lo,hi){return Math.max(0,Math.min(1,(L10(v)-L10(lo))/(L10(hi)-L10(lo))))}
+function gauge(k,t){
+  var g=GA[k],n=gnode(k),v=fluxAt(g.arr,t),th=TH[g.th],thv=th&&ok(th.value)?th.value:null,state='na',txt,rv,fr=0;
+  if(thv!=null)gset(n,'mk',fracOf(thv,g.lo,g.hi),function(f){n.mk.setAttribute('transform','rotate('+(135+270*f).toFixed(2)+' 50 50)')});
+  n.mk.style.display=thv==null?'none':'';
+  if(v==null){rv=NA;txt='n/a';state='na';}
+  else{fr=fracOf(v,g.lo,g.hi);rv=fnum(v);
+    if(thv==null){state='below';txt='threshold n/a';}
+    else if(v>=thv){state='above';txt='▲ at or above '+fnum(thv,0)+' pfu';}
+    else{state='below';txt='▽ below '+fnum(thv,0)+' pfu';}}
+  var q=Math.round(fr*500)/500;
+  gset(n,'fill',q,function(x){n.fill.setAttribute('stroke-dasharray',(x*RING_SW).toFixed(2)+' 300')});
+  gset(n,'rv',rv,function(x){n.rv.innerHTML=x});
+  gset(n,'txt',txt,function(x){n.st.textContent=x});
+  gset(n,'state',state,function(x){n.b.dataset.state=x;n.b.classList.toggle('hot',x==='above')});
+  n.b.dataset.value=v==null?'n/a':String(v);
+  gset(n,'aria',state+rv+txt,function(){n.b.setAttribute('aria-label',g.name+': '+g.ch+' protons '+(v==null?'n/a':plain(rv)+' '+g.unit)+'; '+(state==='na'?'no data at this time':(thv==null?'threshold n/a':(state==='above'?'at or above':'below')+' the published '+fnum(thv,0)+' pfu threshold'))+'. Open the '+g.name+' card.')});
+}
+var GRID=null;
+function buildGrid(){
+  var b=gnode('grid').b, NS='http://www.w3.org/2000/svg';
+  var iss=(ALERTS.grid_issued||[]).map(function(a){return (Date.parse(a.start)-T0)/1000}).filter(isFinite).sort(function(a,b){return a-b});
+  var wn=(ALERTS.grid_warnings||[]).map(function(w){return {s:(Date.parse(w.start)-T0)/1000,e:(Date.parse(w.end)-T0)/1000}}).filter(function(w){return isFinite(w.s)&&isFinite(w.e)});
+  var M=GRID={iss:iss,wn:wn};
+  $('.rg-day',b).setAttribute('stroke-dasharray',(RING_C/11-2.2).toFixed(2)+' 2.2');
+  $('.rg-day',b).setAttribute('transform','rotate(-90 50 50)');
+  var bg=$('.rg-bands',b),ag=$('.rg-als',b);
+  wn.forEach(function(w){var c=document.createElementNS(NS,'circle');c.setAttribute('class','rg-band');c.setAttribute('cx',50);c.setAttribute('cy',50);c.setAttribute('r',38);
+    var s0=Math.max(0,w.s)/SPAN,e0=Math.min(SPAN,w.e)/SPAN,len=Math.max(0.004,e0-s0)*RING_C;
+    c.setAttribute('transform','rotate(-90 50 50)');c.setAttribute('stroke-dasharray',len.toFixed(2)+' '+RING_C.toFixed(2));c.setAttribute('stroke-dashoffset',(-s0*RING_C).toFixed(2));bg.appendChild(c);w.el=c});
+  M.iss=iss.map(function(t){var l=document.createElementNS(NS,'line');l.setAttribute('class','rg-al');l.setAttribute('x1',31);l.setAttribute('x2',47);l.setAttribute('y1',0);l.setAttribute('y2',0);
+    l.setAttribute('transform','translate(50 50) rotate('+(-90+360*t/SPAN).toFixed(2)+')');ag.appendChild(l);return {t:t,el:l,on:false}});
+  return M;
+}
+function gridGauge(t){
+  var n=gnode('grid'),M=GRID||buildGrid();
+  var have=M.iss.length||M.wn.length, hd=$('.rg-hd',n.b);
+  var cnt=0,valid=false,state='na',txt='n/a',rv=NA;
+  if(have){
+    M.iss.forEach(function(a){var on=a.t<=t;if(on)cnt++;if(a.on!==on){a.on=on;a.el.classList.toggle('on',on)}});
+    M.wn.forEach(function(w){var on=t>=w.s&&t<=w.e;if(on)valid=true;if(w.on!==on){w.on=on;w.el.classList.toggle('on',on)}});
+    rv=String(cnt);
+    if(cnt>0&&valid){state='alert';txt='▲ alert issued'}
+    else if(valid){state='warning';txt='◆ warning valid'}
+    else if(cnt>0){state='ended';txt='○ warning ended'}
+    else{state='none';txt='○ none issued yet'}
+    gset(n,'hd',Math.round(slotAt(t)*STEP/SPAN*720)/2,function(a){hd.setAttribute('transform','rotate('+a+' 50 50)')});
+  }
+  gset(n,'rv',rv,function(x){n.rv.innerHTML=x});
+  gset(n,'txt',txt,function(x){n.st.textContent=x});
+  gset(n,'state',state,function(x){n.b.dataset.state=x;n.b.classList.toggle('hot',x==='alert')});
+  n.b.dataset.value=have?String(cnt):'n/a';
+  gset(n,'aria',state+rv,function(){n.b.setAttribute('aria-label','Power grid: '+(have?cnt+' of '+M.iss.length+' issued K at or above 7 alerts so far; '+(state==='alert'?'an alert is issued and a K at or above 7 warning is valid':state==='warning'?'a K at or above 7 warning is valid, no alert issued yet':state==='ended'?'the warning valid period has ended':'no K at or above 7 product yet')+'. These are issued products, not observed K.':'n/a, no issued products')+' Open the power grid card.')});
+}
+function gauges(t){gauge('crew',t);gauge('polar',t);gridGauge(t)}
 
 /* ---------------- charts ---------------- */
 var CH={ml:44,mr:10};

@@ -15,6 +15,11 @@ const check=(name,t)=>{const {rgb,a}=parse(t);for(const [k,bg] of Object.entries
 for(const v of ['--ink','--mute','--faint','--ice']){const m=root.match(new RegExp(v+':\\s*(rgba?\\([^)]*\\)|#[0-9a-fA-F]{6})'));assert.ok(m,v);check(v,m[1]);}
 // accents used for text: n/a amber, "real" green, chart label colours
 for(const [name,hex] of [['n/a amber','#ffc27a'],['real green','#8fe3b0'],['10 MeV','#a9dcff'],['100 MeV','#d9c2ff']])check(name,hex);
+// the three ring colours (crew violet, polar ice, grid amber) are also used for small status text on a ring button, and as non-text graphics (3:1 against the page)
+const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
+for(const k of ['crew','polar','grid']){const m=html.match(new RegExp('\\.aud\\[data-aud='+k+'\\]\\{--c:(#[0-9a-fA-F]{6})'));assert.ok(m,'ring colour for '+k);check('ring '+k,m[1]);
+  const r=ratio(parse(m[1]).rgb,bgs['page #050607']);n++;assert.ok(r>=3,'ring '+k+' graphic vs page '+r.toFixed(2));console.log(('ring '+k).padEnd(10),'graphic 3:1'.padEnd(14),r.toFixed(2));}
+{const r=ratio([255,255,255],bgs['page #050607']);n++;assert.ok(r>=3,'marker white vs page');}
 const al=v=>+(root.match(new RegExp(v+':\\s*rgba\\([^)]*,\\s*([\\d.]+)\\)'))||[])[1];
 assert.ok(al('--faint')<al('--mute'),'--faint must stay dimmer than --mute');
 // the page itself must not introduce dimmer text colours than --faint
