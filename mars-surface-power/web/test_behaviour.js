@@ -114,11 +114,11 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
     await b.ev(`(()=>{const s=document.querySelector('#scrub');s.value=${i};s.dispatchEvent(new Event('input',{bubbles:true}))})()`); await sleep(60);
     const g=await b.ev(`({step:__mars.step,ls:document.querySelector('#live').dataset.ls,rl:document.querySelector('#r-ls').textContent,scene:__mars.scene.step,stamp:document.querySelector('#stamp').textContent,sc:__mars.scene.flux,rf:document.querySelector('#r-flux').textContent})`);
     const f=M.series.curiosity.warm[i].flux;
-    ok(g.step===i&&g.scene===i&&g.ls==String(i*30)&&g.rl.startsWith(String(i*30))&&g.stamp.includes('step '+(i+1)+' of 12')&&Math.abs(g.sc-f)<1e-9&&g.rf===String(Math.round(f)),'scrub to step '+i+': readouts, stamp and scene all show Ls '+i*30+' and flux '+Math.round(f));
+    ok(g.step===i&&g.scene===i&&g.ls==String(i*30)&&g.rl.startsWith(String(i*30))&&g.stamp.includes('step '+(i+1)+' of 12')&&Math.abs(g.sc-f)<1e-9&&g.rf===f.toFixed(1),'scrub to step '+i+': readouts, stamp and scene all show Ls '+i*30+' and flux '+f.toFixed(1));
   }
   // open card: dials follow the same step
   await b.ev(`document.querySelector('.site[data-site="curiosity"]').click()`); await sleep(700);
-  ok(await b.ev(`document.querySelector('#card .dial[data-d="cold"]').dataset.value`)===String(Math.round(M.series.curiosity.cold[11].flux))&&await b.ev(`document.querySelector('#card-ls').textContent.includes('Ls 330')`),'the card dials show the same step (Ls 330)');
+  ok(await b.ev(`document.querySelector('#card .dial[data-d="cold"]').dataset.value`)===M.series.curiosity.cold[11].flux.toFixed(1)&&await b.ev(`document.querySelector('#card-ls').textContent.includes('Ls 330')`),'the card dials show the same step (Ls 330)');
   await key(b,'Escape'); await sleep(600);
   // ---- storm scenario disabled below Ls 180, never faked
   await fresh(b,FILE+'#?scenario=warm&ls=120&paused',500);

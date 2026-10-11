@@ -280,6 +280,9 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function plain(h){return String(h).replace(/<[^>]*>/g,'')}
 function commas(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,',')}
 function fnum(v,d){if(!ok(v))return NA;var t=Math.abs(v).toFixed(d==null?0:d),q=t.split('.');return (v<0&&+t!==0?'\u2212':'')+commas(q[0])+(q[1]?'.'+q[1]:'')}
+/* one formatter for every latitude and longitude: magnitude + degree sign + hemisphere letter (N/S, E/W) */
+function latS(v){return coord(v,'N','S')}
+function lonS(v){return coord(v,'E','W')}
 function coord(v,pos,neg,d){return plain(fnum(Math.abs(v),d||3)).replace(/\.?0+$/,'')+'\u00b0 '+(v<0?neg:pos)}
 function site(id){for(var i=0;i<SITES.length;i++)if(SITES[i].id===id)return SITES[i];return null}
 function siteIdx(id){for(var i=0;i<SITES.length;i++)if(SITES[i].id===id)return i;return -1}
@@ -289,7 +292,9 @@ var DEF={};(D.deficits||[]).forEach(function(d){DEF[d.site+'|'+d.scenario+'|'+d.
 function smp(sid,scn,i){var s=SER[sid]&&SER[sid][scn];return s&&s[i]?s[i]:null}
 function flux(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.flux)?r.flux:null}
 function dod(sid,scn,i){var r=smp(sid,scn,i);return r&&ok(r.dod)?r.dod:null}
-function deficit(sid,scn,i){var d=DEF[sid+'|'+scn+'|'+LSV[i]];return d&&ok(d.value)?d.value:null}
+/* Display rule: fluxes are shown to one decimal. A shown deficit is the shown dust flux minus the shown clear flux (whole tenths), so the arithmetic on screen is always exact; it is within 0.1 W/m2 of the stored subtraction. */
+function tenth(v){return Math.round(v*10)}
+function deficit(sid,scn,i){var d=DEF[sid+'|'+scn+'|'+LSV[i]],a=flux(sid,scn,i),c=flux(sid,'cold',i);return d&&ok(d.value)&&a!=null&&c!=null?(tenth(a)-tenth(c))/10:null}
 var FMAX=1,DMAX=1,DFMAX=1;
 Object.keys(SER).forEach(function(k){Object.keys(SER[k]).forEach(function(s){SER[k][s].forEach(function(r){if(ok(r.flux))FMAX=Math.max(FMAX,r.flux);if(ok(r.dod))DMAX=Math.max(DMAX,r.dod)})})});
 (D.deficits||[]).forEach(function(d){if(ok(d.value))DFMAX=Math.max(DFMAX,Math.abs(d.value))});
@@ -313,9 +318,9 @@ function setT(id,html){var e=$('#'+id);if(e&&e._h!==html){e._h=html;e.innerHTML=
 function readouts(i){
   var f=flux(S.site,S.scn,i),t=dod(S.site,S.scn,i),df=null,k,dtxt;
   setT('r-ls',ok(LSV[i])?LSV[i]+'<span class="u">\u00b0</span>':NA);
-  setT('r-flux',fnum(f));setT('r-dod',fnum(t,2));
-  if(S.scn==='warm'){df=deficit(S.site,'warm',i);dtxt=fnum(df);k='Dusty minus clear, W/m\u00b2'}
-  else if(S.scn==='storm'){df=deficit(S.site,'storm',i);dtxt=fnum(df);k='Storm minus clear, W/m\u00b2'}
+  setT('r-flux',fnum(f,1));setT('r-dod',fnum(t,2));
+  if(S.scn==='warm'){df=deficit(S.site,'warm',i);dtxt=fnum(df,1);k='Dusty minus clear, W/m\u00b2'}
+  else if(S.scn==='storm'){df=deficit(S.site,'storm',i);dtxt=fnum(df,1);k='Storm minus clear, W/m\u00b2'}
   else if(S.scn==='cold'){dtxt='<span class="tx">baseline</span>';k='This is the clear baseline'}
   else{dtxt='<span class="tx">no deficit</span>';k='Climatology is not turned into a deficit'}
   setT('r-def',dtxt);setT('r-defk',k);
@@ -440,7 +445,7 @@ function setScenario(k,fromLink){
 function dialHTML(key,label,q){return '<div class="dial" data-d="'+key+'"><div class="label">'+label+'</div><div class="q">'+q+'</div><div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="38" stroke="rgba(235,242,247,.16)" stroke-width="6" stroke-dasharray="179.07 300"/><circle class="fill" cx="50" cy="50" r="38" stroke="#a9dcff" stroke-width="6" stroke-dasharray="0 300"/></svg><div class="val"><span class="num n">n/a</span><span class="u"></span></div></div><div class="def"></div></div>'}
 function sparkHTML(scn,sid){
   var xs=function(i){return 10+i*(220/(NSTEP-1))},ys=function(v){return 6+(1-v/FMAX)*44};
-  var pts=[],lab=[];for(var i=0;i<NSTEP;i++){var v=flux(sid,scn,i);pts.push(v==null?null:[xs(i),ys(v)]);if(v!=null)lab.push('Ls '+LSV[i]+' '+Math.round(v))}
+  var pts=[],lab=[];for(var i=0;i<NSTEP;i++){var v=flux(sid,scn,i);pts.push(v==null?null:[xs(i),ys(v)]);if(v!=null)lab.push('Ls '+LSV[i]+' '+plain(fnum(v,1)))}
   var g='<svg viewBox="0 0 240 64" role="img" aria-label="'+esc(SCNAME[scn]+' noon flux, W/m2, one point per 30 degrees of Ls, not interpolated: '+(lab.join('; ')||'n/a'))+'" focusable="false"><line class="sp-grid" x1="10" x2="230" y1="50" y2="50"/><line class="sp-grid" x1="10" x2="230" y1="6" y2="6"/>';
   var d='',pen=false;pts.forEach(function(p){if(!p){pen=false;return}d+=(pen?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);pen=true});
   g+='<path class="sp-line" d="'+d+'"/>';pts.forEach(function(p){if(p)g+='<circle class="sp-dot" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.2"/>'});
@@ -450,7 +455,7 @@ function stats(sid,scn){var n=0,below=0,deep=null;for(var i=0;i<NSTEP;i++){var v
 function renderCard(sid){
   var s=site(sid),w=stats(sid,'warm'),m=stats(sid,'storm');
   var h='<div class="card-head"><div><div class="label">Site card \u00b7 '+(s.kind==='rover'?'rover preset':'exploration-zone candidate')+'</div><h2>'+esc(s.name)+'</h2>'
-   +'<div class="meta"><span>Position <b>'+coord(s.lat,'N','S')+', '+coord(s.lon,'E','W')+'</b></span><span>Sample <b>local noon, 0 m, horizontal</b></span><span>Basis <b>modelled, MCD v6.2</b></span></div></div>'
+   +'<div class="meta"><span>Position <b>'+latS(s.lat)+', '+lonS(s.lon)+'</b></span><span>Sample <b>local noon, 0 m, horizontal</b></span><span>Basis <b>modelled, MCD v6.2</b></span></div></div>'
    +'<div class="head-r"><button class="btn" data-open="compare">Compare \u2191</button><button class="btn" data-open="opportunity">Opportunity 2018 \u2191</button><button class="btn" data-open="method">Method &amp; sources \u2191</button></div></div>';
   h+='<div class="example-note"><b>Modelled</b><span>Every value on this card is Mars Climate Database v6.2 output at local true solar time 12 h, 0 m above the surface, in 30\u00b0 steps of Ls, none between. Not daily energy, not panel output. No uncertainty is published, so none is drawn. No power system was sized.</span></div>';
   h+='<div class="label" style="margin-top:18px" id="card-ls"></div><div class="dials">'
@@ -459,8 +464,8 @@ function renderCard(sid){
    +dialHTML('storm','Storm deficit','Dust storm minus clear flux, same Ls')
    +dialHTML('tau','Storm optical depth','Dust column visible optical depth, dust storm')+'</div>';
   h+='<div class="extras" style="grid-template-columns:repeat(2,1fr)">'
-   +'<div class="extra"><span class="label">Deepest dusty deficit</span><b>'+(w.deep?fnum(w.deep.v)+' W/m\u00b2':NA)+'</b><span>'+(w.deep?'at Ls '+w.deep.ls+'\u00b0 \u00b7 negative on '+w.below+' of '+w.n+' seasonal samples':'')+'</span></div>'
-   +'<div class="extra"><span class="label">Deepest storm deficit</span><b>'+(m.deep?fnum(m.deep.v)+' W/m\u00b2':NA)+'</b><span>'+(m.deep?'at Ls '+m.deep.ls+'\u00b0 \u00b7 negative on '+m.below+' of '+m.n+' seasonal samples (storm exists only for Ls 180 to 330)':'')+'</span></div></div>';
+   +'<div class="extra"><span class="label">Deepest dusty deficit</span><b>'+(w.deep?fnum(w.deep.v,1)+' W/m\u00b2':NA)+'</b><span>'+(w.deep?'at Ls '+w.deep.ls+'\u00b0 \u00b7 negative on '+w.below+' of '+w.n+' seasonal samples':'')+'</span></div>'
+   +'<div class="extra"><span class="label">Deepest storm deficit</span><b>'+(m.deep?fnum(m.deep.v,1)+' W/m\u00b2':NA)+'</b><span>'+(m.deep?'at Ls '+m.deep.ls+'\u00b0 \u00b7 negative on '+m.below+' of '+m.n+' seasonal samples (storm exists only for Ls 180 to 330)':'')+'</span></div></div>';
   h+='<div class="label" style="margin-top:20px">Noon flux through the year, one point per 30\u00b0 of Ls \u00b7 shared scale 0 to '+plain(fnum(FMAX))+' W/m\u00b2</div><div class="sparks">'+['cold','climatology','warm','storm'].map(function(k){return sparkHTML(k,sid)}).join('')+'</div>';
   h+='<p class="disclaim">The line joins the stored samples; there is no data between them. The storm has no samples before Ls 180. The white marker is the replay step.</p>';
   h+='<div class="box" style="margin-top:16px"><div class="label">Source files at this season</div><ul class="files" id="card-files"></ul><p class="small" style="margin-top:8px">Coordinate: '+esc(s.source)+' \u00b7 <code class="h">'+esc(s.source_file)+'</code> \u00b7 sha256 <code class="h">'+esc(s.source_sha256)+'</code></p></div>';
@@ -479,12 +484,12 @@ function cardRefresh(i){
   if(!sel)return;var sid=sel,lsl=ok(LSV[i])?'Ls '+LSV[i]+'\u00b0':'n/a';
   setT2('card-ls','Replay step \u00b7 '+lsl+' \u00b7 the four dials and the white markers show this one step');
   var c=flux(sid,'cold',i),w=deficit(sid,'warm',i),m=deficit(sid,'storm',i),t=dod(sid,'storm',i),noStorm=!stormOK(i);
-  setDial('cold',fnum(c),'W/m\u00b2',c==null?null:c/FMAX,'noon, clear sky, '+lsl,'Clear noon flux at '+lsl+': '+(c==null?'n/a':Math.round(c)+' watts per square metre'));
-  setDial('warm',fnum(w),'W/m\u00b2',w==null?null:Math.abs(w)/DFMAX,'dusty minus clear, '+lsl,'Dusty deficit at '+lsl+': '+(w==null?'n/a':Math.round(w)+' watts per square metre'));
-  setDial('storm',fnum(m),'W/m\u00b2',m==null?null:Math.abs(m)/DFMAX,noStorm?'no dust-storm sample before Ls 180':'storm minus clear, '+lsl,'Dust storm deficit at '+lsl+': '+(m==null?'n/a':Math.round(m)+' watts per square metre'));
+  setDial('cold',fnum(c,1),'W/m\u00b2',c==null?null:c/FMAX,'noon, clear sky, '+lsl,'Clear noon flux at '+lsl+': '+(c==null?'n/a':plain(fnum(c,1))+' watts per square metre'));
+  setDial('warm',fnum(w,1),'W/m\u00b2',w==null?null:Math.abs(w)/DFMAX,'dusty minus clear, '+lsl,'Dusty deficit at '+lsl+': '+(w==null?'n/a':plain(fnum(w,1))+' watts per square metre'));
+  setDial('storm',fnum(m,1),'W/m\u00b2',m==null?null:Math.abs(m)/DFMAX,noStorm?'no dust-storm sample before Ls 180':'storm minus clear, '+lsl,'Dust storm deficit at '+lsl+': '+(m==null?'n/a':plain(fnum(m,1))+' watts per square metre'));
   setDial('tau',fnum(t,2),'optical depth',t==null?null:t/DMAX,noStorm?'no dust-storm sample before Ls 180':'database unit, dust storm, '+lsl,'Dust storm optical depth at '+lsl+': '+(t==null?'n/a':t.toFixed(2)));
   $$('#card .spark').forEach(function(sp){var k=sp.dataset.sp,v=flux(sid,k,i),cur=$('[data-cur]',sp),x=10+i*(220/(NSTEP-1));cur.setAttribute('x1',x);cur.setAttribute('x2',x);cur.style.display=v==null?'none':'';
-    var sv=$('.sv',sp),tx=v==null?'n/a'+(k==='storm'?' \u00b7 no storm sample before Ls 180':''):plain(fnum(v))+' W/m\u00b2 at '+lsl;if(sv._h!==tx){sv._h=tx;sv.textContent=tx}});
+    var sv=$('.sv',sp),tx=v==null?'n/a'+(k==='storm'?' \u00b7 no storm sample before Ls 180':''):plain(fnum(v,1))+' W/m\u00b2 at '+lsl;if(sv._h!==tx){sv._h=tx;sv.textContent=tx}});
   var files=['cold','climatology','warm','storm'].map(function(k){var r=smp(sid,k,i);return '<li>'+esc(SCNAME[k])+': '+(r&&r.file?'<span><code class="h">'+esc(r.file)+'</code></span> \u00b7 sha256 <code class="h">'+esc(r.sha256)+'</code>':'<span class="na">n/a</span> \u00b7 no file at this Ls')+'</li>'}).join('');
   var ul=$('#card-files');if(ul&&ul._h!==files){ul._h=files;ul.innerHTML=files}
 }
@@ -516,16 +521,16 @@ function rb(label,vals,lo,hi,unit,dec,zero,note){
   var v=vals.filter(ok);if(!v.length)return '<div class="rb"><div class="lbl">'+label+'</div><div class="rng">'+NA+'</div></div>';
   var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v),L=(mn-lo)/(hi-lo)*100,W=Math.max(1.2,(mx-mn)/(hi-lo)*100);
   return '<div class="rb"><div class="lbl">'+label+'</div><div class="track"><div class="base"></div><div class="span" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%"></div>'+(zero?'<div class="zero"></div>':'')+'</div>'
-   +'<div class="ends"><span>'+plain(fnum(lo,dec))+'</span><span>'+plain(fnum(hi,dec))+'</span></div><div class="rng">'+fnum(mn,dec)+' to '+fnum(mx,dec)+(unit?' '+unit:'')+(note?' \u00b7 '+note(v):'')+'</div></div>'}
+   +'<div class="ends"><span>'+plain(fnum(lo,dec===1?0:dec))+'</span><span>'+plain(fnum(hi,dec===1?0:dec))+'</span></div><div class="rng">'+fnum(mn,dec)+' to '+fnum(mx,dec)+(unit?' '+unit:'')+(note?' \u00b7 '+note(v):'')+'</div></div>'}
 function fillCompare(){
   var h='',axD=Math.ceil(DFMAX/50)*50;
   SITES.forEach(function(s){
     var cold=[],warm=[],storm=[],tau=[];for(var i=0;i<NSTEP;i++){cold.push(flux(s.id,'cold',i));warm.push(deficit(s.id,'warm',i));storm.push(deficit(s.id,'storm',i));tau.push(dod(s.id,'storm',i))}
     var neg=function(v){return 'below zero on '+v.filter(function(x){return x<0}).length+' of '+v.length+' samples'};
-    h+='<div class="box" data-site="'+esc(s.id)+'"><h4>'+esc(s.name)+'<small>'+(s.kind==='rover'?'rover preset':'candidate')+'</small></h4><p class="small">'+coord(s.lat,'N','S')+', '+coord(s.lon,'E','W')+' \u00b7 stored values</p>'
-     +rb('Clear noon flux',cold,0,Math.ceil(FMAX/100)*100,'W/m\u00b2',0,false,function(v){return v.length+' seasonal samples'})
-     +rb('Dusty minus clear',warm,-axD,0,'W/m\u00b2',0,true,neg)
-     +rb('Storm minus clear',storm,-axD,0,'W/m\u00b2',0,true,function(v){return neg(v)+' (Ls 180 to 330 only)'})
+    h+='<div class="box" data-site="'+esc(s.id)+'"><h4>'+esc(s.name)+'<small>'+(s.kind==='rover'?'rover preset':'candidate')+'</small></h4><p class="small">'+latS(s.lat)+', '+lonS(s.lon)+' \u00b7 stored values</p>'
+     +rb('Clear noon flux',cold,0,Math.ceil(FMAX/100)*100,'W/m\u00b2',1,false,function(v){return v.length+' seasonal samples'})
+     +rb('Dusty minus clear',warm,-axD,0,'W/m\u00b2',1,true,neg)
+     +rb('Storm minus clear',storm,-axD,0,'W/m\u00b2',1,true,function(v){return neg(v)+' (Ls 180 to 330 only)'})
      +rb('Storm optical depth (database unit, own axis)',tau,0,Math.ceil(DMAX),'',2,false,function(v){return v.length+' samples'})
      +'<div style="margin-top:14px"><button class="btn" style="min-height:44px" data-site-open="'+esc(s.id)+'">Open site card</button></div></div>'});
   $('#cmp').innerHTML=h;$$('#cmp [data-site-open]').forEach(function(b){b.onclick=function(){openSite(b.dataset.siteOpen)}});
@@ -564,9 +569,9 @@ function fillOpp(){
 function td(x){return '<td class="l">'+x+'</td>'}
 function fillMethod(){
   $('#nopower').textContent=D.no_power||'';
-  $('#method-text').textContent=(D.method||'n/a').split('\n').filter(function(l){return !/^Plotted/.test(l)}).join('\n')+'\n(The "Plotted" traces repeat every value with its source files; they are in data/mars.json.)';
+  $('#method-text').textContent=(D.method||'n/a').split('\n').filter(function(l){return !/^Plotted/.test(l)}).map(function(l){return /^Sites:/.test(l)&&SITES.length?'Sites: '+SITES.map(function(s){return s.name+' ('+latS(s.lat)+', '+lonS(s.lon)+')'}).join('; ')+'.':l}).join('\n')+'\n(The "Plotted" traces repeat every value with its source files; they are in data/mars.json.)';
   $('#tb-scn').innerHTML=SC.map(function(s){var a=s.ls_available||[];return '<tr>'+td(esc(s.label))+td(esc(s.interface_label))+td(esc(s.dust))+td(a.length+(a.length?' (Ls '+a[0]+' to '+a[a.length-1]+')':''))+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
-  $('#tb-sites').innerHTML=SITES.map(function(s){return '<tr>'+td(esc(s.name))+td(coord(s.lat,'N','S')+', '+coord(s.lon,'E','W'))+td(esc(s.source))+td('<code class="h">'+esc(s.source_file)+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
+  $('#tb-sites').innerHTML=SITES.map(function(s){return '<tr>'+td(esc(s.name))+td(latS(s.lat)+', '+lonS(s.lon))+td(esc(s.source))+td('<code class="h">'+esc(s.source_file)+'</code>')+'</tr>'}).join('')||'<tr><td class="l" colspan="4">'+NA+'</td></tr>';
   var man=D.manifest||[];$('#nman').textContent=man.length;
   $('#manifest').innerHTML=man.map(function(m){return '<li><div>'+esc(m.filename)+'<span>'+esc(m.what||'')+'</span><span>fetched '+esc(m.fetched_utc||'n/a')+' \u00b7 '+(ok(m.bytes)?commas(String(m.bytes)):'n/a')+' bytes</span><span>sha256 <code class="h">'+esc(m.sha256||'n/a')+'</code></span></div><a href="'+esc(m.url||'#')+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>'}).join('')||'<li><div>'+NA+'</div></li>';
   var sn=D.sentences||[];$('#nsent').textContent=sn.length;$('#sentences').innerHTML=sn.map(function(t){return '<p>'+esc(t)+'</p>'}).join('')||'<p>'+NA+'</p>';
