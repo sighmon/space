@@ -13,11 +13,21 @@ html,body{overflow:hidden}
 #hero{position:fixed;inset:0;width:100%;height:100%;display:block;transition:filter .9s var(--ease)}
 body.sheet-open #hero{filter:brightness(.6) saturate(.9)}
 body.layer-open #hero{filter:brightness(.32) blur(2px)}
-.top{flex-wrap:wrap;gap:10px 16px}
+.top{flex-wrap:wrap;gap:10px 16px;pointer-events:none}
+.top a,.top button,.top .nav{pointer-events:auto}
+.hero-copy{pointer-events:none}
 .nav button{min-height:44px;padding:0 16px}
 .nav{padding:2px}
 .brand a.ghlink{margin-bottom:-6px}
 
+
+.sc{--c:var(--ice);--cr:169,220,255;position:fixed;z-index:2;left:0;top:0;margin:0;padding:0;border:1px solid transparent;border-radius:50%;background:transparent;color:var(--ink);cursor:pointer;touch-action:manipulation;transition:border-color .35s,background-color .35s,opacity .5s}
+.sc[data-el=crew]{--c:#d9c2ff;--cr:217,194,255}.sc[data-el=polar]{--c:#a9dcff;--cr:169,220,255}.sc[data-el=grid]{--c:#ffc27a;--cr:255,194,122;border-radius:30px}
+.sc:hover,.sc:focus-visible{border-color:rgba(var(--cr),.7);background:rgba(var(--cr),.06)}
+.sc:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.sc .sl{display:none;position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(calc(-50% + var(--sx,0px)));white-space:nowrap;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--c);background:rgba(5,6,7,.78);border:1px solid rgba(var(--cr),.4);padding:4px 9px;border-radius:12px;pointer-events:none}
+.sc:hover .sl,.sc:focus-visible .sl{display:block}
+body.sheet-open .sc,body.layer-open .sc{opacity:0;visibility:hidden;pointer-events:none}
 .hero-copy{position:fixed;left:36px;top:max(20vh,150px);max-width:440px;z-index:3;transition:opacity .6s var(--ease),transform .8s var(--ease)}
 body.sheet-open .hero-copy,body.layer-open .hero-copy,body.sheet-open .stage,body.layer-open .stage,body.sheet-open .live,body.layer-open .live{opacity:0;visibility:hidden;pointer-events:none}
 .hero-copy h1{font-size:clamp(32px,4vw,56px);font-weight:200;letter-spacing:-.03em;line-height:1.05}
@@ -127,11 +137,15 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
   .live .k{font-size:10px}
   .viz{font-size:10.5px}
 }
+@media (max-width:900px) and (max-height:780px),(max-width:340px){.hero-copy{top:150px}.hero-copy h1{font-size:24px}.hero-copy h1 br{display:none}.live{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px}.live .it:has(#r-time){grid-column:auto}#r-time,.live .n{font-size:16px}#r-time{font-size:14.5px}.live .n .na{font-size:15px}#r-dose-age{display:none}}
+@media (max-width:900px) and (max-height:600px){.hero-copy{display:none}}
 @media (max-width:900px) and (max-height:700px){.gg{width:54px;height:54px}.gg .rv{font-size:12px}.gg .rv .na{font-size:11px}.aud{padding:6px 4px;gap:2px}.aud .t .st{margin-top:2px}.stage{gap:8px}}
+body.tight .hero-copy{top:150px}body.tight .hero-copy h1{font-size:24px}body.tight .hero-copy h1 br{display:none}body.tight #r-dose-age{display:none}
+body.tight2 .live .it:has(#r-f10),body.tight2 .live .it:has(#r-f100){display:none}body.tight2 .live{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px}body.tight2 .live .it:has(#r-time){grid-column:auto}body.tight2 #r-time,body.tight2 .live .n{font-size:16px}body.tight2 #r-time{font-size:14.5px}body.tight2 .live .n .na{font-size:15px}
 </style>
 </head>
 <body>
-<canvas id="hero" aria-label="Visualization: a procedurally drawn halo whose radius and brightness follow the logarithm of the real GOES-13 proton flux at the replay time"></canvas>
+<canvas id="hero" role="img" aria-label="Illustration, real values: a procedurally drawn scene of Earth's limb with a faint power grid and a thin auroral band, a polar flight arc with an aircraft, and a crew capsule far out with the direction of the Sun. Proton stream density follows the logarithm of the real GOES-13 flux at the replay time. Each element glows only from its own audience ring: capsule from greater than 100 MeV against 1 pfu, aircraft from 10 MeV and above against 100 pfu, grid from issued K 7 or higher alerts and warnings, not observed K."></canvas>
 
 <header class="top">
   <div class="brand"><div class="label">Space weather · September 2017</div><div class="small t2" style="margin-top:4px">Three audiences, one archived storm · prototype v0.1</div>
@@ -144,9 +158,9 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
 </header>
 
 <section class="hero-copy">
-  <h1>One storm.<br>Three audiences.<br><em>Every number sourced.</em></h1>
+  <h1>One storm. <br>Three audiences. <br><em>Every number sourced.</em></h1>
   <p>NOAA region 2673, 4 to 15 September 2017. A replay of what the public record says about one solar radiation storm for a crew beyond low Earth orbit, a polar flight and a power grid. A past observation, not a forecast.</p>
-  <div class="hint">Open an audience card, or press play and watch the three rings follow the real data</div>
+  <div class="hint">Open an audience card, tap the capsule, the aircraft or the grid in the picture, or press play and watch the rings follow the real data</div>
 </section>
 
 <div class="stage" id="stage">
@@ -155,7 +169,7 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
     <div class="it"><span class="num n" id="r-f10">n/a</span><span class="k">≥10 MeV protons, pfu</span></div>
     <div class="it"><span class="num n" id="r-f100">n/a</span><span class="k">&gt;100 MeV protons, pfu</span></div>
     <div class="it"><span class="num n" id="r-dose">n/a</span><span class="k">CRaTER dose rate on LRO, <span style="text-transform:none">µGy/h</span> <span id="r-dose-age" style="text-transform:none"></span></span></div>
-    <div class="viz" style="grid-column:1/-1">Visualization, real values: crew and polar rings fill with log₁₀ of the real GOES-13 flux against the published threshold (marker). The grid ring is a different kind: the 11-day window as a dial; band = issued K≥7 warning valid period, ticks = issued K≥7 alerts, dot = replay time. Not observed K. Dose is on its own axis, in no ring.</div>
+    <div class="viz" style="grid-column:1/-1">Illustrative drawing, real values: the proton stream follows the real flux; the capsule, aircraft and surface each glow only with their own ring. Rings: crew and polar fill with log₁₀ of the real GOES-13 flux against the published threshold (marker). The grid ring is a different kind: the 11-day window as a dial; band = issued K≥7 warning valid period, ticks = issued K≥7 alerts, dot = replay time. Not observed K. Dose is on its own axis, in no ring.</div>
   </div>
   <div class="auds" role="group" aria-label="Audience gauges: each opens its card">
     <button class="aud" type="button" data-aud="crew" data-state="na"><span class="gg"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle class="rg-track" cx="50" cy="50" r="38" stroke-dasharray="179.07 300" transform="rotate(135 50 50)"/><circle class="rg-fill" cx="50" cy="50" r="38" stroke-dasharray="0 300" transform="rotate(135 50 50)"/><g class="rg-mk"><line x1="82" y1="50" x2="94" y2="50"/><circle cx="95.5" cy="50" r="3.2"/></g></svg><span class="rv num">n/a</span></span><span class="t"><b>Crew</b><span class="opt">beyond low Earth orbit</span><span class="m">>100 MeV · pfu</span><span class="st">n/a</span></span></button>
@@ -169,6 +183,8 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
     <div class="scrub"><label class="sr" for="scrub">Replay time, 2017-09-04 to 2017-09-15</label><input type="range" id="scrub" min="0" max="3167" step="1" value="0"></div>
   </div>
 </div>
+
+<div id="scene" role="group" aria-label="Scene elements: each opens its audience card"><button class="sc" type="button" data-el="crew" data-state="na" data-glow="off" aria-label="Crew capsule in the picture"><span class="sl">Crew · capsule</span></button><button class="sc" type="button" data-el="polar" data-state="na" data-glow="off" aria-label="Polar flight aircraft in the picture"><span class="sl">Polar flight · aircraft</span></button><button class="sc" type="button" data-el="grid" data-state="na" data-glow="off" aria-label="Power grid in the picture"><span class="sl">Power grid · surface</span></button></div>
 
 <!-- Audience card -->
 <section class="sheet" id="sheet" aria-hidden="true" inert aria-label="Audience card">
@@ -237,7 +253,7 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
     <div class="grid2">
       <div class="box"><h4><span class="tag-r">Real</span> · flux, alerts, dose</h4><p>GOES-13 flux samples, the SWPC alerts and warnings, and the CRaTER dose rate are read from the archived files below by the repository's own code and exported unchanged. Samples with a non-zero quality flag or no value are gaps.</p></div>
       <div class="box"><h4><span class="tag-r">Real</span> · hours, first and last, peaks</h4><p>Counted from the exported series at 5-minute samples: “at or above” the published threshold. First to last is a span, not a continuous stretch; the number of separate stretches is shown beside it.</p></div>
-      <div class="box"><h4><span class="tag-i">Illustrative</span> · hero halo and rings</h4><p>The three audience rings (crew and polar fill with log₁₀ of the real flux against the published threshold marker; the grid ring is an 11-day dial of issued K≥7 alerts and the warning valid period, not observed K) and the procedural halo are drawings with real values. Radius and brightness follow log₁₀ of the real flux at the replay time; the rays are decoration. It is not an image of radiation or of the magnetosphere.</p></div>
+      <div class="box"><h4><span class="tag-i">Illustrative</span> · hero scene and rings</h4><p>The three audience rings (crew and polar fill with log₁₀ of the real flux against the published threshold marker; the grid ring is an 11-day dial of issued K≥7 alerts and the warning valid period, not observed K) and the procedural hero scene are drawings with real values: Earth’s limb with a faint power grid, a polar flight arc with an aircraft, a crew capsule far out with the direction of the Sun. The proton stream from the Sun gets denser with log₁₀ of the real ≥10 MeV and >100 MeV flux at the replay time. Each element glows only from its own ring: the capsule from >100 MeV at or above 1 pfu, the aircraft from ≥10 MeV at or above 100 pfu, the surface from issued K≥7 alerts and warnings (one substation lights per issued alert; the band is the warning valid period, not observed K). Positions, shapes, distances and the particles are decoration; it is not an image of radiation, of the magnetosphere or of any flight, vehicle or grid.</p></div>
       <div class="box"><h4><span class="tag-i">Illustrative</span> · replay speed</h4><p>1× is 3 hours of storm per second, 4× is 12, 16× is 48. The replay loops over the 11 days. No latency is measured: the data are archives.</p></div>
     </div>
 
@@ -322,49 +338,216 @@ var hoverT=null;
 function tick(t){
   if(!userSeek&&+scrub.value!==slotAt(t))scrub.value=slotAt(t);
   readouts(t,'r'); readouts(hoverT!=null?hoverT:t,'t');
-  moveHead(t); drawHero(t); gauges(t);
+  moveHead(t); gauges(t); sceneSync(); if(!document.body.classList.contains('layer-open'))drawHero(t);
   if(sel)moveMini(t);
 }
 
-/* ---------------- hero (procedural, data-driven) ---------------- */
+/* ---------------- hero scene (procedural; one picture for three audiences) ----------------
+   Earth's limb at the bottom (terminator, polar cap, a faint power-grid network on the surface), a polar flight arc with an
+   aircraft above it, a crew capsule far out, the Sun off the top-left edge and a proton stream coming from it.
+   Illustrative drawing, real values:
+   - proton stream density: log10 of the real >=10 MeV (ice lane, toward the flight arc) and >100 MeV (violet lane, toward the capsule) flux at the replay time
+   - capsule glow: only the crew ring state (>100 MeV at or above 1 pfu)
+   - aircraft glow: only the polar ring state (>=10 MeV at or above 100 pfu)
+   - surface: only the grid ring state (issued K>=7 alert/warning, never observed K): auroral band dim / warning valid / alert issued;
+     one substation lights per issued K>=7 alert (the same count as the ring centre)
+   Each element has a real button (.sc) over the canvas that opens the matching card. */
 var hero=$('#hero'), hc=hero.getContext('2d'), hw=0, hh=0, dpr=1;
-function sizeHero(){dpr=Math.min(2,window.devicePixelRatio||1);hw=innerWidth;hh=innerHeight;hero.width=Math.round(hw*dpr);hero.height=Math.round(hh*dpr);}
+var L10=Math.log10, TAU=6.2832;
 function rnd(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
-var L10=Math.log10;
-function haloR(v,lo,hi,r0,r1){return r0+(Math.max(0,Math.min(1,(L10(v)-L10(lo))/(L10(hi)-L10(lo)))))*(r1-r0)}
-function drawHero(t){
-  var c=hc; c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,hw,hh);
-  var bg=c.createRadialGradient(hw*.6,hh*.45,0,hw*.6,hh*.45,Math.max(hw,hh)*.8); bg.addColorStop(0,'#0a1017');bg.addColorStop(1,'#050607'); c.fillStyle=bg;c.fillRect(0,0,hw,hh);
-  var wide=hw>900, cx=wide?hw*.56:hw*.5, cy=wide?hh*.48:hh*.40, m=Math.min(hw*(wide?.5:.5),hh*.5);
-  var r0=m*.16, r1=m*.92;
-  var f10=fluxAt(G10,t), f100=fluxAt(G100,t);
-  var p=t/ (LEN||1);
-  // threshold rings: published thresholds drawn at the radius the same scale gives them
-  c.save();c.setLineDash([3,6]);c.lineWidth=1;
-  var tr=[[100,0.1,2000,'rgba(169,220,255,.34)','100 pfu · ≥10 MeV'],[1,0.01,100,'rgba(217,194,255,.34)','1 pfu · >100 MeV']];
-  tr.forEach(function(q,i){var r=haloR(q[0],q[1],q[2],r0,r1); if(i===1)r=haloR(q[0],q[1],q[2],r0,r1*.62);
-    c.strokeStyle=q[3];c.beginPath();c.arc(cx,cy,r,0,6.2832);c.stroke();});
+var STATIC=/[?&#]static\b/.test(location.href);
+var SM={crew:{state:'na',glow:0},polar:{state:'na',glow:0},grid:{state:'na',glow:0,aurora:.08,lit:0,total:0,valid:false}};
+var LY=null, layer=null, sceneBtn={}, lastLayoutKey='';
+var SUN={x:0,y:0};
+function limbY(x){var d=x-LY.ecx;return LY.ecy-Math.sqrt(Math.max(0,LY.R*LY.R-d*d))}
+function arcY(x,alt){var d=x-LY.ecx,R=LY.R+alt;return LY.ecy-Math.sqrt(Math.max(0,R*R-d*d))}
+function pad(r,p){return {l:r.left-p,t:r.top-p,r:r.right+p,b:r.bottom+p}}
+function shown(e){var cs=getComputedStyle(e);return cs.display!=='none'&&cs.visibility!=='hidden'}
+function boxRects(sel){var o=[];$$(sel).forEach(function(e){if(!shown(e))return;var r=e.getBoundingClientRect();if(r.width&&r.height)o.push(pad(r,6))});return o}
+/* text blocks: one rect per line of text, so the free space beside a short line stays free */
+function lineRects(sel){var o=[];$$(sel).forEach(function(e){if(!shown(e))return;var rg=document.createRange();rg.selectNodeContents(e);
+  var m={};Array.prototype.forEach.call(rg.getClientRects(),function(r){if(!r.width||!r.height)return;var k=Math.round(r.top/4);var q=m[k];if(!q)m[k]={left:r.left,right:r.right,top:r.top,bottom:r.bottom};else{q.left=Math.min(q.left,r.left);q.right=Math.max(q.right,r.right);q.top=Math.min(q.top,r.top);q.bottom=Math.max(q.bottom,r.bottom)}});
+  var lh=parseFloat(getComputedStyle(e).lineHeight);Object.keys(m).forEach(function(k){var q=m[k];if(lh>0&&q.bottom-q.top>lh){var mid=(q.top+q.bottom)/2;q.top=mid-lh/2;q.bottom=mid+lh/2}o.push(pad(q,6))})});return o}
+function hit(a,b,pd){pd=pd||0;return a.l<b.r+pd&&b.l<a.r+pd&&a.t<b.b+pd&&b.t<a.b+pd}
+function sizeHero(){document.body.classList.remove('tight','tight2');dpr=Math.min(2,window.devicePixelRatio||1);hw=innerWidth;hh=innerHeight;hero.width=Math.round(hw*dpr);hero.height=Math.round(hh*dpr);layoutScene()}
+/* place the three elements in the free space around the UI: each one slides along its own curve to the nearest spot whose hit area touches no
+   control, text line, readout or the GitHub link (so the picture adapts from 320 to 1440 px instead of colliding) */
+function layoutScene(){
+  var wide=hw>900, tiny=!wide&&(hh<=700||hw<=340);
+  var obs=[].concat(boxRects('.brand .label'),boxRects('.brand .small'),boxRects('.brand .ghlink'),boxRects('.nav'),lineRects('.hero-copy h1'),lineRects('.hero-copy p'),lineRects('.hero-copy .hint'),boxRects('.stage'),boxRects('.live .it'),boxRects('.live .viz'));
+  var st=$('.stage').getBoundingClientRect(), hcr=$('.hero-copy').getBoundingClientRect(), zb=st.top-6;
+  var key=[hw,hh,Math.round(zb),obs.length,Math.round(hcr.bottom)].join();
+  var R=hw*(wide?1.3:1.7), hy, ecx=hw*(wide?.6:.5);
+  hy=wide?Math.max(hh*.45,Math.min(hh*.72,zb-72)):zb-58;
+  LY={R:R,ecx:ecx,ecy:hy+R,hy:hy,wide:wide,s:wide?1.25:(tiny?.8:.95)};
+  SUN={x:-hw*.1,y:wide?hh*.1:Math.max(30,hcr.top*.3)};
+  var A0=wide?hh*.17:Math.max(40,Math.min(90,(hy-hcr.top)*.5)), placed=[];
+  function ok1(r){if(r.l<6||r.r>hw-6||r.t<6||r.b>hh-6)return false;for(var i=0;i<obs.length;i++)if(hit(r,obs[i]))return false;for(i=0;i<placed.length;i++)if(hit(r,placed[i],8))return false;return true}
+  function box(cx,cy,w,h){return {l:cx-w/2,t:cy-h/2,r:cx+w/2,b:cy+h/2}}
+  var S=tiny?46:Math.round(Math.max(48,44*LY.s)), i, x, ap=null, xs=[];
+  // aircraft: slides along the polar arc, lowering the arc if there is no room
+  for(x=14;x<hw-14;x+=6)xs.push(x);
+  var pref=hw*(wide?.72:.78); xs.sort(function(a,b){return Math.abs(a-pref)-Math.abs(b-pref)});
+  var As=[A0,A0*.75,A0*.55,A0*.4,26,16,8], A=A0;
+  for(var ai=0;ai<As.length&&!ap;ai++)for(i=0;i<xs.length&&!ap;i++){var yA=arcY(xs[i],As[ai]),r=box(xs[i],yA,S,S); if(ok1(r)){ap={x:xs[i],y:yA,r:r};A=As[ai]}}
+  if(!ap){A=A0;ap={x:pref,y:arcY(pref,A),r:box(pref,arcY(pref,A),S,S),fail:true}}
+  placed.push(ap.r);
+  // crew capsule: free 2D search, far out (above the aircraft when there is room)
+  var cp=null, cs0=[];
+  for(var yy=8;yy<hh*.75;yy+=6)for(x=10;x<hw-10;x+=6)cs0.push([x,yy]);
+  var px=hw*(wide?.58:.5), py=wide?hh*.2:Math.max(60,ap.y-S*1.4);
+  cs0.sort(function(a,b){return (Math.pow(a[0]-px,2)+Math.pow(a[1]-py,2))-(Math.pow(b[0]-px,2)+Math.pow(b[1]-py,2))});
+  for(var pass=0;pass<2&&!cp;pass++)for(i=0;i<cs0.length&&!cp;i++){var c=cs0[i]; if(pass===0&&c[1]>ap.y-S*.6)continue; var r2=box(c[0],c[1],S,S); if(ok1(r2))cp={x:c[0],y:c[1],r:r2}}
+  if(!cp)cp={x:px,y:py,r:box(px,py,S,S),fail:true};
+  placed.push(cp.r);
+  // grid: a surface patch at the limb; the seven substations sit inside its hit area
+  var gw0=Math.round(Math.max(140,Math.min(190,hw*.42))), gh=Math.max(46,S), gp=null, gx=[], gpref=hw*(wide?.8:.3);
+  for(var gwi=0,gws=[gw0,gw0*.8,gw0*.64,gw0*.52];gwi<gws.length&&!gp;gwi++){var gw=Math.round(gws[gwi]);gx=[];for(x=gw/2+8;x<hw-gw/2-8;x+=6)gx.push(x);
+    gx.sort(function(a,b){return Math.abs(a-gpref)-Math.abs(b-gpref)});
+    for(i=0;i<gx.length&&!gp;i++)for(var dy=-8;dy<=70&&!gp;dy+=3){var lim=Math.min(limbY(gx[i]-gw/2),limbY(gx[i]+gw/2)); var r3={l:gx[i]-gw/2,t:lim+dy,r:gx[i]+gw/2,b:lim+dy+gh}; if(ok1(r3))gp={x:gx[i],y:lim+dy+gh/2,r:r3,dy:dy,lim:lim}}}
+  gw=gw0;
+  if(!gp){var lim2=limbY(gpref);gp={x:gpref,y:lim2+30,r:{l:gpref-gw/2,t:lim2+6,r:gpref+gw/2,b:lim2+6+gh},dy:6,lim:lim2,fail:true}}
+  LY.ap=ap;LY.cp=cp;LY.gp=gp;LY.A=A;LY.fail=!!(ap.fail||cp.fail||gp.fail);
+  [['crew',cp],['polar',ap],['grid',gp]].forEach(function(a){var b=sceneBtn[a[0]],r=a[1].r;
+    var k=[r.l,r.t,r.r,r.b].map(Math.round).join();
+    if(b._k!==k){b._k=k;b.style.left=Math.round(r.l)+'px';b.style.top=Math.round(r.t)+'px';b.style.width=Math.round(r.r-r.l)+'px';b.style.height=Math.round(r.b-r.t)+'px';
+      var cx=(r.l+r.r)/2,half=80,sh=Math.max(0,half+8-cx)-Math.max(0,cx+half+8-hw);b.style.setProperty('--sx',Math.round(sh)+'px')}});
+  if(LY.fail&&!wide){var bc=document.body.classList;if(!bc.contains('tight')){bc.add('tight');layoutScene();return}if(!bc.contains('tight2')){bc.add('tight2');layoutScene();return}}   // not enough free space: compact the heading, then the readouts, and retry
+  if(key!==lastLayoutKey||!layer||layer.width!==hero.width)buildLayer(); lastLayoutKey=key;
+}
+/* static layer: everything that does not depend on the replay time (drawn once per layout) */
+function buildLayer(){
+  var cv=layer||(layer=document.createElement('canvas')); cv.width=hero.width; cv.height=hero.height;
+  var c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0);
+  var w=hw,h=hh,R=LY.R,ecx=LY.ecx,ecy=LY.ecy;
+  var bg=c.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#050607');bg.addColorStop(.7,'#070b10');bg.addColorStop(1,'#050607'); c.fillStyle=bg;c.fillRect(0,0,w,h);
+  var n=Math.round(Math.min(90,w*h/9000));
+  for(var i=0;i<n;i++){var sx=rnd(i*2+1)*w, sy=rnd(i*2+2)*LY.hy*.95, a=.05+.28*rnd(i+9)*rnd(i+4); c.fillStyle='rgba(220,235,255,'+a.toFixed(3)+')';c.fillRect(sx,sy,rnd(i+5)>.9?1.6:1,rnd(i+5)>.9?1.6:1)}
+  var sg=c.createRadialGradient(SUN.x,SUN.y,0,SUN.x,SUN.y,Math.max(w,h)*.75); sg.addColorStop(0,'rgba(210,232,255,.20)');sg.addColorStop(.35,'rgba(150,200,255,.06)');sg.addColorStop(1,'rgba(150,200,255,0)'); c.fillStyle=sg;c.fillRect(0,0,w,h);
+  // Earth: lit on the Sun side (left), terminator toward the right
+  c.save();c.beginPath();c.arc(ecx,ecy,R,0,TAU);c.clip();
+  var eg=c.createLinearGradient(0,0,w,0); eg.addColorStop(0,'#16222e');eg.addColorStop(.45,'#0c1620');eg.addColorStop(.8,'#070b10');eg.addColorStop(1,'#050709'); c.fillStyle=eg;c.fillRect(0,0,w,h);
+  var vg=c.createLinearGradient(0,LY.hy,0,h); vg.addColorStop(0,'rgba(5,6,7,0)');vg.addColorStop(1,'rgba(5,6,7,.78)'); c.fillStyle=vg;c.fillRect(0,LY.hy,w,h-LY.hy);
+  // terminator: a soft curved shadow edge
+  var tx=w*(LY.wide?.86:.9); c.strokeStyle='rgba(169,220,255,.08)';c.lineWidth=1;c.beginPath();c.moveTo(tx,limbY(tx));c.quadraticCurveTo(tx-w*.07,LY.hy+(h-LY.hy)*.45,tx-w*.22,h);c.stroke();
+  var tg=c.createLinearGradient(tx-w*.2,0,w,0);tg.addColorStop(0,'rgba(5,6,7,0)');tg.addColorStop(1,'rgba(5,6,7,.55)');c.fillStyle=tg;c.fillRect(tx-w*.2,LY.hy,w,h);
+  // polar cap at the apex of the limb
+  var cw=w*.2, pcg=c.createLinearGradient(ecx-cw,0,ecx+cw,0);pcg.addColorStop(0,'rgba(220,240,255,0)');pcg.addColorStop(.5,'rgba(220,240,255,.16)');pcg.addColorStop(1,'rgba(220,240,255,0)');
+  c.fillStyle=pcg;c.beginPath();c.arc(ecx,ecy,R,0,TAU);c.arc(ecx,ecy,R-16,TAU,0,true);c.fill();
+  // faint power-grid network on the surface (decorative; the lit part is drawn per frame from the grid state)
+  var rows=6,cols=Math.round(w/70)+2,pts=[];
+  for(var r=0;r<rows;r++){pts[r]=[];for(var q=0;q<cols;q++){var gx=(q/(cols-1))*w+(rnd(r*37+q)-.5)*34, gy=limbY(gx)+8+Math.pow(r,1.7)*13+(rnd(r*11+q*3)-.5)*8; pts[r][q]={x:gx,y:gy}}}
+  c.lineWidth=.8;
+  for(r=0;r<rows;r++)for(q=0;q<cols;q++){var p=pts[r][q];
+    if(q+1<cols&&rnd(r*5+q*7+1)>.28){c.strokeStyle='rgba(169,220,255,'+(.15-r*.014).toFixed(3)+')';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(pts[r][q+1].x,pts[r][q+1].y);c.stroke()}
+    if(r+1<rows&&rnd(r*9+q*13+2)>.55){c.strokeStyle='rgba(169,220,255,'+(.11-r*.012).toFixed(3)+')';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(pts[r+1][q].x,pts[r+1][q].y);c.stroke()}
+    if(rnd(r*3+q*17+3)>.55){c.fillStyle='rgba(200,230,255,'+(.3-r*.04).toFixed(3)+')';c.fillRect(p.x-1,p.y-1,2,2)}}
   c.restore();
-  function halo(v,lo,hi,rmax,rgb,seed,n){
-    if(!ok(v)){return;}
-    var r=haloR(v,lo,hi,r0,rmax), k=(L10(v)-L10(lo))/(L10(hi)-L10(lo)); k=Math.max(0,Math.min(1,k));
-    var g=c.createRadialGradient(cx,cy,r0*.6,cx,cy,r*1.25);
-    g.addColorStop(0,'rgba('+rgb+','+(.10+.32*k).toFixed(3)+')');g.addColorStop(.55,'rgba('+rgb+','+(.06+.16*k).toFixed(3)+')');g.addColorStop(1,'rgba('+rgb+',0)');
-    c.fillStyle=g;c.beginPath();c.arc(cx,cy,r*1.25,0,6.2832);c.fill();
-    c.lineWidth=1.2;
-    for(var i=0;i<n;i++){
-      var a=i/n*6.2832+seed+p*1.8, ln=r*(.55+.5*rnd(i+seed*7)), ph=Math.sin(p*60+i*.7+seed)*.5+.5;
-      var a0=r0*1.05, a1=Math.min(r*1.2,a0+(ln-a0)*(.7+.3*ph));
-      if(a1<=a0)continue;
-      c.strokeStyle='rgba('+rgb+','+((.06+.38*k)*(.35+.65*rnd(i*3+seed))).toFixed(3)+')';
-      c.beginPath();c.moveTo(cx+Math.cos(a)*a0,cy+Math.sin(a)*a0);c.lineTo(cx+Math.cos(a)*a1,cy+Math.sin(a)*a1);c.stroke();
-    }
+  // limb line and a thin atmosphere
+  var lg=c.createLinearGradient(0,0,w,0);lg.addColorStop(0,'rgba(190,225,255,.62)');lg.addColorStop(.6,'rgba(190,225,255,.34)');lg.addColorStop(1,'rgba(190,225,255,.12)');
+  c.strokeStyle=lg;c.lineWidth=1.2;c.beginPath();c.arc(ecx,ecy,R,0,TAU);c.stroke();
+  c.lineWidth=5;c.strokeStyle='rgba(120,190,255,.06)';c.beginPath();c.arc(ecx,ecy,R+3,0,TAU);c.stroke();
+  // polar flight arc (dashed), above the surface
+  c.save();c.setLineDash([2,7]);c.lineWidth=1;c.strokeStyle='rgba(169,220,255,.26)';c.beginPath();c.arc(ecx,ecy,R+LY.A,0,TAU);c.stroke();c.restore();
+}
+/* proton lane: particles along a curve from the Sun to a target; count follows the real flux (log scale) */
+function lane(c,tx,ty,frac,rgb,seed,nmax,ph,bend){
+  if(frac==null)return; var n=Math.round(nmax*(.04+.96*frac)); if(n<1)return;
+  var sx=SUN.x+hw*.02, sy=SUN.y, mx=(sx+tx)/2+bend*(ty-sy)*.18, my=(sy+ty)/2-bend*(tx-sx)*.18;
+  var nx=-(ty-sy), ny=(tx-sx), nl=Math.sqrt(nx*nx+ny*ny)||1; nx/=nl;ny/=nl; var spread=Math.min(hw,hh)*.07;
+  c.lineWidth=1;
+  for(var i=0;i<n;i++){
+    var sp=.5+rnd(i*3+seed)*.9, s=((ph*.045*sp)+rnd(i+seed*5))%1, s2=Math.max(0,s-.014*(1+sp));
+    var off=(rnd(i*7+seed*3)-.5)*spread*(.15+Math.sin(Math.PI*Math.min(1,s*1.2)));
+    function P(u){var a=(1-u)*(1-u),b=2*u*(1-u),d=u*u;return [a*sx+b*mx+d*tx+nx*off*u,a*sy+b*my+d*ty+ny*off*u]}
+    var p1=P(s),p0=P(s2), al=Math.sin(Math.PI*s)*(.18+.5*frac)*(.4+.6*rnd(i*13+seed));
+    c.strokeStyle='rgba('+rgb+','+al.toFixed(3)+')';c.beginPath();c.moveTo(p0[0],p0[1]);c.lineTo(p1[0],p1[1]);c.stroke();
   }
-  halo(f10,0.1,2000,r1,'169,220,255',1,120);
-  halo(f100,0.01,100,r1*.62,'217,194,255',5,70);
-  var core=c.createRadialGradient(cx,cy,0,cx,cy,r0);core.addColorStop(0,'#05070a');core.addColorStop(.85,'#070a0e');core.addColorStop(1,'rgba(7,10,14,.0)');
-  c.fillStyle=core;c.beginPath();c.arc(cx,cy,r0,0,6.2832);c.fill();
-  c.strokeStyle='rgba(235,242,247,.16)';c.lineWidth=1;c.beginPath();c.arc(cx,cy,r0*.82,0,6.2832);c.stroke();
+}
+function glowDot(c,x,y,r,rgb,a){var g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba('+rgb+','+a+')');g.addColorStop(.45,'rgba('+rgb+','+(a*.35).toFixed(3)+')');g.addColorStop(1,'rgba('+rgb+',0)');c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill()}
+var AIR=[[12,0],[8,-1.5],[3,-1.5],[-4,-10.5],[-6.5,-10.5],[-4.5,-1.5],[-9,-1.2],[-11.5,-4.5],[-13,-4.5],[-12,0]];
+function drawAircraft(c,x,y,s,ang,on,ph){
+  var rgb='169,220,255';
+  c.save();c.translate(x,y);c.rotate(ang);
+  var tg=c.createLinearGradient(-90*s,0,-12*s,0);tg.addColorStop(0,'rgba('+rgb+',0)');tg.addColorStop(1,'rgba('+rgb+','+(on?.55:.2)+')');c.strokeStyle=tg;c.lineWidth=1;c.beginPath();c.moveTo(-90*s,0);c.lineTo(-13*s,0);c.stroke();
+  if(on){glowDot(c,0,0,34*s*(1+.06*Math.sin(ph*2.2)),rgb,.42)}
+  c.beginPath();for(var i=0;i<AIR.length;i++)c.lineTo(AIR[i][0]*s,AIR[i][1]*s);for(i=AIR.length-1;i>=0;i--)c.lineTo(AIR[i][0]*s,-AIR[i][1]*s);c.closePath();
+  c.fillStyle=on?'rgba(169,220,255,.2)':'rgba(5,6,7,.85)';c.fill();c.lineWidth=on?1.6:1.1;c.strokeStyle=on?'#cfeaff':'rgba(235,242,247,.7)';c.lineJoin='round';c.stroke();
+  c.restore();
+}
+function drawCapsule(c,x,y,s,on,ph){
+  var rgb='217,194,255', a=Math.atan2(y-SUN.y,x-SUN.x);   // the capsule faces away from the Sun
+  c.save();c.translate(x,y);c.rotate(a-.5);
+  if(on)glowDot(c,0,0,46*s*(1+.06*Math.sin(ph*2.2)),rgb,.5);
+  c.lineJoin='round';c.lineWidth=on?1.6:1.1;c.strokeStyle=on?'#eadcff':'rgba(235,242,247,.7)';c.fillStyle=on?'rgba(217,194,255,.18)':'rgba(5,6,7,.85)';
+  c.beginPath();c.moveTo(12*s,-2.6*s);c.lineTo(12*s,2.6*s);c.lineTo(2*s,7.5*s);c.lineTo(2*s,-7.5*s);c.closePath();c.fill();c.stroke();   // crew module
+  c.beginPath();c.rect(-12*s,-5.5*s,14*s,11*s);c.fill();c.stroke();                                                                      // service module
+  c.lineWidth=1;for(var k=-1;k<=1;k+=2){c.beginPath();c.rect(-11*s,(k>0?7:-21)*s,9*s,14*s);c.stroke();c.beginPath();c.moveTo(-6.5*s,(k>0?7:-21)*s);c.lineTo(-6.5*s,(k>0?21:-7)*s);c.stroke()}  // solar arrays
+  c.restore();
+  // Sun direction: a dashed line toward the Sun and a small open Sun
+  var ux=SUN.x-x,uy=SUN.y-y,ul=Math.sqrt(ux*ux+uy*uy)||1;ux/=ul;uy/=ul;var d0=26*s,d1=58*s,sx=x+ux*d1,sy=y+uy*d1;
+  c.save();c.setLineDash([2,4]);c.strokeStyle='rgba(235,242,247,.32)';c.lineWidth=1;c.beginPath();c.moveTo(x+ux*d0,y+uy*d0);c.lineTo(sx-ux*6,sy-uy*6);c.stroke();c.setLineDash([]);
+  c.strokeStyle='rgba(235,242,247,.6)';c.beginPath();c.arc(sx,sy,3.2,0,TAU);c.stroke();
+  for(var i=0;i<8;i++){var q=i*.7854;c.beginPath();c.moveTo(sx+Math.cos(q)*5.2,sy+Math.sin(q)*5.2);c.lineTo(sx+Math.cos(q)*8,sy+Math.sin(q)*8);c.stroke()}c.restore();
+}
+function substations(){var gp=LY.gp,out=[],n=7,wd=gp.r.r-gp.r.l-30;
+  for(var i=0;i<n;i++){var x=gp.r.l+15+wd*(i+.5)/n+(rnd(i+70)-.5)*8; var y=limbY(x)+Math.max(10,gp.dy+8)+ (i%3)*9 + rnd(i+80)*8; out.push({x:x,y:Math.min(gp.r.b-8,y)})}
+  return out}
+function drawHero(t){
+  if(!LY)return; var c=hc, ph=(REDUCED||STATIC)?.37:performance.now()/1000;
+  c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,hw,hh);
+  c.drawImage(layer,0,0,hw,hh);
+  var f10=fluxAt(G10,t), f100=fluxAt(G100,t);
+  var k10=f10==null?null:fracOf(f10,0.1,2000), k100=f100==null?null:fracOf(f100,0.01,100);
+  var ap=LY.ap,cp=LY.cp,gp=LY.gp,s=LY.s;
+  // proton stream from the Sun: ice lane (>=10 MeV) toward the flight arc and limb, violet lane (>100 MeV) toward the capsule
+  c.save();
+  lane(c,ap.x,ap.y,k10,'169,220,255',1,Math.round(Math.min(140,hw/9)),ph,.6);
+  lane(c,cp.x,cp.y,k100,'217,194,255',7,Math.round(Math.min(90,hw/14)),ph,-.5);
+  c.restore();
+  // auroral / geomagnetic band over the polar cap, from the grid ring state only
+  var g=SM.grid, aa=g.aurora, ac='255,194,122', cw=hw*.26, wob=(REDUCED||STATIC)?0:Math.sin(ph*.7)*.06;
+  c.save();c.lineCap='round';
+  for(var j=0;j<3;j++){var al=aa*(j===0?.9:j===1?.45:.22)*(1+wob);
+    var grd=c.createLinearGradient(LY.ecx-cw,0,LY.ecx+cw,0);grd.addColorStop(0,'rgba('+ac+',0)');grd.addColorStop(.5,'rgba('+ac+','+Math.min(1,al).toFixed(3)+')');grd.addColorStop(1,'rgba('+ac+',0)');
+    c.strokeStyle=grd;c.lineWidth=j===0?1.6:3+j*2.5;c.beginPath();c.arc(LY.ecx,LY.ecy,LY.R+4+j*2.5,-Math.PI/2-cw/LY.R,-Math.PI/2+cw/LY.R);c.stroke()}
+  if(g.state==='alert'||g.state==='warning'){var nr=g.state==='alert'?30:14;c.lineWidth=1;
+    for(var i=0;i<nr;i++){var x=LY.ecx+(rnd(i+200)-.5)*2*cw*.9, e=1-Math.abs(x-LY.ecx)/cw, ln=(10+34*rnd(i+300))*e*(g.state==='alert'?1:.5)*(1+.25*Math.sin(ph*1.3+i)*((REDUCED||STATIC)?0:1));
+      var y0=limbY(x)-2,gr=c.createLinearGradient(0,y0,0,y0-ln);gr.addColorStop(0,'rgba('+ac+','+(g.state==='alert'?.5:.25)+')');gr.addColorStop(1,'rgba('+ac+',0)');c.strokeStyle=gr;c.beginPath();c.moveTo(x,y0);c.lineTo(x,y0-ln);c.stroke()}}
+  c.restore();
+  // substations and lines on the surface: one lights per issued K>=7 alert (same count as the grid ring), glow only when the grid ring is hot
+  var ss=substations(), lit=g.lit; c.save();
+  for(i=0;i<ss.length-1;i++){var on2=i+1<lit;c.strokeStyle=on2?'rgba('+ac+','+(g.glow?.8:.5)+')':'rgba(169,220,255,.16)';c.lineWidth=on2?1.3:.8;c.beginPath();c.moveTo(ss[i].x,ss[i].y);c.lineTo(ss[i+1].x,ss[i+1].y);c.stroke()}
+  for(i=0;i<ss.length;i++){var on1=i<lit;
+    if(on1&&g.glow)glowDot(c,ss[i].x,ss[i].y,16*(s>1?1.1:.9),ac,.55);
+    c.fillStyle=on1?'#ffd9a3':'rgba(200,230,255,.4)';c.beginPath();c.arc(ss[i].x,ss[i].y,on1?2.6:1.8,0,TAU);c.fill();
+    c.strokeStyle=on1?'rgba('+ac+',.9)':'rgba(200,230,255,.3)';c.lineWidth=1;c.beginPath();c.arc(ss[i].x,ss[i].y,on1?5:3.6,0,TAU);c.stroke()}
+  c.restore();
+  // aircraft on its arc (heading along the tangent), capsule far out
+  var tgA=Math.atan2(arcY(ap.x+4,LY.A)-arcY(ap.x-4,LY.A),8);
+  drawAircraft(c,ap.x,ap.y,s*1.05,tgA,SM.polar.glow>0,ph);
+  drawCapsule(c,cp.x,cp.y,s*1.3,SM.crew.glow>0,ph);
+}
+/* the scene model: written from the ring states, read by the drawing and by the three buttons */
+function sceneSync(){
+  var r={}, ch=false;
+  ['crew','polar','grid'].forEach(function(k){var b=gnode(k).b,m=SM[k],st=b.dataset.state||'na',hot=b.classList.contains('hot');
+    m.state=st;m.glow=hot?1:0;var sb=sceneBtn[k];
+    if(sb._st!==st+hot){sb._st=st+hot;sb.dataset.state=st;sb.dataset.glow=hot?'on':'off'}
+    var al=b.getAttribute('aria-label')||'';if(sb._al!==al){sb._al=al;sb.setAttribute('aria-label',SCN[k]+' in the picture. '+al)}});
+  var gm=GRID||{iss:[],wn:[]}, g=SM.grid; g.lit=0;g.valid=false;g.total=gm.iss.length;
+  gm.iss.forEach(function(a){if(a.on)g.lit++});gm.wn.forEach(function(w){if(w.on)g.valid=true});
+  g.aurora={na:.05,none:.08,ended:.12,warning:.45,alert:.95}[g.state]||.05;
+  var sb=sceneBtn.grid;sb.dataset.lit=g.state==='na'?'n/a':String(g.lit);sb.dataset.warning=g.valid?'on':'off';
+}
+var SCN={crew:'Crew capsule',polar:'Polar flight aircraft',grid:'Power grid on the surface'};
+var DWELL=null, noHoverUntil=0;
+function initScene(){
+  var host=$('#scene');
+  ['crew','polar','grid'].forEach(function(k){var b=host.querySelector('[data-el="'+k+'"]');sceneBtn[k]=b;
+    b.addEventListener('click',function(){openAud(k)});
+    b.addEventListener('pointerenter',function(e){if(e.pointerType!=='mouse'||performance.now()<noHoverUntil)return;clearTimeout(DWELL);DWELL=setTimeout(function(){if(!sel&&b.matches(':hover'))openAud(k)},650)});
+    b.addEventListener('pointerleave',function(){clearTimeout(DWELL)});});
 }
 
 
@@ -565,7 +748,7 @@ function openAud(key,silent){
   requestAnimationFrame(function(){drawMini()});
   if(!silent)setHash('audience/'+key);
 }
-function closeAud(){ if(!sel)return; var b=$('.aud[data-aud="'+sel+'"]'); if(b&&!panels.trigger.get($('#sheet')))panels.trigger.set($('#sheet'),b); sel=null; document.body.classList.remove('sheet-open'); panels.close($('#sheet')); setHash('')}
+function closeAud(){ if(!sel)return; var b=$('.aud[data-aud="'+sel+'"]'); if(b&&!panels.trigger.get($('#sheet')))panels.trigger.set($('#sheet'),b); sel=null; noHoverUntil=performance.now()+1500; document.body.classList.remove('sheet-open'); panels.close($('#sheet')); setHash('')}
 $('#close').onclick=closeAud;
 $$('.aud').forEach(function(b){b.onclick=function(){openAud(b.dataset.aud)}});
 
@@ -575,7 +758,7 @@ function syncInert(){var sh=$('#sheet');if(sh.classList.contains('open')){if(doc
 function openLayer(id,silent){ closeLayers(true); document.body.classList.add('layer-open'); panels.open($('#'+id),'[data-close]'); syncInert(); setNav(id);
   if(id==='timeline')requestAnimationFrame(function(){drawTimeline();readouts(clock.t,'t')});
   if(!silent)setHash(id)}
-function closeLayers(silent){ var any=$$('.layer.open').length; document.body.classList.remove('layer-open'); $$('.layer').forEach(function(l){panels.close(l,silent)}); syncInert(); setNav(null);
+function closeLayers(silent){ var any=$$('.layer.open').length; document.body.classList.remove('layer-open'); if(any&&LY)drawHero(clock.t); $$('.layer').forEach(function(l){panels.close(l,silent)}); syncInert(); setNav(null);
   if(!silent&&any)setHash(sel?'audience/'+sel:'')}
 $$('[data-close]').forEach(function(b){b.onclick=function(){closeLayers()}});
 $('#scrim').onclick=function(){closeLayers()};
@@ -609,7 +792,7 @@ addEventListener('resize',function(){sizeHero();drawHero(clock.t);setSeg();if(la
 
 /* ---------------- start ---------------- */
 function start(){
-  fillLedger();fillMethod();sizeHero();
+  fillLedger();fillMethod();initScene();sizeHero();
   var hs=location.hash.slice(1), qpos=hs.indexOf('?'), qs=new URLSearchParams((qpos>=0?hs.slice(qpos+1):'')||location.search.slice(1)), path=qpos>=0?hs.slice(0,qpos):hs;
   var h0=0; if(qs.has('h')){var hv0=parseFloat(qs.get('h')); if(isFinite(hv0))h0=Math.max(0,Math.min(LEN,hv0*3600));}
   clock.t=h0; scrub.value=slotAt(h0);
@@ -617,9 +800,12 @@ function start(){
   if(play)clock.start();
   if(path.indexOf('audience/')===0&&AUDS[path.split('/')[1]])openAud(path.split('/')[1],true);
   else if(path==='timeline'||path==='alerts'||path==='method')openLayer(path,true);
-  requestAnimationFrame(function(){setSeg()});
+  requestAnimationFrame(function(){setSeg();layoutScene();drawHero(clock.t)});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){layoutScene();drawHero(clock.t)});
+  addEventListener('load',function(){layoutScene();drawHero(clock.t)});
+  if(window.ResizeObserver){var rq=0,ro=new ResizeObserver(function(){if(rq)return;rq=requestAnimationFrame(function(){rq=0;layoutScene();drawHero(clock.t)})});['.stage','.hero-copy','.live','.top'].forEach(function(q){ro.observe($(q))})}
 }
-window.__weather={clock:clock,slotAt:slotAt,SLOTS:SLOTS,get t(){return clock.t}};
+window.__weather={draw:function(){drawHero(clock.t)},scene:SM,layout:function(){return LY},relayout:function(){layoutScene();drawHero(clock.t)},clock:clock,slotAt:slotAt,SLOTS:SLOTS,get t(){return clock.t}};
 start();
 })();
 </script>

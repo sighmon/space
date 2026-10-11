@@ -39,4 +39,4 @@ A sample with no time, value, unit, product id, or source file is left off the f
 
 ## Web view
 
-`web/index.html` is a replay of the same storm with three audience cards, a timeline, an alert ledger and a method layer. `python3 -m weather.export_web` writes `web/data/storm.json` and its script-tag twin `storm.js` from `build_report`. See [web/README.md](web/README.md) for how to open it, what is real and what is illustrative, and its limits.
+`web/index.html` is a replay of the same storm with a procedurally drawn hero scene (Earth's limb and power grid, a polar flight, a crew capsule and a proton stream, each element tied to its own audience ring), three audience cards, a timeline, an alert ledger and a method layer. `python3 -m weather.export_web` writes `web/data/storm.json` and its script-tag twin `storm.js` from `build_report`. See [web/README.md](web/README.md) for how to open it, what is real and what is illustrative, and its limits.

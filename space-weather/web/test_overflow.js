@@ -25,12 +25,15 @@ const measure=`((rootSel)=>{
   return bad.slice(0,10);
 })`;
 const overlap=`(()=>{
-  const sels=['.brand .label','.brand .small','.brand .ghlink','.nav button','#r-time','#r-f10','#r-f100','#r-dose','.hero-copy h1','.aud','#play','#seg button','#scrub'];
-  const items=[]; for(const s of sels)for(const e of document.querySelectorAll(s)){const cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')continue;const r=e.getBoundingClientRect();if(!r.width||!r.height)continue;items.push({n:s,e,r});}
+  const sels=['.brand .label','.brand .small','.brand .ghlink','.nav button','#r-time','#r-f10','#r-f100','#r-dose','.hero-copy h1','.aud','#play','#seg button','#scrub','.sc'];
+  const items=[]; for(const s of sels)for(const e of document.querySelectorAll(s)){const cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')continue;
+    if(s==='.hero-copy h1'){const rg=document.createRange();rg.selectNodeContents(e);const m={};for(const q of rg.getClientRects()){if(!q.width)continue;const k=Math.round(q.top/4);m[k]=m[k]?{left:Math.min(m[k].left,q.left),right:Math.max(m[k].right,q.right),top:Math.min(m[k].top,q.top),bottom:Math.max(m[k].bottom,q.bottom)}:{left:q.left,right:q.right,top:q.top,bottom:q.bottom}}
+      const lh=parseFloat(cs.lineHeight);for(const k in m){const q=m[k];if(lh>0&&q.bottom-q.top>lh){const mid=(q.top+q.bottom)/2;q.top=mid-lh/2;q.bottom=mid+lh/2}items.push({n:s+' (text line)',e,r:q})}continue}
+    const r=e.getBoundingClientRect();if(!r.width||!r.height)continue;items.push({n:s,e,r});}
   const bad=[];
   for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){const a=items[i].r,b=items[j].r; if(items[i].e.contains(items[j].e)||items[j].e.contains(items[i].e))continue;
     if(a.left<b.right-0.5&&b.left<a.right-0.5&&a.top<b.bottom-0.5&&b.top<a.bottom-0.5)bad.push(items[i].n+' x '+items[j].n);}
-  const small=[]; for(const s of ['.nav button','.aud','#play','#seg button','#scrub','.brand .ghlink']){for(const e of document.querySelectorAll(s)){const r=e.getBoundingClientRect();if(r.width&&(r.height<43.5||r.width<43.5))small.push(s+' '+r.width.toFixed(1)+'x'+r.height.toFixed(1));}}
+  const small=[]; for(const s of ['.nav button','.aud','#play','#seg button','#scrub','.brand .ghlink','.sc']){for(const e of document.querySelectorAll(s)){const r=e.getBoundingClientRect();if(r.width&&(r.height<43.5||r.width<43.5))small.push(s+' '+r.width.toFixed(1)+'x'+r.height.toFixed(1));}}
   const gfit=[...document.querySelectorAll('.aud')].flatMap(e=>{const r=e.getBoundingClientRect(),o=[];if(e.scrollWidth>e.clientWidth+1)o.push('aud scrollWidth');
     for(const c of e.querySelectorAll('*')){const q=c.getBoundingClientRect();if(!q.width&&!q.height)continue;if(q.left<r.left-1||q.right>r.right+1||q.top<r.top-1||q.bottom>r.bottom+1)o.push(e.dataset.aud+' '+c.tagName+'.'+(c.className.baseVal!==undefined?c.className.baseVal:c.className));}
     const ts=[...e.querySelectorAll('.t b,.t span,.rv')].filter(x=>x.getBoundingClientRect().width);for(let i=0;i<ts.length;i++)for(let j=i+1;j<ts.length;j++){const a=ts[i].getBoundingClientRect(),b=ts[j].getBoundingClientRect();if(a.left<b.right-.5&&b.left<a.right-.5&&a.top<b.bottom-.5&&b.top<a.bottom-.5)o.push(e.dataset.aud+' text overlap '+ts[i].className+'/'+ts[j].className)}
