@@ -1,4 +1,4 @@
-// Headless checks for the root landing page (index.html): links, Mars not a link, no overflow at phone widths,
+// Headless checks for the root landing page (index.html): links to all three prototypes (Mars is a real card), no overflow at phone widths,
 // keyboard reachable, no console errors, no external requests, reduced motion respected, starfield capped.
 // usage: node --experimental-websocket shared/test_index_page.js
 const path=require('path'),assert=require('assert'),{launch,sleep}=require('../space-weather/web/cdp.js');
@@ -13,14 +13,15 @@ const FILE='file://'+path.resolve(__dirname,'../index.html'); let n=0; const ok=
     ok(!m.bad.length&&!m.tg.length,w+'px: no horizontal overflow, link targets >= 44px '+JSON.stringify(m));}
   await b.viewport(1440,900); await b.goto('about:blank',100); await b.goto(FILE,800);
   const links=await b.ev(`[...document.querySelectorAll('a')].map(a=>a.getAttribute('href'))`);
-  ok(links.includes('moon-south-pole-atlas/web/index.html')&&links.includes('space-weather/web/index.html'),'links to both prototypes are relative: '+links.join(', '));
+  ok(links.includes('moon-south-pole-atlas/web/index.html')&&links.includes('space-weather/web/index.html')&&links.includes('mars-surface-power/web/index.html'),'links to all three prototypes are relative: '+links.join(', '));
   ok(links.filter(h=>!/^https:\/\/github\.com\/sighmon\/space$/.test(h)&&!/^[a-z-]+\/web\/index\.html$/.test(h)).length===0,'the only other link is the GitHub repository');
-  ok(await b.ev(`(()=>{const m=[...document.querySelectorAll('.card')].find(c=>/Mars/.test(c.textContent));return m&&m.tagName!=='A'&&!m.closest('a')&&!m.querySelector('a')&&/Coming soon/i.test(m.textContent)})()`),'Mars surface power is "coming soon" and is not a link');
+  ok(await b.ev(`(()=>{const m=[...document.querySelectorAll('.card')].find(c=>/Mars/.test(c.textContent));return m&&m.tagName==='A'&&m.getAttribute('href')==='mars-surface-power/web/index.html'&&/Prototype/i.test(m.querySelector('.pill').textContent)&&m.querySelector('.pill').classList.contains('on')&&/Mars surface power: prototype/.test(m.getAttribute('aria-label'))&&/No power system was sized/.test(m.textContent)&&!/Coming soon/i.test(m.textContent)})()`),'Mars surface power is a real link card: Prototype pill, aria-label, status text, no "coming soon"');
+  ok(await b.ev(`[...document.querySelectorAll('a.card')].length===3&&document.querySelectorAll('.card.soon').length===0`),'all three cards are links');
   ok(await b.ev(`document.querySelectorAll('.card').length===3`),'three projects listed');
   ok((await b.ev(`document.body.innerText`)).includes('sighmon/space'),'GitHub link text present');
   // keyboard: Tab reaches GitHub link and both cards
-  const order=[]; for(let i=0;i<5;i++){await b.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});await b.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});order.push(await b.ev(`document.activeElement.getAttribute('href')`));}
-  ok(order.includes('moon-south-pole-atlas/web/index.html')&&order.includes('space-weather/web/index.html')&&order.includes('https://github.com/sighmon/space'),'keyboard Tab reaches the GitHub link and both project links: '+order.join(' | '));
+  const order=[]; for(let i=0;i<6;i++){await b.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});await b.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});order.push(await b.ev(`document.activeElement.getAttribute('href')`));}
+  ok(order.includes('moon-south-pole-atlas/web/index.html')&&order.includes('space-weather/web/index.html')&&order.includes('mars-surface-power/web/index.html')&&order.includes('https://github.com/sighmon/space'),'keyboard Tab reaches the GitHub link and all three project links: '+order.join(' | '));
   ok(await b.ev(`(()=>{document.querySelector('a.card').focus();const cs=getComputedStyle(document.activeElement);return cs.outlineStyle!=='none'&&parseFloat(cs.outlineWidth)>=2})()`),'focused card has a visible focus ring');
   // starfield: capped fps
   await b.ev(`window.__d=0;const o=CanvasRenderingContext2D.prototype.clearRect;CanvasRenderingContext2D.prototype.clearRect=function(){__d++;return o.apply(this,arguments)}`);

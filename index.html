@@ -23,8 +23,6 @@ a.card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
 .card .q{margin-top:14px;font-size:14.5px;line-height:1.55;color:var(--ink);min-height:0;overflow-wrap:anywhere}
 .card .st{margin-top:14px;font-size:12.5px;line-height:1.55;color:var(--mute)}
 .card .go{margin-top:auto;padding-top:20px;display:flex;align-items:center;min-height:44px;font-size:13px;color:var(--ice);letter-spacing:.02em}
-.card.soon{border-style:dashed;background:rgba(14,17,20,.5)}
-.card.soon .go{color:var(--mute)}
 .pill{align-self:flex-start;display:inline-block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--mute)}
 .pill.on{color:var(--ice);border-color:rgba(169,220,255,.45)}
 .foot2{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:0 36px 48px;font-size:12px;color:var(--mute);line-height:1.6}
@@ -55,12 +53,12 @@ a.card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
       <p class="q">What does this solar radiation storm mean for a crew beyond low Earth orbit, a polar flight, and the power grid?</p>
       <p class="st">September 2017, NOAA region 2673: a replay of SWPC alerts, GOES-13 protons and RadLab CRaTER dose. A past observation, not a forecast. Dose is copied, not computed from flux.</p>
       <span class="go">Open the replay →</span></a></li>
-    <li><div class="card soon" role="group" aria-label="Mars surface power: coming soon">
-      <span class="pill">Coming soon</span>
+    <li><a class="card" href="mars-surface-power/web/index.html" aria-label="Mars surface power: prototype. Open the sunlight replay.">
+      <span class="pill on">Prototype</span>
       <h2>Mars surface power</h2>
       <p class="q">Where on Mars is solar power an inconvenience, and where is it unsafe for a crew?</p>
-      <p class="st">Folder only. Nothing to open yet.</p>
-      <span class="go">Not available yet</span></div></li>
+      <p class="st">Six sites, one frozen Mars Climate Database v6.2 slice: noon sunlight in a clear sky, a dusty season and a global dust storm, with Opportunity's 2018 measured opacity kept in its own unit. Modelled values, not a verdict. No power system was sized.</p>
+      <span class="go">Open the replay →</span></a></li>
   </ul>
 </main>
 <p class="foot2">No account, no tracking, no external requests: each page is static files and opens from disk. <a class="ghlink" style="min-height:44px" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer">sighmon/space on GitHub ↗</a></p>
