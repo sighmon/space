@@ -1,8 +1,9 @@
-/* space.css: shared design system for the pages in this repository.
-   Extracted from the generic parts of moon-south-pole-atlas/web/index.html (design tokens, reset and overflow
-   guards, typography, top bar / nav / foot, chip, ghlink, bottom sheet / layer panels, buttons, play clock,
-   dials, extras, range bars, notes, n/a, reduced motion). Pages add only their own hero and content rules.
-   No fonts, images or requests: system font stack, relative paths only. */
+/* space.css: the shared design system for the landing page and the space-weather page (the atlas keeps its own inline copy).
+   Provides: design tokens, reset and overflow guards, typography, top bar / nav / foot, chip, ghlink, the bottom sheet and
+   full-height layer panels with their scrim, buttons, play clock, dials, extras, range bars, notes, tables, reduced motion.
+   Constraints: no fonts, images, imports or requests (system font stack only). Pages must add only their own hero and content
+   rules, mark closed panels inert, and toggle body.sheet-open / body.layer-open (the scrim and dimming depend on them).
+   Pages that use it reference it by a relative path and must be served or opened from the repository root. */
 :root{
   --bg:#050607; --ink:#f2f5f7; --mute:rgba(235,242,247,.68); --faint:rgba(235,242,247,.56);
   --line:rgba(235,242,247,.10); --line2:rgba(235,242,247,.18);
@@ -182,16 +183,14 @@ td .sid{display:block;font-size:11px;color:var(--faint);margin-top:2px}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.swipe{display:none;font-size:11px;color:var(--ice);margin-top:12px;letter-spacing:.04em}
 
 .scrim{position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .5s}
+body.layer-open .scrim{opacity:1;pointer-events:auto}
 
 /* ---------- shared helpers ---------- */
 .sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
-.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.swipe{display:none;font-size:11px;color:var(--ice);margin-top:12px;letter-spacing:.04em}
 .tl-read{display:flex;gap:10px 28px;align-items:baseline;flex-wrap:wrap}
 .tl-read .n{font-size:22px;display:inline-block;white-space:nowrap}
 .tl-read .k{font-size:11px;color:var(--mute);letter-spacing:.06em;margin-left:6px}
-.disclaim{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.55}
 .q{min-height:34px}
 
 /* ---------- responsive (same breakpoints as the atlas) ---------- */
