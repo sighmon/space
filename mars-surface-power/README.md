@@ -38,16 +38,20 @@ Opportunity’s 2018 opacity is the PDS Pancam derived atmospheric opacity for M
 
 ## Regenerate
 
-From this directory. `python` may be absent from `PATH`. The standard library is enough.
+From this directory. The standard library is enough; use `python3` (a bare `python` may be absent from `PATH`).
 
 ```bash
-/usr/local/opt/python@3.14/bin/python3.14 -m power
-/usr/local/opt/python@3.14/bin/python3.14 -m unittest tests.test_slice
+python3 -m power
+python3 -m unittest tests.test_slice tests.test_export_web
 ```
 
 Fetch the files in `data/MANIFEST.tsv` into `data/raw/` first (check each `sha256`). The entry point reads only those local files and writes `output/mcd-v62.png` plus the statement on stdout. Two runs print the same text. The PNG carries that method note in a `tEXt` chunk named `method`.
 
 A sample without a version, scenario, site, Ls, flux, unit, and source file is left off the figure.
+
+## Web page
+
+A prototype season replay of this slice lives in [web/](web/README.md) (open `web/index.html` from the repository root). `python3 -m power.export_web` regenerates `web/data/mars.json` and `mars.js` from the same raw files.
 
 ## Standing constraint
 
