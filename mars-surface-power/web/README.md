@@ -54,7 +54,7 @@ No power system sized, no crew or load model, so no "safe" or "unsafe" and no ve
 - The storm has 6 samples per site, so the storm replay loops over Ls 180 to 330 only.
 - Flux at Ls 180 for the storm scenario was returned by the interface and is included although the interface text says `180 < Ls < 360`.
 - The three candidate coordinates come from 2015 abstracts; the model is evaluated at that single point.
-- Display precision: fluxes and deficits are shown to one decimal W/m². A shown deficit is the shown dust flux minus the shown clear flux (whole tenths), so the arithmetic on screen is exact for all 108 samples; it is within 0.1 W/m² of the stored subtraction (which stays unchanged in `data/mars.json`). Latitudes and longitudes use one formatter (`35.352° S`, `94.02° E`) in the tables, compare layer and method note.
+- Display precision: fluxes and deficits are shown to one decimal W/m². A shown deficit is the stored (unrounded) deficit from `data/mars.json` rounded once to one decimal, not printed flux minus printed flux, so it can differ by up to 0.1 W/m² from the printed fluxes (display rounding; the card, compare and method layers say so). Latitudes and longitudes use one formatter (`35.352° S`, `94.02° E`) in the tables, compare layer and method note.
 - Opportunity's opacity window is the table's last 40 sols; the round "about 4.9" figure is not in the table and is not plotted.
 - The page references `../../shared/`, so serve the repository root rather than only `web/`.
 

@@ -6,7 +6,7 @@ const M=JSON.parse(fs.readFileSync(path.resolve(__dirname,'data/mars.json'),'utf
 let n=0; const ok=(c,m)=>{n++;assert.ok(c,m);console.log('ok',m)};
 const MIN='\u2212', fmt=(v,d=0)=>(v<0&&+Math.abs(v).toFixed(d)!==0?MIN:'')+Math.abs(v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const def=(s,k,ls)=>M.deficits.find(d=>d.site===s&&d.scenario===k&&d.ls===ls);
-// display rule: fluxes to one decimal; shown deficit = shown dust flux minus shown clear flux (whole tenths)
+// display rule: fluxes to one decimal; shown deficit = the stored deficit rounded to one decimal (not printed flux minus printed flux)
 // displayed deficit = the STORED deficit (data/mars.json) rounded to 1 decimal with the same rule as fmt (toFixed on the magnitude); never flux minus flux
 const dsp=d=>(d.value<0?-1:1)*+Math.abs(d.value).toFixed(1), NOTE='Rounding: deficits are computed from unrounded values, so a difference of up to 0.1 W/m\u00b2 from the printed fluxes is display rounding.';
 async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,ms||700);}
