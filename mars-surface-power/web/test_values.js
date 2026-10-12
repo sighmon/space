@@ -74,7 +74,26 @@ async function fresh(b,url,ms){await b.goto('about:blank',100);await b.goto(url,
   const mt=await b.ev(`document.querySelector('#method').innerText`);
   for(const s of ['No power system was sized.','climatology average solar scenario','cold scenario (low dust, minimum solar)','warm scenario (dusty, maximum solar)','dust storm average solar scenario','exploration-zone candidates','not a specific year','not days','No conversion factor was applied.','No uncertainty is published','not daily energy','Storm never faked before Ls 180','No ranking of sites','No combined score','No claim of safe or unsafe','Modelled','Illustrative','Measured'])ok(mt.toLowerCase().includes(s.toLowerCase()),'method layer states: '+s);
   ok(mt.includes(NOTE),'method layer carries the rounding note');
-  ok(await b.ev(`document.querySelectorAll('#manifest li').length`)===261&&await b.ev(`document.querySelector('#cites').children.length>=5`)&&await b.ev(`!!document.querySelector('#method a[href="https://github.com/sighmon/space"]')`),'method layer lists 261 manifest entries, citations and the GitHub link');
+  ok(/No Earth-day duration/.test(mt)&&/No interpolation between stored local times/.test(mt),'method layer refuses an Earth-day duration and interpolation between stored local times');
+  // ---- one sol: twelve stored local times, stored deficit rounded once, noon matches the seasonal sample
+  await fresh(b,FILE+'#sol?paused',800);
+  const solTxt=await b.ev(`document.querySelector('#sol').innerText`);
+  const noon=M.sol.samples.find(r=>r.hour===12), dark=M.sol.samples.find(r=>r.hour===0);
+  const cell=async k=>b.ev(`document.querySelector('#soltable tr[data-hour="12"] [data-k="${k}"]').textContent`);
+  ok(M.sol.site==='mesopotamia'&&M.sol.ls===270&&M.sol.samples.length===12&&M.sol.hours.join()==='0,2,4,6,8,10,12,14,16,18,20,22','mars.json sol is Mesopotamia, Ls 270, printed hours 0,2,...,22');
+  ok(await b.ev(`document.querySelectorAll('#solchart .ad').length`)===12&&await b.ev(`document.querySelectorAll('#solchart .am').length`)===12&&await b.ev(`document.querySelectorAll('#solchart path').length`)===0,'sol chart draws 12 dusty and 12 storm dots and no line between them');
+  ok(await cell('storm')===fmt(dsp({value:noon.storm_deficit}),1)&&await cell('warm')===fmt(dsp({value:noon.warm_deficit}),1),'local noon deficits are the stored values rounded once: storm '+fmt(dsp({value:noon.storm_deficit}),1)+', dusty '+fmt(dsp({value:noon.warm_deficit}),1));
+  ok(fmt(dsp({value:noon.storm_deficit}),1)===MIN+'537.8','Mesopotamia Ls 270 storm noon shows '+MIN+'537.8 (stored '+noon.storm_deficit+')');
+  ok(Math.abs(noon.storm.flux-M.series.mesopotamia.storm[9].flux)<1e-6&&Math.abs(noon.cold.flux-M.series.mesopotamia.cold[9].flux)<1e-6&&Math.abs(noon.warm.flux-M.series.mesopotamia.warm[9].flux)<1e-6,'local noon fluxes equal the seasonal Mesopotamia Ls 270 samples');
+  ok(await b.ev(`document.querySelector('#soltable tr[data-hour="0"] td:nth-child(2)').textContent`)===fmt(dark.cold.flux,1)&&dark.cold.flux===0,'the 24 h request, printed as 0 h, shows the stored flux 0.0');
+  const neg=M.sol.samples.filter(r=>r.storm_deficit<0).length, lit=M.sol.samples.filter(r=>r.cold.flux>0).length;
+  ok(await b.ev(`document.querySelector('#sol-neg').textContent`)===neg+' of '+M.sol.samples.length&&await b.ev(`document.querySelector('#sol-lit').textContent`)===lit+' of '+M.sol.samples.length,'negative and above-zero counts are sample counts: '+neg+' and '+lit+' of 12');
+  ok(/No power system was sized\./.test(solTxt)&&/stored local-time samples/.test(solTxt)&&/nothing is drawn between the twelve samples/i.test(solTxt)&&!/Earth day|Earth hour|hours long/.test(solTxt),'the sol layer counts stored samples and does not invent an Earth duration');
+  ok((await b.ev(`document.querySelector('#sol [data-round-note]').textContent`))===NOTE,'sol layer carries the rounding note');
+  await b.ev(`document.querySelector('#sol details').open=true`);
+  const solSent=await b.ev(`document.querySelector('#sol details').innerText`);
+  for(const s of M.sol.sentences)ok(solSent.includes(s), 'sol layer includes the project sentence: '+s.slice(0,80));
+  ok(await b.ev(`document.querySelectorAll('#manifest li').length`)===298&&await b.ev(`document.querySelector('#cites').children.length>=5`)&&await b.ev(`!!document.querySelector('#method a[href="https://github.com/sighmon/space"]')`),'method layer lists 298 manifest entries, citations and the GitHub link');
   // ---- exhaustive: all 108 deficits, every place a flux and a deficit are shown (hero read-outs, card dials, sparkline read-outs)
   const num=t=>+String(t).replace(/\u2212/g,'-').replace(/,/g,'').match(/^-?[0-9.]+/)[0];
   let exh=0,worst=0;

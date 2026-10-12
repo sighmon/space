@@ -19,7 +19,7 @@ from pathlib import Path
 
 from power.assemble import NO_CONVERSION, NO_POWER
 from power.parse import assign_site, parse_mcd_html, parse_rovers, parse_sites, traced_sample
-from power.slice import INTERFACE, PAPERS, RAW, ROOT, SEASON, build_report
+from power.slice import DESIGN, INTERFACE, NOON_FILE, PAPERS, RAW, ROOT, SLUGS, build_report, build_sol
 
 WEB_DATA = ROOT / "web" / "data"
 MANIFEST = ROOT / "data" / "MANIFEST.tsv"
@@ -85,6 +85,18 @@ def read_manifest(raw: Path = RAW, manifest: Path = MANIFEST) -> list[dict]:
 def _what(name: str) -> str:
     if name.startswith("mcd62_storm_season"):
         return "MCD v6.2 interface response: the dust-storm season limit (out-of-season request rejection)"
+    hour = re.match(r"mcd62_([a-z]+)_ls(\d+)_lt(\d+)_([a-z]+)\.html$", name)
+    if hour:
+        requested = int(hour.group(3))
+        clock = f"requested local time {requested} h"
+        if requested == 24:
+            clock += " (the interface prints this response as local time 0.0 h)"
+        return (
+            f"MCD v6.2 response, {hour.group(1)} scenario, Ls {int(hour.group(2))}, "
+            f"{clock}, {hour.group(4)}"
+        )
+    if name == DESIGN:
+        return "MCD detailed design document v6.1: mean fields every 2 Martian hours from 2 to 24"
     m = re.match(r"mcd62_([a-z]+)_ls(\d+)_([a-z]+)\.html$", name)
     if m:
         return f"MCD v6.2 response, {m.group(1)} scenario, Ls {int(m.group(2))}, {m.group(3)}"
@@ -115,7 +127,7 @@ def build() -> dict:
     by_name = {s.name: s for s in found}
     samples = []
     for path in sorted(RAW.glob("mcd62_*.html")):
-        if path.name == SEASON:
+        if not NOON_FILE.match(path.name):
             continue
         parsed = parse_mcd_html(path.read_text(encoding="utf-8", errors="replace"), path.name)
         if parsed is None:
@@ -177,6 +189,50 @@ def build() -> dict:
     if len(deficits) != 108:
         raise ValueError(f"expected 108 deficits, found {len(deficits)}")
 
+    sol_report = build_sol(report)
+    if sol_report.hours != (0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22):
+        raise ValueError(f"expected printed local times 0,2,...,22, found {sol_report.hours}")
+    if len(sol_report.deficits) != 24:
+        raise ValueError(f"expected 24 local-time deficits, found {len(sol_report.deficits)}")
+    sol_slug = SLUGS[sol_report.site]
+    sol_index = {}
+    for item in sol_report.deficits:
+        sol_index[(item.scenario_key, int(item.local_time_h))] = item
+    sol_rows = []
+    for hour in sol_report.hours:
+        row = {"hour": hour}
+        for key in ("cold", "warm", "storm"):
+            # absolute fluxes are on the deficit rows for warm and storm; cold is the baseline of either
+            if key == "cold":
+                item = sol_index[("warm", hour)]
+                row[key] = {"flux": item.baseline_flux, "file": item.baseline_file, "sha256": digest[item.baseline_file]}
+            else:
+                item = sol_index[(key, hour)]
+                row[key] = {"flux": item.dusty_flux, "file": item.dusty_file, "sha256": digest[item.dusty_file]}
+                row[key + "_deficit"] = item.value
+                if abs((row[key]["flux"] - row["cold"]["flux"]) - item.value) > 1e-9:
+                    raise ValueError(f"sol deficit mismatch at local time {hour} {key}")
+        sol_rows.append(row)
+    noon = next(row for row in sol_rows if row["hour"] == 12)
+    seasonal_index = LS.index(int(sol_report.ls))
+    for key in ("cold", "warm", "storm"):
+        seasonal = series[sol_slug][key][seasonal_index]["flux"]
+        if abs(noon[key]["flux"] - seasonal) > 1e-6:
+            raise ValueError(f"local noon does not match the seasonal sample for {key}")
+    sol = {
+        "site": sol_slug,
+        "name": sol_report.site,
+        "ls": int(sol_report.ls),
+        "hours": list(sol_report.hours),
+        "why": "This is the site and season where the stored dust-storm minus cold noon flux is deepest.",
+        "design_file": DESIGN,
+        "design_sha256": digest[DESIGN],
+        "flux_unit": sol_report.deficits[0].unit,
+        "samples": sol_rows,
+        "sentences": list(sol_report.sentences),
+        "method": sol_report.method,
+    }
+
     opp = report.opportunity
     opportunity = {
         "unit": opp[0].unit, "product_id_note": "one product per point", "source_file": opp[0].source_file,
@@ -193,7 +249,7 @@ def build() -> dict:
         "local_time_h": 12, "altitude_m": 0,
         "flux_unit": next(iter(units)), "dod_unit": next(iter(dod_units)),
         "no_power": NO_POWER, "no_conversion": NO_CONVERSION,
-        "scenarios": scenarios, "sites": sites, "series": series, "deficits": deficits,
+        "scenarios": scenarios, "sites": sites, "series": series, "deficits": deficits, "sol": sol,
         "opportunity": opportunity,
         "sentences": list(report.sentences), "method": report.method,
         "manifest": [{"filename": r["filename"], "what": _what(r["filename"]), "url": r["url"],

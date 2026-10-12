@@ -171,6 +171,17 @@ def month_span_degrees(pdf: bytes) -> int | None:
     return None
 
 
+def diurnal_hours(pdf: bytes) -> tuple[int, ...] | None:
+    """The design document's stored clock: every 2 hours from 2 to 24.
+
+    Both phrases have to be in the file. A missing phrase does not become a guessed clock.
+    """
+    text = _compact(pdf)
+    if "every2martianhours" not in text or "from2to24hours" not in text:
+        return None
+    return tuple(range(2, 26, 2))
+
+
 def _compact(pdf: bytes) -> str:
     return re.sub(r"\s+", "", " ".join(pdf_lines(pdf)))
 

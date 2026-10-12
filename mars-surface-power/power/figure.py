@@ -24,9 +24,11 @@ COLORS = (
 )
 
 
-def render(report: Report, path: Path) -> None:
-    lines = _wrap(report.method, 70)
-    height = 36 + 4 * PANEL_H + 3 * PANEL_GAP + 12 + len(lines) * 16 + 12
+def render(report: Report, path: Path, sol=None) -> None:
+    method = report.method if sol is None else report.method + "\n" + sol.method
+    lines = _wrap(method, 70)
+    panels = 5 if sol is not None and sol.deficits else 4
+    height = 36 + panels * PANEL_H + (panels - 1) * PANEL_GAP + 12 + len(lines) * 16 + 12
     canvas = Canvas(WIDTH, height)
     canvas.fill((248, 246, 240))
     canvas.text(12, 8, f"{report.version or 'MCD'}  {NO_POWER}", (20, 22, 28), 1)
@@ -45,12 +47,15 @@ def render(report: Report, path: Path) -> None:
     )
     top += PANEL_H + PANEL_GAP
     _storm_opacity(canvas, top, report)
+    if sol is not None and sol.deficits:
+        top += PANEL_H + PANEL_GAP
+        _sol_panel(canvas, top, sol)
     y = top + PANEL_H + 8
     for line in lines:
         canvas.text(12, y, line, (20, 22, 28), 2)
         y += 16
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(canvas.png(report.method))
+    path.write_bytes(canvas.png(method))
 
 
 def _storm_opacity(canvas, top, report: Report) -> None:
@@ -62,6 +67,18 @@ def _storm_opacity(canvas, top, report: Report) -> None:
     values = [value for points in series.values() for _, value in points]
     unit = report.storm_opacity[0].unit if report.storm_opacity else "absent"
     _xy_panel(canvas, top, f"dust storm {unit}", values, series, sites)
+
+
+def _sol_panel(canvas, top, sol) -> None:
+    keys = ("warm", "storm")
+    labels = {"warm": "warm minus cold", "storm": "dust storm minus cold"}
+    series = {
+        labels[key]: [(item.local_time_h, item.value) for item in sol.deficits if item.scenario_key == key]
+        for key in keys
+    }
+    values = [value for points in series.values() for _, value in points]
+    label = f"{sol.site} Ls {int(sol.ls)} local time, deficit (W/m2)"
+    _xy_panel(canvas, top, label, values, series, list(series), span=24.0)
 
 
 def _deficit_panel(canvas, top, report, sites, key, label) -> None:
@@ -78,7 +95,7 @@ def _opacity_panel(canvas, top, samples, label, color) -> None:
     _line_panel(canvas, top, label, samples, values, color)
 
 
-def _xy_panel(canvas, top, label, values, series, sites) -> None:
+def _xy_panel(canvas, top, label, values, series, sites, span: float = 360.0) -> None:
     x0, x1, y0, y1 = MARGIN_L, WIDTH - MARGIN_R, top + 16, top + PANEL_H - 6
     canvas.rect(x0, y0, x1, y1, (255, 255, 255))
     canvas.rect_border(x0, y0, x1, y1, (40, 42, 48))
@@ -96,7 +113,7 @@ def _xy_panel(canvas, top, label, values, series, sites) -> None:
         color = COLORS[index % len(COLORS)]
         previous = None
         for ls, value in series[site]:
-            point = _map(ls, value, x0, x1, y0, y1, low, high)
+            point = _map(ls, value, x0, x1, y0, y1, low, high, span)
             if previous is None:
                 canvas.marker(point[0], point[1], color)
             else:
@@ -130,8 +147,8 @@ def _line_panel(canvas, top, label, samples, values, color) -> None:
     canvas.text(4, y0, f"{high:.4g}", (60, 60, 60), 1)
 
 
-def _map(ls, value, x0, x1, y0, y1, low, high):
-    x = x0 + int((ls / 360.0) * (x1 - x0))
+def _map(ls, value, x0, x1, y0, y1, low, high, span: float = 360.0):
+    x = x0 + int((ls / span) * (x1 - x0))
     y = y1 - int((value - low) / (high - low) * (y1 - y0))
     return x, y
 

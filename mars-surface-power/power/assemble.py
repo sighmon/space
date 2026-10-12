@@ -35,6 +35,34 @@ class StoredOpacity:
 
 
 @dataclass(frozen=True)
+class HourDeficit:
+    site: str
+    scenario_key: str
+    scenario: str
+    baseline: str
+    ls: float
+    local_time_h: float
+    value: float
+    unit: str
+    dusty_flux: float
+    baseline_flux: float
+    dusty_file: str
+    baseline_file: str
+
+
+@dataclass(frozen=True)
+class SolReport:
+    version: str
+    site: str
+    ls: float
+    hours: tuple[int, ...]
+    deficits: tuple[HourDeficit, ...]
+    sentences: tuple[str, ...]
+    method: str
+    text: str
+
+
+@dataclass(frozen=True)
 class Report:
     version: str
     sites: tuple[str, ...]
@@ -73,6 +101,172 @@ def assemble(
         method=method,
         text=text,
     )
+
+
+def assemble_sol(samples: list[Sample], hours: tuple[int, ...]) -> SolReport:
+    """One site, one Ls, twelve stored local times. Deficit is still stored dusty flux minus stored cold flux."""
+    allowed = set(hours)
+    kept = []
+    for sample in samples:
+        if not traced_sample(sample) or sample.local_time_h is None:
+            continue
+        if sample.local_time_h in allowed:
+            kept.append(sample)
+            continue
+        # The 24 h request is printed as 0.0 h. Keep the printed time.
+        if sample.local_time_h == 0 and 24 in allowed and "_lt24_" in sample.source_file:
+            kept.append(sample)
+    kept.sort(key=lambda sample: (sample.key, sample.local_time_h or 0, sample.source_file))
+    version = kept[0].version if kept else ""
+    site = kept[0].site if kept and len({sample.site for sample in kept}) == 1 else ""
+    seasons = {sample.ls for sample in kept}
+    ls = next(iter(seasons)) if len(seasons) == 1 else None
+    if len({sample.site for sample in kept}) != 1 or ls is None:
+        kept = []
+        site = ""
+        ls = None
+    by_key: dict[tuple[str, float], Sample] = {}
+    for sample in kept:
+        by_key[(sample.key, sample.local_time_h)] = sample
+    found: list[HourDeficit] = []
+    for sample in kept:
+        if sample.key not in ("warm", "storm"):
+            continue
+        baseline = by_key.get(("cold", sample.local_time_h))
+        if baseline is None or baseline.flux is None or sample.flux is None:
+            continue
+        if baseline.flux_unit != sample.flux_unit or not sample.flux_unit:
+            continue
+        found.append(
+            HourDeficit(
+                site=sample.site,
+                scenario_key=sample.key,
+                scenario=sample.scenario,
+                baseline=baseline.scenario,
+                ls=sample.ls,
+                local_time_h=sample.local_time_h,
+                value=sample.flux - baseline.flux,
+                unit=sample.flux_unit,
+                dusty_flux=sample.flux,
+                baseline_flux=baseline.flux,
+                dusty_file=sample.source_file,
+                baseline_file=baseline.source_file,
+            )
+        )
+    found.sort(key=lambda item: (item.scenario_key, item.local_time_h, item.dusty_file))
+    deficits = tuple(found)
+    printed = tuple(sorted({int(sample.local_time_h) for sample in kept}))
+    sentences = _sol_sentences(kept, deficits, printed)
+    method = _sol_method(kept, deficits, printed)
+    text = _sol_text(version, site, ls, printed, sentences, method)
+    return SolReport(
+        version=version,
+        site=site,
+        ls=ls if ls is not None else 0.0,
+        hours=printed,
+        deficits=deficits,
+        sentences=sentences,
+        method=method,
+        text=text,
+    )
+
+
+def _sol_sentences(samples: list[Sample], deficits: tuple[HourDeficit, ...], hours: tuple[int, ...]) -> tuple[str, ...]:
+    lines: list[str] = []
+    if not deficits:
+        return ("No traced local-time samples.", NO_POWER)
+    lead = deficits[0]
+    clock = ", ".join(str(hour) for hour in hours)
+    lines.append(
+        f"At {lead.site}, Ls {_ls(lead.ls)}, the stored local times are {clock} h. "
+        "The design document stores mean fields every 2 Martian hours from 2 to 24. "
+        "The request at 24 h is printed by the interface as local time 0.0 h and is kept at that printed time."
+    )
+    for key in ("warm", "storm"):
+        series = [item for item in deficits if item.scenario_key == key]
+        if series:
+            lines.append(_hour_sentence(series))
+    for key, label in (("cold", "cold"), ("warm", "warm"), ("storm", "dust-storm")):
+        series = [sample for sample in samples if sample.key == key and sample.flux is not None]
+        lit = [sample for sample in series if sample.flux > 0]
+        if series:
+            lines.append(
+                f"{label} incident flux is above zero on {len(lit)} of {len(series)} stored local-time samples."
+            )
+    lines.append(NO_POWER)
+    return tuple(lines)
+
+
+def _hour_sentence(series: list[HourDeficit]) -> str:
+    lead = series[0]
+    below = [item for item in series if item.value < 0]
+    deepest = min(series, key=lambda item: (item.value, item.local_time_h))
+    below_list = ", ".join(_hour(item.local_time_h) for item in below) if below else "none"
+    values = "; ".join(
+        f"local time {_hour(item.local_time_h)} h {_num(item.value)} {item.unit} "
+        f"({item.dusty_file} minus {item.baseline_file})"
+        for item in series
+    )
+    return (
+        f"At {lead.site}, Ls {_ls(lead.ls)}, {lead.scenario} minus {lead.baseline} incident solar flux "
+        f"is {_num(deepest.value)} {lead.unit} at its deepest, local time {_hour(deepest.local_time_h)} h "
+        f"({deepest.dusty_file} minus {deepest.baseline_file}). "
+        f"The difference is negative on {len(below)} of {len(series)} stored local-time samples "
+        f"({below_list}). Samples: {values}."
+    )
+
+
+def _sol_method(samples: list[Sample], deficits: tuple[HourDeficit, ...], hours: tuple[int, ...]) -> str:
+    if not samples:
+        return "No traced local-time samples.\n" + NO_POWER
+    lead = samples[0]
+    clock = ", ".join(str(hour) for hour in hours)
+    unit = deficits[0].unit if deficits else "absent"
+    lines = [
+        f"{lead.version}. One sol at {lead.site}, Ls {_ls(lead.ls)}, local true solar time {clock} h, altitude "
+        f"{_num(lead.altitude_m)} m ALS.",
+        "The detailed design document stores mean fields every 2 Martian hours from 2 to 24, in true solar time. "
+        "These requests are those hours as local true solar time at the site, the spacing that document names. "
+        "Its reference clock is Mars Universal Time, local time at longitude 0; that offset was not added, "
+        "so local noon is the same local-time request as the seasonal sample. "
+        "The document uses linear interpolation between stored Martian hours when a requested time falls between them. "
+        "These twelve requests are the stored hours. "
+        "The 24 h response is printed as local time 0.0 h and is kept at 0.",
+        f"Sunlight deficit is stored dusty flux minus stored cold flux, in {unit}. {NO_POWER}",
+        "A local time that is not one of those twelve hours is omitted.",
+        "How long the deficit lasts is a count of these stored local-time samples.",
+        "Plotted warm minus cold: " + _hour_trace(deficits, "warm"),
+        "Plotted dust storm minus cold: " + _hour_trace(deficits, "storm"),
+    ]
+    return "\n".join(lines)
+
+
+def _hour_trace(deficits: tuple[HourDeficit, ...], key: str) -> str:
+    series = [item for item in deficits if item.scenario_key == key]
+    if not series:
+        return "none"
+    return "; ".join(
+        f"local time {_hour(item.local_time_h)} h {_num(item.value)} {item.unit} "
+        f"({item.dusty_file} minus {item.baseline_file})"
+        for item in series
+    )
+
+
+def _sol_text(version, site, ls, hours, sentences, method) -> str:
+    lines = [
+        f"sol: {site or 'absent'} Ls {_ls(ls) if ls is not None else 'absent'}",
+        f"hours: {', '.join(str(hour) for hour in hours) if hours else 'none'}",
+        f"database: {version or 'absent'}",
+        NO_POWER,
+        *[f"check: {sentence}" for sentence in sentences],
+        "method:",
+        method,
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _hour(value: float) -> str:
+    return _ls(value)
 
 
 def _deficits(samples: list[Sample]) -> tuple[Deficit, ...]:

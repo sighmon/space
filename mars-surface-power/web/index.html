@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mars surface power: where the sunlight goes · Prototype</title>
-<meta name="description" content="One frozen Mars Climate Database v6.2 slice: the noon sunlight deficit in a dusty season and in a global dust storm at six sites. Modelled values, every number sourced. No power system was sized.">
+<meta name="description" content="One frozen Mars Climate Database v6.2 slice: the noon sunlight deficit at six sites, and one sol at the twelve stored local times. Modelled values, every number sourced. No power system was sized.">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="../../shared/space.css">
 <style>
@@ -87,6 +87,10 @@ code.h{font-family:ui-monospace,monospace;font-size:11px;color:#a9dcff;overflow-
 .rb .zero{position:absolute;right:0;top:0;height:18px;border-right:1px dashed rgba(255,194,122,.7)}
 .chart{margin-top:14px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .c{background:var(--ice)}.legend .o{background:#ffc27a}
+#soltable tr.noon td:first-child{color:var(--ice)}
 .chart.narrow svg{max-width:240px;margin:0 auto}
 .ax{stroke:rgba(235,242,247,.18);stroke-width:1}.gl{stroke:rgba(235,242,247,.07);stroke-width:1}
 .at{fill:rgba(235,242,247,.7);font-size:10.5px}
@@ -123,8 +127,8 @@ table.sc tbody tr{cursor:default}
 }
 @media (max-width:520px){
   .top{padding:14px 14px}
-  .nav{width:100%}
-  .nav button{flex:1 1 0;padding:0 6px}
+  .nav{width:100%;flex-wrap:wrap}
+  .nav button{flex:1 1 auto;padding:0 8px}
   .stage{left:14px;right:14px}
   .seg button{padding:0 9px;font-size:12px}
   .seg .long{display:none}.seg .short{display:inline}
@@ -149,6 +153,7 @@ table.sc tbody tr{cursor:default}
   <div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></div></div>
   <nav class="nav" aria-label="Views">
     <button data-v="compare">Compare</button>
+    <button data-v="sol">One sol</button>
     <button data-v="opportunity">Opportunity<span class="long"> 2018</span></button>
     <button data-v="method">Method<span class="long"> &amp; sources</span></button>
   </nav>
@@ -156,7 +161,7 @@ table.sc tbody tr{cursor:default}
 
 <section class="hero-copy">
   <h1>Where the <br>sunlight goes. <br><em>Every number sourced.</em></h1>
-  <p>One frozen slice of the Mars Climate Database v6.2: the noon sunlight at six sites through the year, in a clear sky, a dusty season and a global dust storm. Modelled values. No power system was sized.</p>
+  <p>One frozen slice of the Mars Climate Database v6.2: the noon sunlight at six sites through the year, in a clear sky, a dusty season and a global dust storm. A separate layer holds one sol at the twelve stored local times. Modelled values. No power system was sized.</p>
 </section>
 
 <div class="stage" id="stage">
@@ -220,6 +225,15 @@ table.sc tbody tr{cursor:default}
   </div>
 </section>
 
+<!-- One sol: twelve stored local times, one site, one Ls -->
+<section class="layer" id="sol" aria-hidden="true" inert aria-label="One sol at twelve stored local times">
+  <div class="panel">
+    <div class="xwrap"><button class="x" data-close aria-label="Close one sol">✕</button></div>
+    <div class="grab" role="button" tabindex="0" aria-label="Close one sol" data-grab="layer"></div>
+    <div id="solbody"></div>
+  </div>
+</section>
+
 <!-- Method layer -->
 <section class="layer" id="method" aria-hidden="true" inert aria-label="Method and sources">
   <div class="panel">
@@ -229,7 +243,7 @@ table.sc tbody tr{cursor:default}
 
     <h3>Real, modelled and illustrative</h3>
     <div class="grid2">
-      <div class="box"><h4><span class="tag-i">Modelled</span> · every flux and optical depth</h4><p>Everything except Opportunity's opacity is Mars Climate Database v6.2 output, read from saved interface responses by the repository's own parser and exported unchanged. Incident solar flux on a horizontal surface at local true solar time 12 h and 0 m above the surface, and the monthly mean dust column visible optical depth. This is not daily energy and not panel output.</p></div>
+      <div class="box"><h4><span class="tag-i">Modelled</span> · every flux and optical depth</h4><p>Everything except Opportunity's opacity is Mars Climate Database v6.2 output, read from saved interface responses by the repository's own parser and exported unchanged. The year is incident solar flux on a horizontal surface at local true solar time 12 h and 0 m above the surface, plus the monthly mean dust column visible optical depth. The One sol layer is a second slice of the same scenarios: the twelve stored local times at one site and one Ls. This is not daily energy and not panel output.</p></div>
       <div class="box"><h4><span class="tag-r">Measured</span> · Opportunity 2018 opacity</h4><p>61 Pancam atmospheric opacity values at 880 nm, sols 5066.54 to 5105.61, Ls 165.6 to 187.9, from PDS product 1tau880_5106_20181207a. Opacity and the database's optical depth are different units. They never share an axis and no conversion factor was applied.</p></div>
       <div class="box"><h4><span class="tag-i">Illustrative</span> · the hero scene</h4><p>A drawing with real values: sky haze follows 1 − e^(−τ/2) of the real dust optical depth τ; the Sun disc radius follows the square root of the real noon flux against the largest flux in the slice. The horizon, rocks, lander or rover silhouette and the drifting dust motes are decoration. It is not a picture of any site or storm.</p></div>
       <div class="box"><h4><span class="tag-i">Illustrative</span> · replay and strip</h4><p>The replay steps through 12 seasonal samples; there is nothing between them and no interpolation. 1× is 1.6 seconds per sample. The Mars strip is stylised; only the marker positions are real latitudes and longitudes.</p></div>
@@ -243,7 +257,7 @@ table.sc tbody tr{cursor:default}
     <p class="disclaim">The three landing sites (Deuteronilus Mensae, Protonilus Mensae, Mesopotamia) are exploration-zone candidates from 2015 abstracts, not selected sites. The rover coordinates are the database web page's presets.</p>
 
     <h3>How to read it</h3>
-    <div class="box"><p>The deficit is the stored dusty flux minus the stored cold (clear, low-dust) flux at the same site and Ls: the dusty (warm) scenario and the dust-storm scenario against the cold baseline. Climatology is stored and shown but is not turned into a deficit. The dust storm is the interface's "average" scenario, not a specific year, and exists only for Ls 180 to 330; earlier requests are rejected by the interface, so those samples are absent, never zero. How long a deficit lasts is a count of seasonal samples, not days. No uncertainty is published, so none is drawn. The project says: <b id="nopower"></b></p></div>
+    <div class="box"><p>The deficit is the stored dusty flux minus the stored cold (clear, low-dust) flux at the same site and Ls: the dusty (warm) scenario and the dust-storm scenario against the cold baseline. Climatology is stored and shown but is not turned into a deficit. The dust storm is the interface's "average" scenario, not a specific year, and exists only for Ls 180 to 330; earlier requests are rejected by the interface, so those samples are absent, never zero. How long a deficit lasts is a count of seasonal samples, not days. On the One sol layer the same rule uses the twelve stored local times: a count of those samples, including a stored flux of zero. No uncertainty is published, so none is drawn. The project says: <b id="nopower"></b></p></div>
 
     <h3>The method text from the project</h3>
     <div class="box"><p class="mt" id="method-text"></p><p class="small" id="round-note" data-round-note style="margin-top:10px"></p></div>
@@ -259,7 +273,7 @@ table.sc tbody tr{cursor:default}
     </ul>
 
     <h3>What this page will not do</h3>
-    <div class="nots"><span>No power system sized</span><span>No claim of safe or unsafe</span><span>No combined score</span><span>No ranking of sites</span><span>Climatology not turned into a deficit</span><span>No opacity to optical depth conversion</span><span>No interpolation between seasons</span><span>No daily energy or panel output</span><span>No error bars invented</span><span>Storm never faked before Ls 180</span></div>
+    <div class="nots"><span>No power system sized</span><span>No claim of safe or unsafe</span><span>No combined score</span><span>No ranking of sites</span><span>Climatology not turned into a deficit</span><span>No opacity to optical depth conversion</span><span>No interpolation between seasons</span><span>No interpolation between stored local times</span><span>No Earth-day duration</span><span>No daily energy or panel output</span><span>No error bars invented</span><span>Storm never faked before Ls 180</span></div>
   </div>
 </section>
 <div class="scrim" id="scrim"></div>
@@ -459,7 +473,7 @@ function renderCard(sid){
   var s=site(sid),w=stats(sid,'warm'),m=stats(sid,'storm');
   var h='<div class="card-head"><div><div class="label">Site card \u00b7 '+(s.kind==='rover'?'rover preset':'exploration-zone candidate')+'</div><h2>'+esc(s.name)+'</h2>'
    +'<div class="meta"><span>Position <b>'+latS(s.lat)+', '+lonS(s.lon)+'</b></span><span>Sample <b>local noon, 0 m, horizontal</b></span><span>Basis <b>modelled, MCD v6.2</b></span></div></div>'
-   +'<div class="head-r"><button class="btn" data-open="compare">Compare \u2191</button><button class="btn" data-open="opportunity">Opportunity 2018 \u2191</button><button class="btn" data-open="method">Method &amp; sources \u2191</button></div></div>';
+   +'<div class="head-r"><button class="btn" data-open="compare">Compare \u2191</button><button class="btn" data-open="sol">One sol \u2191</button><button class="btn" data-open="opportunity">Opportunity 2018 \u2191</button><button class="btn" data-open="method">Method &amp; sources \u2191</button></div></div>';
   h+='<div class="example-note"><b>Modelled</b><span>Every value on this card is Mars Climate Database v6.2 output at local true solar time 12 h, 0 m above the surface, in 30\u00b0 steps of Ls, none between. Not daily energy, not panel output. No uncertainty is published, so none is drawn. No power system was sized.</span></div>';
   h+='<div class="label" style="margin-top:18px" id="card-ls"></div><div class="dials">'
    +dialHTML('cold','Clear noon flux','Noon sunlight on the ground in the clear (cold) scenario')
@@ -569,6 +583,89 @@ function fillOpp(){
   $('#oppnote').textContent=(D.no_conversion||'No conversion factor was applied.')+' Source: '+(OPP.source_file||'n/a')+' (PDS Pancam atmospheric opacity), label '+(OPP.label_file||'n/a')+'. The window is every measured row within 40 sols of the table\'s last sol, copied unchanged. The round "about 4.9" figure quoted elsewhere is not in the table, so it is not plotted. No error bars: none are published.';
 }
 
+/* ---------------- one sol: twelve stored local times, dots only, stored deficit rounded once ---------------- */
+var SOL=D.sol||{};
+function cellFlux(row,key){var c=row&&row[key];return c&&ok(c.flux)?c.flux:null}
+function solDef(row,key){var v=row?row[key+'_deficit']:null;return ok(v)?r1(v):null}
+function fillSol(){
+  var box=$('#solbody'); if(!box)return;
+  var rows=Array.isArray(SOL.samples)?SOL.samples:[];
+  var name=SOL.name||'', ls=SOL.ls, unit=SOL.flux_unit||'W/m2';
+  function tally(get,test){var n=0,hit=0;rows.forEach(function(r){var v=get(r);if(!ok(v))return;n++;if(test(v))hit++});return n?{n:n,hit:hit}:null}
+  function litHours(key){var s=[],okAll=true;rows.forEach(function(r){var v=cellFlux(r,key);if(!ok(v)){okAll=false;return}if(v>0)s.push(r.hour)});return okAll?s.join(','):null}
+  var stormNeg=tally(function(r){return solDef(r,'storm')},function(v){return v<0});
+  var warmNeg=tally(function(r){return solDef(r,'warm')},function(v){return v<0});
+  var coldLit=tally(function(r){return cellFlux(r,'cold')},function(v){return v>0});
+  var warmLit=tally(function(r){return cellFlux(r,'warm')},function(v){return v>0});
+  var stormLit=tally(function(r){return cellFlux(r,'storm')},function(v){return v>0});
+  var deep=null;rows.forEach(function(r){var v=solDef(r,'storm');if(!ok(v))return;if(!deep||v<deep.v||(v===deep.v&&r.hour<deep.h))deep={v:v,h:r.hour}});
+  var sameLit=litHours('cold'), wlit=litHours('warm'), slit=litHours('storm');
+  var same=sameLit!=null&&sameLit===wlit&&sameLit===slit;
+  var title=name?(name+(ok(ls)?', Ls '+ls:'')):'One sol';
+  var note='Modelled incident solar flux on a horizontal surface, 0 m. ';
+  if(name)note+=name+(ok(ls)?', Ls '+ls:'')+'. ';
+  note+='The year on the rest of this page is local noon only. This layer is the database\'s own twelve stored local times, requested as local true solar time at this site. ';
+  note+=(SOL.why?SOL.why+' ':'');
+  note+='The design document stores mean fields every 2 Martian hours from 2 to 24. Its reference clock is Mars Universal Time; that offset was not added. The 24 h request is printed as local time 0.0 h and is kept at 0. ';
+  note+='The design document uses linear interpolation between stored Martian hours when a time falls between them. These requests are the stored hours, and nothing is drawn between the twelve samples. ';
+  if(same&&coldLit)note+='Incident flux is above zero on the same '+coldLit.hit+' of '+coldLit.n+' stored local times in the clear, dusty and dust-storm scenarios, so the dust storm does not add a dark sample on this day. It cuts the flux on hours the clear scenario is already lit. ';
+  else note+='A stored flux of zero is a sample. A missing flux is n/a. ';
+  note+='How long the deficit lasts is a count of these stored local-time samples. No power system was sized.';
+  function big(id,val,k){return '<div><span class="num" id="'+id+'">'+(val==null?NA:esc(String(val)))+'</span><span class="k">'+k+'</span></div>'}
+  var h='<div class="lh"><div><div class="label">Stored local times \u00b7 modelled</div><h2 id="sol-title">'+esc(title)+'</h2></div></div>';
+  h+='<div class="example-note"><b>Modelled</b><span id="sol-note">'+esc(note)+'</span></div>';
+  h+='<div class="big" id="solbig">';
+  h+=big('sol-deep',deep?fnum(deep.v,1):null,deep?'deepest dust-storm minus clear, stored deficit rounded once, local time '+deep.h+' h':'deepest dust-storm minus clear');
+  h+=big('sol-neg',stormNeg?stormNeg.hit+' of '+stormNeg.n:null,'dust-storm deficit negative, stored local-time samples');
+  h+=big('sol-warmneg',warmNeg?warmNeg.hit+' of '+warmNeg.n:null,'dusty deficit negative, stored local-time samples');
+  h+=big('sol-lit',coldLit?coldLit.hit+' of '+coldLit.n:null,'clear incident flux above zero. Dusty '+(warmLit?warmLit.hit+' of '+warmLit.n:'n/a')+', dust storm '+(stormLit?stormLit.hit+' of '+stormLit.n:'n/a'));
+  h+='</div>';
+  h+='<div class="chart" id="solchart">'+solChart(rows)+'</div>';
+  h+='<div class="legend"><span><i class="c"></i>Dusty minus clear</span><span><i class="o"></i>Dust storm minus clear</span><span>Local time 12 h is the noon sample.</span></div>';
+  h+='<div class="tablewrap"><table class="sc" id="soltable"><thead><tr><th class="l">Printed local time</th><th class="l">Clear, '+esc(unit)+'</th><th class="l">Dusty, '+esc(unit)+'</th><th class="l">Dusty minus clear</th><th class="l">Dust storm, '+esc(unit)+'</th><th class="l">Storm minus clear</th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td class="l" colspan="6">'+NA+'</td></tr>';
+  rows.forEach(function(r){
+    var noon=r.hour===12;
+    h+='<tr data-hour="'+esc(r.hour)+'"'+(noon?' class="noon"':'')+'>'+td(esc(r.hour)+' h'+(noon?' \u00b7 noon':''))+td(fnum(cellFlux(r,'cold'),1))+td(fnum(cellFlux(r,'warm'),1))+td('<span data-k="warm">'+fnum(solDef(r,'warm'),1)+'</span>')+td(fnum(cellFlux(r,'storm'),1))+td('<span data-k="storm">'+fnum(solDef(r,'storm'),1)+'</span>')+'</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<p class="disclaim" data-round-note>'+ROUND_NOTE+'</p>';
+  h+='<p class="disclaim" id="solpower">'+(D.no_power||'No power system was sized.')+'</p>';
+  var sn=SOL.sentences||[];
+  h+='<details><summary>The project\'s sentences for this sol ('+sn.length+')</summary>'+(sn.length?sn.map(function(t){return '<p>'+esc(t)+'</p>'}).join(''):'<p>'+NA+'</p>')+'</details>';
+  if(SOL.design_file)h+='<p class="small" style="margin-top:10px">Clock source: <code class="h">'+esc(SOL.design_file)+'</code> \u00b7 sha256 <code class="h">'+esc(SOL.design_sha256||'n/a')+'</code>. Each plotted value\'s source file is named in the sentences above.</p>';
+  box.innerHTML=h;
+}
+function solChart(rows){
+  var pts=[];
+  rows.forEach(function(r){if(!ok(r.hour))return;var w=solDef(r,'warm'),s=solDef(r,'storm');if(ok(w))pts.push(w);if(ok(s))pts.push(s)});
+  var W=640,H=250,ml=54,mr=16,mt=16,mb=36;
+  if(!pts.length)return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="No stored local-time deficits" focusable="false"><text class="at" x="'+ml+'" y="40">n/a</text></svg>';
+  var lo=Math.min.apply(null,pts.concat([0])),hi=Math.max.apply(null,pts.concat([0]));
+  if(hi===lo){lo-=1}
+  function X(hour){return ml+(hour/24)*(W-ml-mr)}
+  function Y(v){return mt+(1-(v-lo)/(hi-lo))*(H-mt-mb)}
+  var aria=rows.map(function(r){return 'local time '+r.hour+' h, dusty '+plain(fnum(solDef(r,'warm'),1))+', storm '+plain(fnum(solDef(r,'storm'),1))}).join('; ');
+  var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Twelve stored local times. Dots only, nothing between them. '+esc(aria)+'" focusable="false">';
+  g+='<line class="gl" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'"/>';
+  g+='<text class="at" x="'+(ml-8)+'" y="'+(Y(0)+4)+'" text-anchor="end">0</text>';
+  g+='<text class="at" x="'+(ml-8)+'" y="'+(Y(lo)+4)+'" text-anchor="end">'+plain(fnum(lo,1))+'</text>';
+  [0,6,12,18,22].forEach(function(hour){g+='<text class="at" x="'+X(hour).toFixed(1)+'" y="'+(H-mb+16)+'" text-anchor="middle">'+hour+'</text>'});
+  g+='<line class="ax" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+(H-mb)+'" y2="'+(H-mb)+'"/>';
+  g+='<text class="at" x="'+((ml+W-mr)/2)+'" y="'+(H-4)+'" text-anchor="middle">printed local time, h</text>';
+  var nx=X(12);
+  g+='<line x1="'+nx.toFixed(1)+'" x2="'+nx.toFixed(1)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke="#fff" stroke-dasharray="2 3" stroke-width="1" opacity=".75"/>';
+  g+='<text class="at" x="'+nx.toFixed(1)+'" y="'+(mt+10)+'" text-anchor="middle">noon</text>';
+  rows.forEach(function(r){
+    if(!ok(r.hour))return;
+    var w=solDef(r,'warm'),s=solDef(r,'storm'),x=X(r.hour);
+    if(ok(w))g+='<circle class="ad" data-warm="1" cx="'+x.toFixed(1)+'" cy="'+Y(w).toFixed(1)+'" r="4.2"/>';
+    if(ok(s))g+='<circle class="am" data-storm="1" cx="'+x.toFixed(1)+'" cy="'+Y(s).toFixed(1)+'" r="2.5"/>';
+  });
+  g+='</svg>';
+  return g;
+}
+
 /* ---------------- method and sources ---------------- */
 function td(x){return '<td class="l">'+x+'</td>'}
 function fillMethod(){
@@ -582,7 +679,9 @@ function fillMethod(){
   var seen={},cit=[];SITES.forEach(function(s){if(!seen[s.source_file]&&s.kind==='candidate'){seen[s.source_file]=1;cit.push('<li><div>'+esc(s.source)+'<span>'+esc(s.name)+' coordinate \u00b7 <code class="h">'+esc(s.source_file)+'</code></span></div><a href="'+esc(s.source_url||'#')+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>')}});
   var f=function(re){return man.filter(function(m){return re.test(m.filename)})[0]};
   var m1=f(/interface\.html$/),m2=f(/\.lbl$/),m3=f(/manual/);
-  if(m1)cit.push('<li><div>Mars Climate Database v6.2, web interface<span>All 252 samples and the rover presets \u00b7 <code class="h">'+esc(m1.filename)+'</code></span></div><a href="'+esc(m1.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
+  if(m1)cit.push('<li><div>Mars Climate Database v6.2, web interface<span>The noon samples, the one-sol responses and the rover presets \u00b7 <code class="h">'+esc(m1.filename)+'</code></span></div><a href="'+esc(m1.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
+  var m4=f(/mcd_ddd/);
+  if(m4)cit.push('<li><div>MCD detailed design document v6.1<span>Mean fields every 2 Martian hours from 2 to 24 \u00b7 <code class="h">'+esc(m4.filename)+'</code></span></div><a href="'+esc(m4.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
   if(m3)cit.push('<li><div>MCD user manual (version 6.1)<span>Each month covers 30\u00b0 of Ls \u00b7 <code class="h">'+esc(m3.filename)+'</code></span></div><a href="'+esc(m3.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
   if(m2)cit.push('<li><div>PDS Pancam atmospheric opacity (MER)<span>Opportunity, 1tau880_5106_20181207a \u00b7 <code class="h">'+esc(m2.filename)+'</code></span></div><a href="'+esc(m2.url)+'" target="_blank" rel="noopener noreferrer">source \u2197</a></li>');
   $('#cites').innerHTML=cit.join('')||'<li><div>'+NA+'</div></li>';
@@ -597,7 +696,7 @@ addEventListener('resize',function(){sizeHero();drawHero(S.step);setSeg('#seg');
 
 /* ---------------- start ---------------- */
 function start(){
-  buildRail();buildMap();fillCompare();fillOpp();fillMethod();
+  buildRail();buildMap();fillCompare();fillOpp();fillSol();fillMethod();
   var hs=location.hash.slice(1),qpos=hs.indexOf('?'),path=qpos>=0?hs.slice(0,qpos):hs;
   var q=new URLSearchParams(location.search.slice(1)),hq=new URLSearchParams(qpos>=0?hs.slice(qpos+1):'');
   function has(k){return hq.has(k)||q.has(k)}function get(k){return hq.has(k)?hq.get(k):q.get(k)}
@@ -614,7 +713,7 @@ function start(){
   clock.playing=play;setPlayUI(play);railSel();mapSel();sizeHero();setSeg('#seg');setSeg('#scn');tick(clock.t);
   if(play)clock.start();
   if(pm&&site(pm[1]))openSite(pm[1],true);
-  else if(path==='compare'||path==='opportunity'||path==='method')openLayer(path,true);
+  else if(path==='compare'||path==='sol'||path==='opportunity'||path==='method')openLayer(path,true);
   requestAnimationFrame(function(){setSeg('#seg');setSeg('#scn');layoutScene();drawHero(S.step)});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){layoutScene();drawHero(S.step)});
   addEventListener('load',function(){layoutScene();drawHero(S.step)});

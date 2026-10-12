@@ -16,7 +16,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   await fresh(b,FILE+'#?paused');
   // ---- closed panels are inert
   const closed=await b.ev(`[...document.querySelectorAll('.sheet,.layer')].map(p=>[p.id,p.hasAttribute('inert'),p.getAttribute('aria-hidden')])`);
-  ok(closed.length===4&&closed.every(x=>x[1]&&x[2]==='true'),'all four panels (card + three layers) start inert and aria-hidden: '+JSON.stringify(closed.map(x=>x[0])));
+  ok(closed.length===5&&closed.every(x=>x[1]&&x[2]==='true'),'all five panels (card + four layers) start inert and aria-hidden: '+JSON.stringify(closed.map(x=>x[0])));
   ok(await b.ev(`[...document.querySelectorAll('#sheet *,.layer *')].filter(e=>e.matches('button,a,input,summary,[tabindex]')).every(e=>e.closest('[inert]'))`),'every focusable inside a closed panel is under [inert]');
   // ---- six site cards: open, X top right, handle, Escape, focus return
   for(const s of M.sites){
@@ -45,7 +45,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   ok(await b.ev(`document.querySelector('#card h2').textContent`)==='Opportunity'&&await b.ev(`document.querySelectorAll('#map .mk').length`)===6,'tapping a marker on the Mars strip opens that site (six markers)');
   await key(b,'Escape'); await sleep(700);
   // ---- layers
-  for(const id of ['compare','opportunity','method']){
+  for(const id of ['compare','opportunity','method','sol']){
     await b.ev(`document.querySelector('.nav button[data-v="${id}"]').focus();document.querySelector('.nav button[data-v="${id}"]').click()`); await sleep(900);
     ok(await b.ev(`(()=>{const l=document.querySelector('#${id}');return l.classList.contains('open')&&!l.hasAttribute('inert')&&document.activeElement.hasAttribute('data-close')})()`),id+' layer opens with focus on its X');
     const xr=await b.ev(`(()=>{const p=document.querySelector('#${id} .panel').getBoundingClientRect(),x=document.querySelector('#${id} .x').getBoundingClientRect();return [p.right-x.right,x.top-p.top,x.width,x.height]})()`);
@@ -54,7 +54,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
     ok(await b.ev(`document.querySelector('#${id}').hasAttribute('inert')&&document.activeElement.dataset.v==='${id}'`),id+': X closes and focus returns to the nav button');
   }
   // ---- card -> layer -> close: card inert beneath, focus returns to the trigger inside the card
-  for(const id of ['compare','opportunity','method']){
+  for(const id of ['compare','opportunity','method','sol']){
     await fresh(b,FILE+'#?paused');
     await b.ev(`document.querySelector('.site[data-site="perseverance"]').click()`); await sleep(800);
     const sel=`#sheet [data-open="${id}"]`;
@@ -69,7 +69,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   // ---- scrim is visible and clickable with a layer open; a real click in the gutter dismisses it
   await fresh(b,FILE+'#?paused');
   ok(await b.ev(`(()=>{const s=getComputedStyle(document.querySelector('#scrim'));return +s.opacity===0&&s.pointerEvents==='none'})()`),'scrim is invisible and not clickable with no layer open');
-  for(const id of ['compare','opportunity','method']){
+  for(const id of ['compare','opportunity','method','sol']){
     await b.ev(`document.querySelector('.nav button[data-v="${id}"]').click()`); await sleep(900);
     const sc=await b.ev(`(()=>{const s=getComputedStyle(document.querySelector('#scrim')),r=document.querySelector('#${id}').getBoundingClientRect();return {o:+s.opacity,pe:s.pointerEvents,gx:Math.floor(r.left/2),top:document.elementFromPoint(Math.max(2,Math.floor(r.left/2)),450)===document.querySelector('#scrim'),left:r.left}})()`);
     ok(sc.o===1&&sc.pe==='auto'&&sc.left>20&&sc.top,id+': scrim is visible, clickable and is the element in the gutter '+JSON.stringify(sc));
@@ -137,7 +137,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   await fresh(b,FILE+'#?ls=0'); const r1=await b.ev('__mars.t'); await sleep(800); ok(r1===await b.ev('__mars.t')&&await b.ev(`document.querySelector('#play').getAttribute('aria-label')==='Play replay'`),'prefers-reduced-motion starts paused');
   await b.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   // ---- deep links
-  const dl={'#site/curiosity?paused':['#sheet','curiosity'],'#site/opportunity?ls=180&scenario=storm&paused':['#sheet','opportunity'],'#compare?paused':['#compare',null],'#opportunity?paused':['#opportunity',null],'#method?paused':['#method',null]};
+  const dl={'#site/curiosity?paused':['#sheet','curiosity'],'#site/opportunity?ls=180&scenario=storm&paused':['#sheet','opportunity'],'#compare?paused':['#compare',null],'#opportunity?paused':['#opportunity',null],'#method?paused':['#method',null],'#sol?paused':['#sol',null]};
   for(const [h,[sel,site]] of Object.entries(dl)){
     await fresh(b,FILE+h,700);
     ok(await b.ev(`document.querySelector('${sel}').classList.contains('open')&&!document.querySelector('${sel}').hasAttribute('inert')`),'deep link '+h+' opens '+sel);
@@ -181,6 +181,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
     for(const s of Object.keys(x.series))for(const k of Object.keys(x.series[s]))for(const r of x.series[s][k]){r.flux=null;r.dod=null;r.file=null;r.sha256=null}
     for(const d of x.deficits)d.value=null;
     x.opportunity.points=[];x.manifest=[];x.sentences=[];x.method='';
+    if(x.sol){x.sol.sentences=[];x.sol.method='';for(const r of x.sol.samples||[]){for(const k of ['cold','warm','storm'])if(r[k]){r[k].flux=null;r[k].file=null;r[k].sha256=null}r.warm_deficit=null;r.storm_deficit=null}}
     v=x}})})()`});
   errors.length=0;
   await fresh(b,FILE+'#site/curiosity?ls=240&paused',900);
@@ -189,7 +190,7 @@ const key=async(b,k,code)=>{await b.send('Input.dispatchKeyEvent',{type:'keyDown
   ok(await b.ev(`[...document.querySelectorAll('#card .dial')].every(d=>d.dataset.value==='n/a')`),'every dial reads n/a');
   await key(b,'Escape'); await sleep(700);
   ok(await b.ev(`['#r-flux','#r-dod','#r-def'].every(s=>document.querySelector(s).textContent==='n/a')`),'nulled data renders n/a in the live readouts');
-  for(const id of ['compare','opportunity','method']){await b.ev(`document.querySelector('.nav button[data-v="${id}"]').click()`);await sleep(700);
+  for(const id of ['compare','opportunity','method','sol']){await b.ev(`document.querySelector('.nav button[data-v="${id}"]').click()`);await sleep(700);
     if(id!=='method'){const t=await b.ev(`document.querySelector('#${id}').innerText`);ok(/n\/a/.test(t),id+' layer shows n/a for nulled data');}
     await b.ev(`document.querySelector('#${id} .x').click()`);await sleep(600);}
   ok(errors.length===0,'nulled data causes no console errors '+errors.join('|'));

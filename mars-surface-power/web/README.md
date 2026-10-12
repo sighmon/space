@@ -1,6 +1,6 @@
 # Mars surface power web view
 
-One static page for the frozen Mars Climate Database (MCD) v6.2 slice in this project: a full-bleed hero scene drawn from the real values for the selected site and scenario, a season replay over 12 steps of 30° of Ls, a scenario control (clear, climatology, dusty, dust storm), six site cards (bottom sheets), a compare layer, an Opportunity 2018 measured layer, and a method and sources layer. Same look and feel as [space-weather/web](../../space-weather/web/README.md) and the atlas: near-black canvas, ice-blue accent, glass sheets, big light numerals, built on [shared/space.css](../../shared/space.css) and [shared/space.js](../../shared/space.js). No build step, no dependencies, no network requests.
+One static page for the frozen Mars Climate Database (MCD) v6.2 slice in this project: a full-bleed hero scene drawn from the real values for the selected site and scenario, a season replay over 12 steps of 30° of Ls, a scenario control (clear, climatology, dusty, dust storm), six site cards (bottom sheets), a compare layer, a one-sol layer (twelve stored local times at one site and one Ls), an Opportunity 2018 measured layer, and a method and sources layer. Same look and feel as [space-weather/web](../../space-weather/web/README.md) and the atlas: near-black canvas, ice-blue accent, glass sheets, big light numerals, built on [shared/space.css](../../shared/space.css) and [shared/space.js](../../shared/space.js). No build step, no dependencies, no network requests.
 
 **It shows the sunlight deficit. It does not size or propose a power system** ("No power system was sized."), makes no claim that any site is safe or unsafe, has no combined score and no ranking.
 
@@ -15,7 +15,7 @@ python3 -m http.server 8000   # then open http://localhost:8000/mars-surface-pow
 
 Every path is relative, so it also works under a subpath such as `https://host/space/mars-surface-power/web/index.html`.
 
-Deep links: `#site/curiosity` (also `deuteronilus`, `protonilus`, `mesopotamia`, `perseverance`, `opportunity`), `#compare`, `#opportunity`, `#method`. Query (in the hash after `?`, or in the query string): `ls=240` (snaps to the nearest 30°), `scenario=cold|climatology|warm|storm`, `site=curiosity`, `speed=1|2|4`, `paused`. Example: `#site/mesopotamia?ls=270&scenario=storm&paused`. The replay autoplays by default; it starts paused for `prefers-reduced-motion`. A hidden tab pauses it, redraws are capped at 30 fps, and it loops so the last step (Ls 330) is reached. Opening a site card pauses the replay; closing it resumes if it was playing.
+Deep links: `#site/curiosity` (also `deuteronilus`, `protonilus`, `mesopotamia`, `perseverance`, `opportunity`), `#compare`, `#sol`, `#opportunity`, `#method`. Query (in the hash after `?`, or in the query string): `ls=240` (snaps to the nearest 30°), `scenario=cold|climatology|warm|storm`, `site=curiosity`, `speed=1|2|4`, `paused`. Example: `#site/mesopotamia?ls=270&scenario=storm&paused`. The replay autoplays by default; it starts paused for `prefers-reduced-motion`. A hidden tab pauses it, redraws are capped at 30 fps, and it loops so the last step (Ls 330) is reached. Opening a site card pauses the replay; closing it resumes if it was playing.
 
 ## Regenerate the data
 
@@ -25,14 +25,15 @@ cd mars-surface-power
 python3 -m power.export_web   # writes web/data/mars.json and web/data/mars.js
 ```
 
-`mars.js` is the same JSON assigned to `window.MARS`, so the page works from `file://` (browsers block `fetch` of local files). The exporter checks every raw file against the manifest sha256, reads the absolute fluxes and optical depths with the project's own parser (`power.parse`), takes the deficits and the Opportunity points from `power.slice.build_report()`, and refuses to write if the two disagree, if there are not 108 deficits, if the export is 1 MB or larger, or if any key is (or contains as a word) `score`, `safe`, `rank` or `forecast`. `web/data` is about 260 KB per file.
+`mars.js` is the same JSON assigned to `window.MARS`, so the page works from `file://` (browsers block `fetch` of local files). The exporter checks every raw file against the manifest sha256, reads the absolute fluxes and optical depths with the project's own parser (`power.parse`), takes the noon deficits and the Opportunity points from `power.slice.build_report()` and the one sol from `power.slice.build_sol()`, and refuses to write if those disagree, if there are not 108 noon deficits, if the sol is not the twelve printed local times with 24 deficits, if local noon does not match the seasonal sample, if the export is 1 MB or larger, or if any key is (or contains as a word) `score`, `safe`, `rank` or `forecast`. The 7 MB design document stays out of the JSON; the export keeps its manifest row and sha256.
 
 ## Real, modelled and illustrative
 
 | Element | Status |
 | --- | --- |
 | Noon flux (W/m², incident solar flux on a horizontal surface) and dust column visible optical depth, per site, scenario and Ls (252 saved MCD v6.2 responses: 72 climatology, 72 cold, 72 warm, 36 storm), with the source file and sha256 of each | **Modelled** MCD v6.2 output, exported unchanged. Local true solar time 12 h, 0 m, 30° Ls steps. Not daily energy, not panel output. |
-| Deficit (108 values: 72 dusty minus clear, 36 storm minus clear) | **Modelled**: stored dusty flux minus stored cold flux, from `build_report()`. The page shows the stored deficit rounded once to one decimal (never printed flux minus printed flux), so it can differ by up to 0.1 W/m² from the printed fluxes; the card, compare and method layers say so. Not minus climatology; climatology is stored and shown but never turned into a deficit. |
+| One sol (36 more responses: cold, dusty and dust storm at Mesopotamia, Ls 270, requested local times 2, 4, …, 24 h) | **Modelled**. The same stored subtraction at the twelve printed local times (the 24 h request is printed as 0.0 h and kept at 0). Dots only: nothing is drawn between the samples. Local noon matches the seasonal sample. A stored flux of zero is a sample. Duration is a count of the 12 samples. |
+| Deficit (108 seasonal values: 72 dusty minus clear, 36 storm minus clear, plus 24 one-sol values) | **Modelled**: stored dusty flux minus stored cold flux, from `build_report()` and `build_sol()`. The page shows the stored deficit rounded once to one decimal (never printed flux minus printed flux), so it can differ by up to 0.1 W/m² from the printed fluxes; the card, compare, sol and method layers say so. Not minus climatology; climatology is stored and shown but never turned into a deficit. |
 | Dust storm | **Modelled**, the interface's *average* dust storm scenario, not a specific year. It exists only for Ls 180 to 330 (6 samples); the interface rejects earlier requests. The page disables it below Ls 180 with an explanation and shows n/a, never a faked storm. |
 | Opportunity 2018 opacity (61 points, sols 5066.54 to 5105.61, Ls 165.6 to 187.9, 0.626 to 2.259) | **Measured**: PDS Pancam atmospheric opacity at 880 nm, product `1tau880_5106_20181207a`. Different unit from the model's optical depth: plotted on its own axis beside the modelled storm optical depth at Ls 180 (4.74) on a separate axis. **No conversion factor was applied.** |
 | Sites (6) | Deuteronilus Mensae, Protonilus Mensae and Mesopotamia are **exploration-zone candidates** from 2015 abstracts (Head et al. 1033; Gallegos and Newsom 1053, 1035), not selected landing sites. Curiosity, Perseverance and Opportunity are the MCD web page's rover presets. |
@@ -46,15 +47,15 @@ One snapped step feeds every readout, the scene, the dials and the sparkline mar
 
 ## What it will not do
 
-No power system sized, no crew or load model, so no "safe" or "unsafe" and no verdict; no combined score and no ranking (sites are in fixed order); climatology never becomes a deficit; no opacity to optical depth conversion; no interpolation between seasons; no daily energy or panel output; no error bars (none are published); the storm is never shown before Ls 180. "How long a deficit lasts" is a count of seasonal samples, not days.
+No power system sized, no crew or load model, so no "safe" or "unsafe" and no verdict; no combined score and no ranking (sites are in fixed order); climatology never becomes a deficit; no opacity to optical depth conversion; no interpolation between seasons or between the twelve stored local times; no Earth-day duration; no daily energy or panel output; no error bars (none are published); the storm is never shown before Ls 180. "How long a deficit lasts" is a count of stored samples, seasonal steps on the year and local times on the one sol.
 
 ## Limits
 
-- One database version (v6.2), one local time (12 h), one altitude (0 m), 30° Ls steps, six sites. The scenario manual the site still serves is 6.1.
+- One database version (v6.2), one altitude (0 m), 30° Ls steps, six sites. The year is one local time (12 h). The one sol adds the twelve stored local times at Mesopotamia, Ls 270, and nowhere else. The scenario manual the site still serves is 6.1; the stored clock is taken from the v6.1 detailed design document (`ddd_MCD_v6.2.pdf` returns 404).
 - The storm has 6 samples per site, so the storm replay loops over Ls 180 to 330 only.
 - Flux at Ls 180 for the storm scenario was returned by the interface and is included although the interface text says `180 < Ls < 360`.
 - The three candidate coordinates come from 2015 abstracts; the model is evaluated at that single point.
-- Display precision: fluxes and deficits are shown to one decimal W/m². A shown deficit is the stored (unrounded) deficit from `data/mars.json` rounded once to one decimal, not printed flux minus printed flux, so it can differ by up to 0.1 W/m² from the printed fluxes (display rounding; the card, compare and method layers say so). Latitudes and longitudes use one formatter (`35.352° S`, `94.02° E`) in the tables, compare layer and method note.
+- Display precision: fluxes and deficits are shown to one decimal W/m². A shown deficit is the stored (unrounded) deficit from `data/mars.json` rounded once to one decimal, not printed flux minus printed flux, so it can differ by up to 0.1 W/m² from the printed fluxes (display rounding; the card, compare, sol and method layers say so). Latitudes and longitudes use one formatter (`35.352° S`, `94.02° E`) in the tables, compare layer and method note.
 - Opportunity's opacity window is the table's last 40 sols; the round "about 4.9" figure is not in the table and is not plotted.
 - The page references `../../shared/`, so serve the repository root rather than only `web/`.
 
@@ -67,10 +68,10 @@ cd mars-surface-power && python3 -m unittest tests.test_slice tests.test_export_
 node mars-surface-power/web/test_contrast.js
 node --experimental-websocket mars-surface-power/web/test_overflow.js    # 320 to 1024 px (and 1440): no overflow in the page, cards and layers, no overlap among fixed controls, 44 px targets, phone heights
 node --experimental-websocket mars-surface-power/web/test_behaviour.js   # panels inert, focus return, Escape, scrim, playback and wrap, last step, storm loop, deep links, n/a with nulled data, no console errors or external requests, http /space/ subpath
-node --experimental-websocket mars-surface-power/web/test_values.js      # displayed values at fixed ?ls/scenario/site combinations equal mars.json and the project's numbers; storm disabled below Ls 180; compare, Opportunity and method content
+node --experimental-websocket mars-surface-power/web/test_values.js      # displayed values at fixed ?ls/scenario/site combinations equal mars.json and the project's numbers; storm disabled below Ls 180; compare, one sol, Opportunity and method content
 node --experimental-websocket shared/test_index_page.js                  # landing page
 ```
 
 ## Screenshots
 
-`web/screenshots/` (each at `desktop-1440x900`, `mobile-390x844` and `mobile-360x740`): `index-*` is the landing page; `mars-<view>-*` is each Mars view: `home` (Curiosity, dusty, Ls 240, paused), `storm` (Mesopotamia, dust storm, Ls 270, paused), `card-deuteronilus`, `card-protonilus`, `card-mesopotamia`, `card-curiosity`, `card-perseverance`, `card-opportunity` (each paused at a fixed Ls), `compare`, `opportunity` and `method`.
+`web/screenshots/` (each at `desktop-1440x900`, `mobile-390x844` and `mobile-360x740`): `index-*` is the landing page; `mars-<view>-*` is each Mars view: `home` (Curiosity, dusty, Ls 240, paused), `storm` (Mesopotamia, dust storm, Ls 270, paused), `card-deuteronilus`, `card-protonilus`, `card-mesopotamia`, `card-curiosity`, `card-perseverance`, `card-opportunity` (each paused at a fixed Ls), `compare`, `sol` (Mesopotamia, Ls 270, twelve stored local times), `opportunity` and `method`.

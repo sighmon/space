@@ -10,7 +10,7 @@ const PHONES=[[320,640],[360,740],[390,844],[430,932]];
 const STATES=[['home','#?ls=240&paused',null],['home-clear','#?ls=60&scenario=cold&paused',null],['home-storm','#?ls=270&scenario=storm&paused',null],['home-storm-na','#?ls=90&scenario=storm&paused',null],
   ['deuteronilus','#site/deuteronilus?ls=240&paused','#sheet'],['protonilus','#site/protonilus?ls=300&scenario=storm&paused','#sheet'],['mesopotamia','#site/mesopotamia?ls=60&paused','#sheet'],
   ['curiosity','#site/curiosity?ls=270&paused','#sheet'],['perseverance','#site/perseverance?ls=0&paused','#sheet'],['opportunity','#site/opportunity?ls=180&paused','#sheet'],
-  ['compare','#compare?paused','#compare'],['opportunity-layer','#opportunity?paused','#opportunity'],['method','#method?paused','#method']];
+  ['compare','#compare?paused','#compare'],['opportunity-layer','#opportunity?paused','#opportunity'],['method','#method?paused','#method'],['sol','#sol?paused','#sol']];
 const measure=`((rootSel)=>{
   const vw=innerWidth,bad=[],de=document.documentElement;
   if(de.scrollWidth>vw)bad.push('documentElement.scrollWidth '+de.scrollWidth+' > '+vw);
@@ -44,7 +44,7 @@ const tap=`(()=>{const out=[];for(const s of ['#sheet .x','#sheet .grab','.layer
   for(const w of WIDTHS.concat([1440])){
     await b.viewport(w,w===1440?900:800);
     for(const [name,hash,root] of STATES){
-      if(w===1440&&!/^(home|curiosity|compare)$/.test(name))continue;
+      if(w===1440&&!/^(home|curiosity|compare|sol)$/.test(name))continue;
       await b.goto('about:blank',60); await b.goto(base+hash,400); await sleep(650);
       const bad=await b.ev(`${measure}(${JSON.stringify(root)})`); checks++;
       if(bad.length){fails.push([w,name,bad]);console.log(w,name,'FAIL',bad);} else console.log(w,name,'overflow ok');

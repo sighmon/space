@@ -96,8 +96,39 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(coords["deuteronilus"], (39.11, 23.199)); self.assertEqual(coords["mesopotamia"], (-35.352, 94.02)); self.assertEqual(coords["opportunity"], (-1.95, 354.47))
         self.assertEqual(self.data["sentences"], list(self.report.sentences)); self.assertEqual(self.data["method"], self.report.method)
         self.assertEqual(self.data["sentences"][-1], "No power system was sized.")
-        self.assertEqual(len(self.data["manifest"]), 261)
+        self.assertEqual(len(self.data["manifest"]), 298)
         self.assertTrue(all(len(m["sha256"]) == 64 for m in self.data["manifest"]))
+
+    def test_sol_is_stored_subtraction_at_the_twelve_printed_times(self):
+        sol = self.data["sol"]
+        self.assertEqual(sol["site"], "mesopotamia")
+        self.assertEqual(sol["name"], "Mesopotamia")
+        self.assertEqual(sol["ls"], 270)
+        self.assertEqual(sol["hours"], [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22])
+        self.assertEqual(len(sol["samples"]), 12)
+        self.assertEqual(sol["sentences"][-1], "No power system was sized.")
+        self.assertIn("local true solar time at the site", sol["method"])
+        self.assertIn("linear interpolation between stored Martian hours", sol["method"])
+        self.assertNotIn(sol["method"], self.data["method"])
+        noon = next(row for row in sol["samples"] if row["hour"] == 12)
+        seasonal_storm = next(d for d in self.data["deficits"] if d["site"] == "mesopotamia" and d["scenario"] == "storm" and d["ls"] == 270)
+        self.assertEqual(noon["storm_deficit"], seasonal_storm["value"])
+        self.assertAlmostEqual(noon["storm_deficit"], -537.81713, places=4)
+        for key in ("cold", "warm", "storm"):
+            self.assertEqual(noon[key]["flux"], self.data["series"]["mesopotamia"][key][LS.index(270)]["flux"])
+            self.assertEqual(len(noon[key]["sha256"]), 64)
+        for row in sol["samples"]:
+            self.assertAlmostEqual(row["warm_deficit"], row["warm"]["flux"] - row["cold"]["flux"], delta=1e-9)
+            self.assertAlmostEqual(row["storm_deficit"], row["storm"]["flux"] - row["cold"]["flux"], delta=1e-9)
+        self.assertEqual(sum(row["storm_deficit"] < 0 for row in sol["samples"]), 7)
+        self.assertEqual(sum(row["cold"]["flux"] > 0 for row in sol["samples"]), 7)
+        self.assertEqual(sum(row["warm"]["flux"] > 0 for row in sol["samples"]), 7)
+        self.assertEqual(sum(row["storm"]["flux"] > 0 for row in sol["samples"]), 7)
+        names = [row["filename"] for row in self.data["manifest"]]
+        self.assertEqual(sum("_lt" in name for name in names), 36)
+        self.assertIn("mcd_ddd_v6.1.pdf", names)
+        self.assertEqual(len(sol["design_sha256"]), 64)
+        self.assertLess(len(json.dumps(sol)), 200_000)
 
     def test_no_banned_key_anywhere_and_small(self):
         guard(self.data)
