@@ -27,7 +27,20 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
 .viz{font-size:11.5px;color:var(--faint);line-height:1.45}
 .links{display:flex;flex-wrap:wrap;gap:8px}
 .links button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:rgba(18,22,26,.72);color:var(--mute);font-size:13px}
-.links button.on,#scenes button.on,#speeds button.on{color:#061018;background:var(--ice);border-color:var(--ice)}
+.links button.on,#scenes button.on,#speeds button.on,.seg button.on{color:#061018;background:var(--ice);border-color:var(--ice)}
+.ruler{display:flex;flex-direction:column;gap:5px;grid-column:1/-1}
+.ruler .track{position:relative;height:3px;border-radius:3px;background:var(--line2);overflow:hidden}
+.ruler .fill{position:absolute;inset:0;background:var(--ice);transform-origin:0 50%;transform:scaleX(0);will-change:transform;box-shadow:0 0 8px var(--ice-glow)}
+.ruler .rk{font-size:11.5px;color:var(--mute);line-height:1.4;font-variant-numeric:tabular-nums}
+.dsoc{grid-column:1/-1;display:none}
+body.sc-mars .dsoc{display:block}
+.dsoc .track{position:relative;height:16px}
+.dsoc .base{position:absolute;left:0;right:0;top:7px;height:2px;background:var(--line2);border-radius:2px}
+.dsoc .end{position:absolute;left:0;top:2px;width:2px;height:12px;background:var(--mute);border-radius:2px}
+.dsoc .end.b{left:auto;right:0}
+.dsoc .pt{position:absolute;left:0;top:1px;width:2px;height:14px;background:var(--ice);border-radius:2px;box-shadow:0 0 8px var(--ice);will-change:transform}
+.dsoc .ends{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums;margin-top:2px}
+.dsoc .where{font-size:11.5px;color:var(--mute);margin-top:3px;line-height:1.4}
 .links button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .dock{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:8px 14px 8px 8px;border-radius:26px;background:rgba(18,22,26,.82);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .play{width:44px;height:44px;min-width:44px}
@@ -48,10 +61,24 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
 @media (max-width:520px){
   .top{padding:14px}
   .nav button{padding:0 10px}
-  .nav{width:100%}
+  .nav{margin-left:auto}
   .stage{left:14px;right:14px}
-  .stamp{flex-basis:100%;margin-left:0}
+  .stamp{display:none}
+  .links{gap:6px}
   .links button{padding:0 10px;font-size:12px}
+  .brand .small{display:none}
+  .stage{bottom:8px;gap:8px}
+  .live{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px}
+  .live .it:first-child{grid-column:1/-1}
+  .live .n{font-size:17px}
+  #r-time,#r-km{white-space:nowrap}
+  .live .it:first-child .n{font-size:16px}
+  .viz{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .dock{padding:6px;gap:6px 8px;border-radius:24px}
+  #scenes{flex:1 1 auto}
+  #scenes button{flex:1 1 auto;padding:0 8px}
+  #scenes .l{display:none}
+  .seg button{padding:0 8px}
 }
 @media (max-width:900px) and (max-height:700px){.viz{display:none}}
 @media (max-width:360px){.viz{display:none}}
@@ -74,6 +101,9 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
     <div class="it"><span class="num n" id="r-time">n/a</span><span class="k">Light time, one way</span></div>
     <div class="it"><span class="num n" id="r-km">n/a</span><span class="k">Path length</span></div>
     <div class="it"><span class="num n" id="r-rate">n/a</span><span class="k">Published rate</span></div>
+    <div class="ruler" id="ruler"><div class="track" aria-hidden="true"><div class="fill" id="ruler-fill"></div></div><span class="rk" id="ruler-k"></span></div>
+    <div class="dsoc" id="dsoc" role="group" aria-label="Published Deep Space Optical Communications endpoints"><div class="track" aria-hidden="true"><div class="base"></div><div class="end"></div><div class="end b"></div><div class="pt" id="dsoc-pt"></div></div>
+      <div class="ends"><span>0.36 AU · 267 Mb/s</span><span>2.68 AU · 8.3 Mb/s</span></div><div class="where" id="dsoc-where"></div></div>
     <div class="viz" id="r-note" style="grid-column:1/-1"></div>
   </div>
   <div class="links" id="links" role="group" aria-label="Optical links in this scene"></div>
@@ -83,7 +113,7 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
       <button type="button" data-scene="mesh">Mesh</button>
       <button type="button" data-scene="moon">Moon</button>
       <button type="button" data-scene="mars">Mars</button>
-      <button type="button" data-scene="conj">Conjunction</button>
+      <button type="button" data-scene="conj" aria-label="Conjunction">Conj<span class="l">unction</span></button>
     </div>
     <div class="seg" id="speeds" role="group" aria-label="Speed">
       <button type="button" data-s="1">1×</button>
@@ -98,8 +128,11 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
     <div class="xwrap"><button class="x" id="mclose" type="button" data-close aria-label="Close method">✕</button></div>
     <div class="lh"><h2>Method and sources</h2></div>
     <div class="box" style="margin-top:18px"><h4>What is drawn</h4>
-      <p>Four schematics. The mesh is a low Earth orbit ring. The Moon view places Earth and the Moon side by side and draws an elliptical lunar frozen orbit, of the family ESA’s Moonlight programme uses for its south-pole communications satellite, plus a small halo just past the Moon for an Earth–Moon L2 relay. The Mars view puts Earth and Mars on circular heliocentric orbits and a relay on a tight loop around Mars. The conjunction view freezes Mars on the far side of the Sun and puts one relay 60° ahead of Mars, the Sun–Mars L4 region. Orbits move faster than real time. Pulses move on the light-time scale named in the dock.</p>
-      <p>Light time is path length divided by 299,792.458 km/s. The lunar mean distance used for the straight Earth–Moon hop is 384,400 km. One astronomical unit is 149,597,870.7 km. Mars’s orbit is drawn at 1.524 AU. The conjunction path via L4 is the sum of the two straight legs, Earth to the L4 point and that point to Mars. The far-side path is the same kind of sum: 64,500 km from the far side to a halo 64,500 km beyond the Moon, then 448,900 km from that halo back to Earth.</p>
+      <p>Four schematics. The mesh is a low Earth orbit ring. The Moon view places Earth and the Moon side by side and draws an elliptical lunar frozen orbit, of the family ESA’s Moonlight programme uses for its south-pole communications satellite, plus a small halo just past the Moon for an Earth–Moon L2 relay. The Mars view puts Earth and Mars on circular heliocentric orbits and a relay on a tight loop around Mars. The conjunction view freezes Mars on the far side of the Sun and puts one relay 60° ahead of Mars on its orbit, the Sun–Mars L4 region. Earth is then 120° (2π/3) from L4 as seen from the Sun, so Earth to L4 is about 2.20 AU and L4 to Mars is 1.524 AU (an equilateral triangle with the Sun), 3.73 AU in all, about 31.0 minutes of light. The direct Earth–Mars line passes through the solar exclusion zone, drawn as a glare around the Sun, and the beam breaks there. Orbits move faster than real time, at an illustrative rate (the speed buttons change only the orbits). Planet positions are circular and not tied to a date.</p>
+      <p><b>How time is shown.</b> Packets on the Moon scene fly in real time: a pulse on the 384,400 km line takes 1.28 s of your clock, measured with the browser’s frame clock so it holds at 60, 120 or any refresh rate. A single mesh hop is 18 ms, too short to see, so the mesh heartbeat is drawn 50× slower and says so. Mars light times are minutes, so the Mars and conjunction scenes are drawn 60× faster than light (1 s on screen = 1 min of light) and say so. The 5,400 km handoff on the Moon scene is 18 ms at real time, so it is drawn as a steady lit beam rather than a pulse. The ruler under the readout fills over the selected path’s delay on the same stated scale. Speed buttons never change the light scale.</p>
+      <p><b>Pulse trains.</b> The number of packets in flight on a path is 1 + 2·log10(rate ÷ 1 Mb/s), from the published rate only. A published range draws two faint trains, one for each end. A path with no published rate gets a single packet, and the readout says “No published rate”. A soft ring marks each arrival. Nothing here is a modelled throughput.</p>
+      <p><b>Mars rate marker.</b> On the Mars scene a marker places the drawn Earth–Mars distance on the axis between the two published Deep Space Optical Communications endpoints, 0.36 AU at 267 Mb/s and 2.68 AU at 8.3 Mb/s. Only those two measured points are labelled. No rate is read off between them.</p>
+      <p>Light time is path length divided by 299,792.458 km/s. The lunar mean distance used for the straight Earth–Moon hop is 384,400 km. One astronomical unit is 149,597,870.7 km. Mars’s orbit is drawn at 1.524 AU. The conjunction path via L4 is the sum of the two straight legs, Earth to the L4 point and that point to Mars, computed from the drawn heliocentric positions. The far-side path is the same kind of sum: 64,500 km from the far side to a halo 64,500 km beyond the Moon, then 448,900 km from that halo back to Earth.</p>
       <p>A rate is printed only when the source states one. The mesh rate is 100 Gbps, from Travis Brashears, SPIE, 2024, including the longest reported link of 5,400 km. The Mars cruise rate is the Deep Space Optical Communications span, 8.3 to 267 Mb/s, measured from 0.36 to 2.68 AU with a 22 cm flight terminal. It is not interpolated to the angle on screen. The conjunction rate, 28 to 44 Mb/s return, is a Jet Propulsion Laboratory study of a proposed 50 cm optical terminal in a long-period Sun–Mars L4 or L5 orbit, not a flight. No Starlink rate is published at lunar or Martian range, so those hops show light time and say so. No link budget was calculated.</p>
     </div>
     <h3>Sources</h3>
@@ -116,41 +149,63 @@ body.layer-open .hero-copy,body.layer-open .stage{opacity:0;visibility:hidden;po
 <script>
 (function(){
 'use strict';
-var C=299792.458, AU=149597870.7, MOON=384400, L2=64500, MARS_A=1.524;
+var C=299792.458, AU=149597870.7, MOON=384400, L2=64500, MARS_A=1.524, TAU=Math.PI*2;
 var $=Space.$;
 var REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 var cv=$('#hero'), ctx=cv.getContext('2d'), W=0, H=0, dpr=1;
-var scene='moon', speed=1, playing=!REDUCED, t=0, sel='direct';
+var off=document.createElement('canvas'), octx=off.getContext('2d');   /* static layers: sky, orbits, fixed discs, Sun glare */
+var scene='moon', speed=1, sel='direct', draws=0;
 var panels=Space.panels();
-
+var FONT='12px '+getComputedStyle(document.body).fontFamily, LABEL='rgba(235,242,247,.78)', ICE='169,220,255';
+/* Light-time display factor per scene: on-screen seconds per real second of light. Stated in the ruler label. */
+var SCALE={
+  mesh:{f:50, word:'shown 50× slower'},
+  moon:{f:1, word:'shown in real time'},
+  mars:{f:1/60, word:'shown 60× faster (1 s = 1 min)'},
+  conj:{f:1/60, word:'shown 60× faster (1 s = 1 min)'}
+};
+var NORATE='No published rate';
 var LINKS={
   mesh:[
-    {id:'neighbour', name:'Neighbour laser', ends:'LEO satellite to the next', km:5400, rate:'100 Gbps', kind:'measured',
+    {id:'neighbour', name:'Neighbour laser', ends:'LEO satellite to the next', km:5400, rate:'100 Gbps', bps:[100e9], kind:'measured',
      note:'Brashears, SPIE 2024. Measured on the Starlink mesh. The longest reported link is 5,400 km. The drawing shows eight satellites so the ring can be read.'}
   ],
   moon:[
-    {id:'direct', name:'Earth–Moon line', ends:'Near side to Earth', km:MOON, rate:'No Starlink rate', kind:'geometry',
+    {id:'direct', name:'Earth–Moon line', ends:'Near side to Earth', km:MOON, rate:NORATE, bps:null, kind:'geometry',
      note:'Mean lunar distance 384,400 km. Light time only. A Starlink terminal has no published rate at this range.'},
-    {id:'trunk', name:'ELFO to Earth', ends:'Frozen lunar orbit to Earth', km:MOON, rate:'No Starlink rate', kind:'geometry',
+    {id:'trunk', name:'ELFO to Earth', ends:'Frozen lunar orbit to Earth', km:MOON, rate:NORATE, bps:null, kind:'geometry',
      note:'The communications satellite in ESA Moonlight sits on an elliptical lunar frozen orbit, aimed at the south pole. The trunk back to Earth is about one lunar distance. No optical rate is published for that hop.'},
-    {id:'l2', name:'Far side via L2', ends:'Far side to L2 to Earth', km:null, rate:'No Starlink rate', kind:'geometry',
+    {id:'l2', name:'Far side via L2', ends:'Far side to L2 to Earth', km:null, rate:NORATE, bps:null, kind:'geometry',
      note:'A far-side station cannot see Earth: the Moon is in the way. A halo about Earth–Moon L2 sits past the Moon, so it can see both. Far side to the halo is 64,500 km, 215 ms. Halo to Earth is 448,900 km, 1.50 s. The light time shown is both legs, longer than the near-side line. No optical rate is published.'},
-    {id:'mesh', name:'Earth mesh handoff', ends:'Gateway to a LEO laser', km:5400, rate:'100 Gbps', kind:'measured',
+    {id:'mesh', name:'Earth mesh handoff', ends:'Gateway to a LEO laser', km:5400, rate:'100 Gbps', bps:[100e9], kind:'measured',
      note:'Once the bits are at Earth, the measured mesh rate applies: 100 Gbps over a neighbour-scale hop.'}
   ],
   mars:[
-    {id:'trunk', name:'Earth–Mars trunk', ends:'Earth to a Mars relay', km:null, rate:'8.3–267 Mb/s', kind:'measured',
+    {id:'trunk', name:'Earth–Mars trunk', ends:'Earth to a Mars relay', km:null, rate:'8.3–267 Mb/s', bps:[8.3e6,267e6], kind:'measured',
      note:'Deep Space Optical Communications, a 22 cm terminal on Psyche: 8.3 to 267 Mb/s from 0.36 to 2.68 AU. The span is the published result. It is not turned into a rate for the angle on screen. The light time is the drawn separation.'}
   ],
   conj:[
-    {id:'relay', name:'Via Sun–Mars L4', ends:'Mars to L4 to Earth', km:null, rate:'28–44 Mb/s', kind:'study',
-     note:'JPL study of one relay in a long-period orbit about Sun–Mars L4 or L5, with 50 cm telescopes: 28 to 44 Mb/s return during superior conjunction. A study, not a flight. The light time is the two straight legs.'},
-    {id:'direct', name:'Straight line, Sun in it', ends:'Earth to Mars through the Sun', km:null, rate:'Not used', kind:'blocked',
-     note:'At superior conjunction the Sun sits on the Earth–Mars line. The geometric light time is still shown. The study routes around it.'}
+    {id:'relay', name:'Via Sun–Mars L4', ends:'Mars to L4 to Earth', km:null, rate:'28–44 Mb/s', bps:[28e6,44e6], kind:'study',
+     note:'JPL study of one relay in a long-period orbit about Sun–Mars L4 or L5, with 50 cm telescopes: 28 to 44 Mb/s return during superior conjunction. A study, not a flight. The light time is the two straight legs, Earth to L4 about 2.20 AU and L4 to Mars 1.524 AU.'},
+    {id:'direct', name:'Straight line, Sun in it', ends:'Earth to Mars through the Sun', km:null, rate:'Not used', bps:null, kind:'blocked',
+     note:'At superior conjunction the Sun sits on the Earth–Mars line. The geometric light time is still shown. The beam breaks inside the solar exclusion zone, so the study routes around it.'}
   ]
 };
 
+/* ---------- geometry (AU, heliocentric, computed from positions) ---------- */
 function light(km){return km/C;}
+function helio(r,a){return [r*Math.cos(a), r*Math.sin(a)];}
+function dist(p,q){return Math.hypot(p[0]-q[0], p[1]-q[1]);}
+var CONJ={te:Math.PI, tm:0, lead:Math.PI/3};   /* Earth opposite Mars across the Sun; L4 leads Mars by 60° on Mars's orbit */
+function conjPos(){return {earth:helio(1,CONJ.te), mars:helio(MARS_A,CONJ.tm), l4:helio(MARS_A,CONJ.tm+CONJ.lead)};}
+function conjRelay(){
+  var p=conjPos(), e=dist(p.earth,p.l4)*AU, m=dist(p.l4,p.mars)*AU;
+  var a=Math.abs(Math.atan2(Math.sin(CONJ.tm+CONJ.lead-CONJ.te), Math.cos(CONJ.tm+CONJ.lead-CONJ.te)));
+  return {earth:e, mars:m, sum:e+m, angleEarthL4:a};
+}
+function conjDirect(){var p=conjPos(); return dist(p.earth,p.mars)*AU;}
+function marsSepAt(te,tm){return dist(helio(1,te), helio(MARS_A,tm))*AU;}
+
 function fmtTime(s){
   if(s<1)return (s*1000).toFixed(s<0.1?1:0)+' ms';
   if(s<90)return s.toFixed(s<10?2:1)+' s';
@@ -160,12 +215,16 @@ function fmtKm(km){
   if(km<2e6)return Math.round(km).toLocaleString('en-US')+' km';
   return (km/AU).toFixed(2)+' AU';
 }
-function marsSep(theta){return Math.sqrt(1+MARS_A*MARS_A-2*MARS_A*Math.cos(theta))*AU;}
-function conjDirect(){return (MARS_A+1)*AU;}
-function conjRelay(){
-  var legE=Math.sqrt(1+MARS_A*MARS_A-2*MARS_A*Math.cos(Math.PI/3))*AU;
-  return {earth:legE, mars:MARS_A*AU, sum:legE+MARS_A*AU};
-}
+/* packets in flight per light crossing, from the published rate only (log scale) */
+function density(bps){return 1+2*Math.log10(bps/1e6);}
+
+/* ---------- state: accumulated phases, so speed changes never teleport ---------- */
+var OMEGA={mesh:.45, g:.5, elfo:.32, l2:.55, earth:.12, mars:.064, relay:.9, l4:.3};
+var ph={mesh:0, g:0, elfo:0, l2:0, earth:0, mars:1.15, relay:0, l4:0};
+var pk={};                 /* packet travel accumulators, in light crossings, per scene:link */
+var rings=[], glow=[0,0,0,0,0,0,0,0], simT=0;
+function pkey(id){return scene+':'+id;}
+function pget(id){var k=pkey(id); if(pk[k]==null)pk[k]=0.42; return pk[k];}
 
 function active(){return LINKS[scene];}
 function current(){
@@ -173,25 +232,343 @@ function current(){
   for(i=0;i<list.length;i++)if(list[i].id===sel)return list[i];
   return list[0];
 }
-function linkKm(L, theta){
-  if(scene==='mars')return marsSep(theta);
-  if(scene==='conj'){var c=conjRelay(); if(L.id==='direct')return conjDirect(); return c.sum;}
-  if(L.id==='l2')return MOON+2*L2;
+function linkKm(L){
+  if(scene==='mars')return marsSepAt(ph.earth, ph.mars);
+  if(scene==='conj')return L.id==='direct'?conjDirect():conjRelay().sum;
+  if(L.id==='l2')return L2+(MOON+L2);
   return L.km;
 }
 
-function paintReadout(theta){
-  var L=current(), km=linkKm(L, theta);
-  $('#r-name').textContent=L.name;
-  $('#r-ends').textContent=L.ends;
-  $('#r-time').textContent=fmtTime(light(km));
-  $('#r-km').textContent=fmtKm(km);
-  $('#r-rate').textContent=L.rate;
-  $('#r-note').textContent=L.note;
-  var pulse=scene==='mesh'?'Pulses slowed so a hop can be seen.':scene==='moon'?'Pulses in real light time.':'1 s of pulse = 1 min of light.';
-  var stamp='Not to scale. '+pulse;
-  $('#stamp').textContent=stamp;
+/* ---------- layout, read once per resize / scene / link change ---------- */
+var G={}, band0=null, dsocW=0;
+function readBand(){
+  var head=$('.top').getBoundingClientRect().bottom+8;
+  var foot=$('.stage').getBoundingClientRect().top-10;
+  if(foot<head+36)foot=head+36;
+  return {top:head, bot:foot, cy:(head+foot)/2, h:foot-head};
 }
+function layout(){
+  band0=readBand();
+  dsocW=$('#dsoc .track').getBoundingClientRect().width||0;
+  var wide=W>900, b=band0;
+  G={wide:wide};
+  if(scene==='mesh'){
+    if(wide){G.cx=W*0.6; G.cy=H*0.58; G.R=Math.min(W,H)*0.11;}
+    else{G.cx=W*0.5; G.cy=b.cy+4; G.R=Math.max(16,Math.min(W*0.09,(b.h-36)/4.8));}
+    G.ring=G.R*2.15;
+  }else if(scene==='moon'){
+    var drop=wide?0:Math.min(52,b.h*0.34), rise=wide?0:Math.min(56,b.h*0.36);
+    G.ex=wide?W*0.44:W*0.30; G.ey=wide?H*0.64:b.bot-drop;
+    G.mx=wide?W*0.62:W*0.68; G.my=wide?H*0.42:b.top+rise;
+    G.eR=wide?42:Math.max(7,Math.min(24,drop/2.1));
+    G.mR=wide?30:Math.max(7,Math.min(20,rise/2.2));
+    G.ring=G.eR*1.85; G.exr=G.mR*2.6; G.eyr=G.mR*1.2;
+    G.dir=G.mx>G.ex?1:-1;
+    G.hx=G.mx+G.dir*(wide?G.mR*3.1:G.mR*2.3); G.hy=G.my; G.hr=G.mR*(wide?0.9:0.7);
+  }else{
+    G.sx=wide?W*0.58:W*0.52; G.sy=wide?H*0.58:b.cy;
+    G.rm=wide?200:Math.max(46,Math.min(W*0.24,(b.h/2)-22));
+    G.re=wide?120:G.rm*0.62;
+    G.sun=wide?16:11; G.glare=scene==='conj'?G.sun*3.2:G.sun*2.2;
+    G.or=wide?16:11; G.l4rx=wide?22:14; G.l4ry=wide?14:9;
+    G.pd=wide?7:5; G.pm=wide?6:4;
+  }
+  renderStatic();
+}
+function P(r,a){return [G.sx+Math.cos(a)*G.rm*r/MARS_A, G.sy+Math.sin(a)*G.rm*r/MARS_A*0.96];}
+function Pe(a){return [G.sx+Math.cos(a)*G.re, G.sy+Math.sin(a)*G.re*0.96];}
+function Pm(a){return [G.sx+Math.cos(a)*G.rm, G.sy+Math.sin(a)*G.rm*0.96];}
+
+/* ---------- drawing helpers (take a context so the static layer can reuse them) ---------- */
+function disc(g,x,y,r,a,b){
+  var gr=g.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);
+  gr.addColorStop(0,a); gr.addColorStop(1,b);
+  g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,TAU); g.fill();
+}
+function label(g,x,y,text,anchor){g.font=FONT; g.fillStyle=LABEL; g.textAlign=anchor||'left'; g.fillText(text,x,y);}
+function orbit(g,x,y,rx,ry,rot){
+  g.save(); g.translate(x,y); g.rotate(rot||0);
+  g.strokeStyle='rgba(169,220,255,.38)'; g.lineWidth=1;
+  g.beginPath(); g.ellipse(0,0,rx,ry,0,0,TAU); g.stroke(); g.restore();
+}
+function sunGlare(g,x,y,r,R){
+  var gr=g.createRadialGradient(x,y,r*.5,x,y,R);
+  gr.addColorStop(0,'rgba(255,214,150,.55)'); gr.addColorStop(.45,'rgba(255,190,110,.16)'); gr.addColorStop(1,'rgba(255,190,110,0)');
+  g.fillStyle=gr; g.beginPath(); g.arc(x,y,R,0,TAU); g.fill();
+}
+var sprite=(function(){  /* one pre-rendered packet glow, drawn with drawImage */
+  var c=document.createElement('canvas'); c.width=c.height=64; var g=c.getContext('2d');
+  var gr=g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,250,240,1)'); gr.addColorStop(.25,'rgba(255,240,220,.7)'); gr.addColorStop(1,'rgba(255,194,122,0)');
+  g.fillStyle=gr; g.fillRect(0,0,64,64); return c;
+})();
+function packet(x,y,r,a){ctx.globalAlpha=a; ctx.drawImage(sprite,x-r,y-r,2*r,2*r); ctx.globalAlpha=1;}
+function sat(x,y,gl){
+  gl=gl||0;
+  if(gl>0.02){ctx.globalAlpha=gl*0.8; ctx.drawImage(sprite,x-10,y-10,20,20); ctx.globalAlpha=1;}
+  ctx.fillStyle='#f2f5f7'; ctx.beginPath(); ctx.arc(x,y,2.4+gl*1.4,0,TAU); ctx.fill();
+}
+
+function renderStatic(){
+  off.width=Math.round(W*dpr); off.height=Math.round(H*dpr);
+  var g=octx; g.setTransform(dpr,0,0,dpr,0,0);
+  var sky=g.createRadialGradient(W*0.7,H*0.2,0,W*0.6,H*0.4,Math.max(W,H));
+  sky.addColorStop(0,'#0c1218'); sky.addColorStop(1,'#050607');
+  g.fillStyle=sky; g.fillRect(0,0,W,H);
+  if(W>900){
+    var vg=g.createLinearGradient(0,0,W*0.42,0);
+    vg.addColorStop(0,'rgba(5,6,7,.82)'); vg.addColorStop(1,'rgba(5,6,7,0)');
+    g.fillStyle=vg; g.fillRect(0,0,W*0.42,H);
+  }
+  if(scene==='mesh'){
+    disc(g,G.cx,G.cy,G.R,'#8eb4c9','#1a2833');
+    label(g,G.cx,G.cy+G.R+16,'Earth','center');
+    orbit(g,G.cx,G.cy,G.ring,G.ring*0.94,0);
+    label(g,G.cx,G.cy-G.ring-12,'8 of the mesh, neighbour lasers','center');
+  }else if(scene==='moon'){
+    disc(g,G.ex,G.ey,G.eR,'#8eb4c9','#1a2833');
+    disc(g,G.mx,G.my,G.mR,'#c5ccd2','#3a424a');
+    label(g,G.ex-G.eR-8,G.ey,'Earth','right');
+    label(g,G.mx,G.my+G.mR+16,'Moon','center');
+    orbit(g,G.ex,G.ey,G.ring,G.ring*0.92,0);
+    orbit(g,G.mx,G.my,G.exr,G.eyr,-0.5);
+    orbit(g,G.hx,G.hy,G.hr,G.hr*0.7,0);
+    if(G.wide)label(g,G.hx,G.hy-G.hr-10,'L2','center');
+  }else{
+    sunGlare(g,G.sx,G.sy,G.sun,G.glare);
+    disc(g,G.sx,G.sy,G.sun,'#fff1d6','#ffb25a');
+    label(g,G.sx,G.sy-Math.max(22,G.glare*0.75),'Sun','center');
+    orbit(g,G.sx,G.sy,G.re,G.re*0.96,0);
+    orbit(g,G.sx,G.sy,G.rm,G.rm*0.96,0);
+    if(scene==='conj'){
+      var e=Pe(CONJ.te), m=Pm(CONJ.tm), l4=Pm(CONJ.tm+CONJ.lead);
+      orbit(g,m[0],m[1],G.or,G.or*0.8,0);
+      disc(g,e[0],e[1],G.pd,'#8eb4c9','#1a2833');
+      disc(g,m[0],m[1],G.pm,'#e7b08a','#8a4632');
+      label(g,e[0]+8,e[1]-8,'Earth'); label(g,m[0]+8,m[1]-8,'Mars');
+      orbit(g,l4[0],l4[1],G.l4rx,G.l4ry,0);
+      label(g,l4[0],l4[1]-20,'L4','center');
+    }
+  }
+}
+
+/* ---------- routes for the current frame: points + km per leg ---------- */
+function routes(){
+  var R=[];
+  if(scene==='mesh'){
+    var pts=[], i;
+    for(i=0;i<8;i++){var a=ph.mesh+i*TAU/8; pts.push([G.cx+Math.cos(a)*G.ring, G.cy+Math.sin(a)*G.ring*0.94]);}
+    G.sats=pts;
+    var ring=pts.concat([pts[0]]);
+    R.push({id:'neighbour', pts:ring, km:[5400,5400,5400,5400,5400,5400,5400,5400], hop:5400, color:'#ffc27a', mesh:true});
+  }else if(scene==='moon'){
+    var a0=ph.g;
+    G.g1=[G.ex+Math.cos(a0)*G.ring, G.ey+Math.sin(a0)*G.ring*0.92];
+    G.g2=[G.ex+Math.cos(a0+0.7)*G.ring, G.ey+Math.sin(a0+0.7)*G.ring*0.92];
+    var ea=ph.elfo, c=Math.cos(-0.5), s=Math.sin(-0.5);
+    G.elf=[G.mx+Math.cos(ea)*G.exr*c-Math.sin(ea)*G.eyr*s, G.my+Math.cos(ea)*G.exr*s+Math.sin(ea)*G.eyr*c];
+    G.l2s=[G.hx+Math.cos(ph.l2)*G.hr, G.hy+Math.sin(ph.l2)*G.hr*0.7];
+    var E=[G.ex,G.ey], near=[G.mx-G.dir*G.mR,G.my], far=[G.mx+G.dir*G.mR,G.my];
+    var W2='rgba(235,242,247,.85)';
+    R.push({id:'direct', pts:[near,E], km:[MOON], color:W2, dash:[4,5]});
+    R.push({id:'trunk', pts:[G.elf,E], km:[MOON], color:W2, dash:[4,5]});
+    R.push({id:'l2', pts:[far,G.l2s,E], km:[L2,MOON+L2], color:W2, dash:[4,5]});
+    R.push({id:'mesh', pts:[G.g1,G.g2], km:[5400], color:'#ffc27a'});
+  }else if(scene==='mars'){
+    G.earth=Pe(ph.earth); G.mars=Pm(ph.mars);
+    G.relay=[G.mars[0]+Math.cos(ph.relay)*G.or, G.mars[1]+Math.sin(ph.relay)*G.or*0.8];
+    R.push({id:'trunk', pts:[G.earth,G.relay], km:[marsSepAt(ph.earth,ph.mars)], color:'#ffc27a'});
+  }else{
+    var e=Pe(CONJ.te), m=Pm(CONJ.tm), l4=Pm(CONJ.tm+CONJ.lead), cr=conjRelay();
+    G.rs=[l4[0]+Math.cos(ph.l4)*G.l4rx, l4[1]+Math.sin(ph.l4)*G.l4ry];
+    R.push({id:'relay', pts:[m,G.rs,e], km:[cr.mars,cr.earth], color:'#d9c2ff'});
+    R.push({id:'direct', pts:[m,e], km:[conjDirect()], color:'rgba(235,242,247,.7)', dash:[3,6], blocked:true});
+  }
+  var list=active();
+  R.forEach(function(r){
+    r.L=list.filter(function(L){return L.id===r.id})[0];
+    r.total=r.km.reduce(function(a,b){return a+b},0);
+    r.T=light(r.mesh?r.hop:r.total);                     /* light time of the path (mesh: one hop) */
+    r.D=r.T*SCALE[scene].f*(r.mesh?8:1);                 /* on-screen seconds per crossing (mesh: whole ring) */
+    r.sel=r.id===sel;
+  });
+  return R;
+}
+/* point at fraction u of a route, measured along km (not pixels), so chained legs keep their real proportions */
+function along(r,u){
+  var d=u*r.total, i=0;
+  while(i<r.km.length-1&&d>r.km[i]){d-=r.km[i]; i++;}
+  var f=Math.max(0,Math.min(1,d/r.km[i])), p=r.pts[i], q=r.pts[i+1];
+  return [p[0]+(q[0]-p[0])*f, p[1]+(q[1]-p[1])*f, i, f];
+}
+
+/* ---------- time step from Space.clock (real seconds, any refresh rate) ---------- */
+function tick(dt){
+  simT+=dt;
+  for(var k in ph)ph[k]+=OMEGA[k]*dt*speed;
+  var R=routes();
+  R.forEach(function(r){
+    var q0=pget(r.id), q1=q0+dt/r.D; pk[pkey(r.id)]=q1;
+    if(r.D<0.25||r.blocked)return;
+    if(r.mesh){
+      if(Math.floor(q1*8)>Math.floor(q0*8)){var n=(Math.floor(q1*8))%8; glow[n]=1; if(r.sel)rings.push({x:G.sats[n][0],y:G.sats[n][1],t0:simT});}
+      return;
+    }
+    var ks=r.L.bps?r.L.bps.map(density):[1], end=r.pts[r.pts.length-1];
+    ks.forEach(function(k){if(Math.floor(q1*k)>Math.floor(q0*k))rings.push({x:end[0],y:end[1],t0:simT,a:r.sel?1:.4});});
+  });
+  for(var i=0;i<8;i++)glow[i]*=Math.exp(-dt/0.5);
+  return R;
+}
+
+function lineSeg(r,opt){
+  ctx.strokeStyle=r.color; ctx.lineWidth=r.sel?1.7:1; ctx.globalAlpha=r.sel?0.95:0.45;
+  ctx.setLineDash(r.dash||[]);
+  ctx.beginPath(); ctx.moveTo(r.pts[0][0],r.pts[0][1]);
+  for(var i=1;i<r.pts.length;i++)ctx.lineTo(r.pts[i][0],r.pts[i][1]);
+  ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+}
+function drawRoute(r){
+  if(r.blocked){drawBlocked(r); return;}
+  if(scene==='conj'&&r.sel){    /* the L4 route lights up */
+    ctx.strokeStyle='rgba(217,194,255,.18)'; ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(r.pts[0][0],r.pts[0][1]);
+    for(var j=1;j<r.pts.length;j++)ctx.lineTo(r.pts[j][0],r.pts[j][1]); ctx.stroke();
+  }
+  if(r.mesh){drawMesh(r); return;}
+  lineSeg(r);
+  if(r.D<0.25){   /* too short to see at this scale: a steady lit beam, said in the ruler */
+    ctx.strokeStyle='rgba(255,236,210,.5)'; ctx.lineWidth=r.sel?3:2; ctx.beginPath(); ctx.moveTo(r.pts[0][0],r.pts[0][1]); ctx.lineTo(r.pts[1][0],r.pts[1][1]); ctx.stroke();
+    return;
+  }
+  var q=pget(r.id);
+  if(!r.L.bps){var p=along(r,q-Math.floor(q)); packet(p[0],p[1],r.sel?14:8,1); return;}
+  var two=r.L.bps.length>1;
+  r.L.bps.forEach(function(b,ti){
+    var k=density(b), fr=q*k-Math.floor(q*k), off=two?(ti?2.2:-2.2):0;
+    var dx=r.pts[1][1]-r.pts[0][1], dy=r.pts[0][0]-r.pts[1][0], dl=Math.hypot(dx,dy)||1; dx=dx/dl*off; dy=dy/dl*off;
+    for(var j=0;;j++){var u=(fr+j)/k; if(u>=1)break; var p=along(r,u); packet(p[0]+dx,p[1]+dy,r.sel?(two?9:12):6,two?0.55:0.9);}
+  });
+}
+function drawBlocked(r){
+  /* beam fades into the solar exclusion zone and is broken inside it */
+  var a=r.pts[0], b=r.pts[1], s=[G.sx,G.sy], Rx=G.glare;
+  var vx=b[0]-a[0], vy=b[1]-a[1], L=Math.hypot(vx,vy), ux=vx/L, uy=vy/L;
+  var tc=(s[0]-a[0])*ux+(s[1]-a[1])*uy, dc=Math.abs((s[0]-a[0])*uy-(s[1]-a[1])*ux);
+  var h=dc<Rx?Math.sqrt(Rx*Rx-dc*dc):0, t1=tc-h, t2=tc+h, fade=Math.min(60,L*0.12);
+  ctx.setLineDash(r.dash); ctx.lineWidth=r.sel?1.7:1;
+  function seg(f,t,fromA,toA){
+    if(t<=f)return; var g=ctx.createLinearGradient(a[0]+ux*f,a[1]+uy*f,a[0]+ux*t,a[1]+uy*t);
+    g.addColorStop(0,'rgba(235,242,247,'+fromA+')'); g.addColorStop(1,'rgba(235,242,247,'+toA+')');
+    ctx.strokeStyle=g; ctx.beginPath(); ctx.moveTo(a[0]+ux*f,a[1]+uy*f); ctx.lineTo(a[0]+ux*t,a[1]+uy*t); ctx.stroke();
+  }
+  var A=r.sel?.75:.4;
+  if(h>0){seg(0,t1-fade,A,A); seg(t1-fade,t1,A,0); seg(t2,t2+fade,0,A); seg(t2+fade,L,A,A);}
+  else seg(0,L,A,A);
+  ctx.setLineDash([]);
+  if(r.sel&&h>0){  /* a packet that dies in the glare: no arrival ring */
+    var q=pget(r.id), u=q-Math.floor(q), d=u*L, al=d<t1-fade?1:d<t1?(t1-d)/fade:0;
+    if(al>0)packet(a[0]+ux*d,a[1]+uy*d,10,al);
+  }
+}
+function drawMesh(r){
+  var q=pget(r.id), k=density(r.L.bps[0]), hq=q*8, i;
+  for(i=0;i<8;i++){
+    var p=r.pts[i], n=r.pts[i+1];
+    ctx.strokeStyle='#ffc27a'; ctx.globalAlpha=0.45; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(p[0],p[1]); ctx.lineTo(n[0],n[1]); ctx.stroke();
+    ctx.globalAlpha=0.38; ctx.fillStyle='#ffe2bd';           /* faint train on every neighbour beam, density from 100 Gbps */
+    var fr=hq*k-Math.floor(hq*k);
+    for(var j=0;;j++){var u=(fr+j)/k; if(u>=1)break; ctx.fillRect(p[0]+(n[0]-p[0])*u-0.75,p[1]+(n[1]-p[1])*u-0.75,1.5,1.5);}
+    ctx.globalAlpha=1;
+  }
+  var hb=along(r,q-Math.floor(q));   /* heartbeat: one pulse hopping around the ring */
+  packet(hb[0],hb[1],r.sel?13:8,1);
+  for(i=0;i<8;i++)sat(r.pts[i][0],r.pts[i][1],glow[i]);
+}
+function drawRings(){
+  var keep=[];
+  for(var i=0;i<rings.length;i++){
+    var g=rings[i], age=simT-g.t0; if(age>0.3||age<0)continue; keep.push(g);
+    var u=age/0.3, a=(1-u)*(1-u)*0.7*(g.a==null?1:g.a);
+    ctx.strokeStyle='rgba('+ICE+','+a.toFixed(3)+')'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(g.x,g.y,4+u*12,0,TAU); ctx.stroke();
+  }
+  rings=keep;
+}
+function drawDynamic(R){
+  if(scene==='moon'){
+    ctx.strokeStyle='rgba(169,220,255,.45)'; ctx.setLineDash([2,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(G.mx,G.my+G.mR); ctx.lineTo(G.elf[0],G.elf[1]); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if(scene==='mars'){
+    orbit(ctx,G.mars[0],G.mars[1],G.or,G.or*0.8,0);
+    disc(ctx,G.earth[0],G.earth[1],G.pd,'#8eb4c9','#1a2833');
+    disc(ctx,G.mars[0],G.mars[1],G.pm,'#e7b08a','#8a4632');
+    ctx.font=FONT; label(ctx,G.earth[0]+8,G.earth[1]-8,'Earth'); label(ctx,G.mars[0]+8,G.mars[1]-8,'Mars');
+  }
+  R.forEach(function(r){if(!r.sel)drawRoute(r);});
+  R.forEach(function(r){if(r.sel)drawRoute(r);});
+  if(scene==='moon'){
+    sat(G.g1[0],G.g1[1]); sat(G.g2[0],G.g2[1]); sat(G.elf[0],G.elf[1]); sat(G.l2s[0],G.l2s[1]);
+    if(G.wide)label(ctx,G.elf[0]+6,G.elf[1]-6,'ELFO');
+  }
+  if(scene==='mars')sat(G.relay[0],G.relay[1]);
+  if(scene==='conj')sat(G.rs[0],G.rs[1],sel==='relay'?0.7:0);
+  drawRings();
+}
+
+/* ---------- readout: DOM writes only on change ---------- */
+var txt={};
+function setT(id,v){if(txt[id]===v)return false; txt[id]=v; $('#'+id).textContent=v; return true;}
+var lastFill=-1, lastPt=-1, shownKm=null, tw=null;
+function ease(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;}
+function tweenP(){if(!tw)return 1; var p=(performance.now()-tw.t0)/600; if(p>=1){tw=null; return 1;} return ease(Math.max(0,p));}
+function paintReadout(R,e){
+  var L=current(), km=linkKm(L), r=R.filter(function(x){return x.id===L.id})[0];
+  var show=km; if(e<1&&tw&&tw.from)show=Math.exp(Math.log(tw.from)+(Math.log(km)-Math.log(tw.from))*e);  /* km→AU count-up */
+  shownKm=km;
+  var moved=setT('r-name',L.name)|setT('r-ends',L.ends)|setT('r-rate',L.rate)|setT('r-note',L.note);
+  setT('r-time',fmtTime(light(km)));
+  setT('r-km',fmtKm(show));
+  var S=SCALE[scene], how=r.D<0.25?'too short to draw, beam shown lit':S.word;
+  if(r.blocked)how+=', broken by the Sun';
+  setT('ruler-k','Light: '+fmtTime(light(km))+' one way, '+how+'. Orbits '+speed+'×. Not to scale.');
+  setT('stamp','Not to scale. Light '+S.word+'.');
+  var q=pget(r.id), u=r.mesh?(q*8-Math.floor(q*8)):(q-Math.floor(q));
+  if(r.D<0.25)u=1; if(r.blocked)u=Math.min(u,0.5);
+  if(Math.abs(u-lastFill)>0.002){lastFill=u; $('#ruler-fill').style.transform='scaleX('+u.toFixed(4)+')';}
+  if(scene==='mars'){
+    var au=km/AU, x=Math.max(0,Math.min(1,(au-0.36)/(2.68-0.36)))*Math.max(0,dsocW-2);
+    if(Math.abs(x-lastPt)>0.3){lastPt=x; $('#dsoc-pt').style.transform='translateX('+x.toFixed(1)+'px)';}
+    setT('dsoc-where', au<0.36?'Drawn distance '+au.toFixed(2)+' AU, nearer than the nearest measured point.':au>2.68?'Drawn distance '+au.toFixed(2)+' AU, beyond the farthest measured point.':'Drawn distance '+au.toFixed(2)+' AU, between the two measured points. No rate is read off between them.');
+  }
+  return moved;
+}
+
+function draw(){
+  draws++;
+  var e=REDUCED?1:tweenP();
+  var R=routes();
+  ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle='#050607'; ctx.fillRect(0,0,cv.width,cv.height);
+  var s=e<1?0.9+0.1*e:1;
+  ctx.setTransform(dpr*s,0,0,dpr*s,(1-s)*W/2*dpr,(1-s)*H/2*dpr);
+  ctx.globalAlpha=e<1?e:1;
+  ctx.drawImage(off,0,0,W,H);
+  if(e<1){ctx.save(); ctx.globalAlpha=e; drawDynamic(R); ctx.restore();} else drawDynamic(R);
+  ctx.globalAlpha=1;
+  if(paintReadout(R,e)&&!draw.fix){draw.fix=1; layout(); draw(); draw.fix=0;}
+}
+
+/* ---------- one shared clock: Space.clock, 30 fps cap, pauses in a hidden tab ---------- */
+var lastT=0;
+var clock=Space.clock({length:1e12, rate:1, speed:1, fps:30, playing:false,
+  onTick:function(t){var dt=t-lastT; lastT=t; if(dt>0)tick(dt); draw();},
+  onState:function(){playIcon();}});
+function playIcon(){
+  $('#playp').setAttribute('d', clock.playing?'M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z':'M1 0L10 6L1 12Z');
+  $('#play').setAttribute('aria-label', clock.playing?'Pause':'Play');
+}
+function twLoop(){if(!tw)return; if(!clock.playing||document.hidden)draw(); if(tw)requestAnimationFrame(twLoop); else if(!clock.playing)draw();}
 
 function buttons(){
   var box=$('#links'), html='', list=active(), i;
@@ -202,228 +579,57 @@ function buttons(){
   }
   box.innerHTML=html;
   box.querySelectorAll('button').forEach(function(b){
-    b.onclick=function(){sel=b.dataset.link; buttons();};
+    b.onclick=function(){sel=b.dataset.link; buttons(); var f=document.querySelector('#links [data-link="'+sel+'"]'); if(f)f.focus({preventScroll:true}); layout(); draw();};
   });
 }
-
 function size(){
   dpr=Math.min(2,devicePixelRatio||1);
   W=innerWidth; H=innerHeight;
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
 }
-function disc(x,y,r,a,b){
-  var g=ctx.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);
-  g.addColorStop(0,a); g.addColorStop(1,b);
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill();
-}
-function label(x,y,text,anchor){
-  ctx.font='12px '+getComputedStyle(document.body).fontFamily;
-  ctx.fillStyle='rgba(235,242,247,.78)';
-  ctx.textAlign=anchor||'left';
-  ctx.fillText(text,x,y);
-}
-function beam(x1,y1,x2,y2,u,opt){
-  ctx.save();
-  ctx.strokeStyle=opt.color; ctx.globalAlpha=opt.sel?0.95:0.45; ctx.lineWidth=opt.sel?1.7:1;
-  ctx.setLineDash(opt.dash||[]);
-  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  ctx.setLineDash([]);
-  if(!opt.blocked){
-    var x=x1+(x2-x1)*u, y=y1+(y2-y1)*u;
-    var g=ctx.createRadialGradient(x,y,0,x,y,opt.sel?14:8);
-    g.addColorStop(0,'rgba(255,250,240,.95)');
-    g.addColorStop(1,'rgba(255,194,122,0)');
-    ctx.globalAlpha=1; ctx.fillStyle=g;
-    ctx.beginPath(); ctx.arc(x,y,opt.sel?14:8,0,6.2832); ctx.fill();
-  }
-  ctx.restore();
-}
-function sat(x,y){
-  ctx.fillStyle='#f2f5f7'; ctx.beginPath(); ctx.arc(x,y,2.4,0,6.2832); ctx.fill();
-}
-function pulseU(km){
-  var real=light(km);
-  var screen=scene==='mesh'?0.7:scene==='moon'?Math.max(0.45,real):(real/60);
-  screen=screen/speed;
-  if(REDUCED||!playing)return 0.42;
-  return (t/screen)%1;
-}
-function orbit(x,y,rx,ry,rot){
-  ctx.save(); ctx.translate(x,y); ctx.rotate(rot||0);
-  ctx.strokeStyle='rgba(169,220,255,.38)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.2832); ctx.stroke();
-  ctx.restore();
-}
-
-function band(){
-  var head=$('.top').getBoundingClientRect().bottom+8;
-  var foot=$('.stage').getBoundingClientRect().top-10;
-  if(foot<head+36)foot=head+36;
-  return {top:head, bot:foot, cy:(head+foot)/2, h:foot-head};
-}
-function drawMesh(cx,cy,R){
-  disc(cx,cy,R,'#8eb4c9','#1a2833');
-  label(cx,cy+R+16,'Earth','center');
-  var n=8, ring=R*2.15, a0=t*0.45*speed, i, pts=[];
-  orbit(cx,cy,ring,ring*0.94,0);
-  for(i=0;i<n;i++){
-    var a=a0+i*6.2832/n;
-    pts.push([cx+Math.cos(a)*ring, cy+Math.sin(a)*ring*0.94]);
-  }
-  for(i=0;i<n;i++){
-    var p=pts[i], q=pts[(i+1)%n];
-    beam(p[0],p[1],q[0],q[1], pulseU(5400), {color:'#ffc27a', sel:sel==='neighbour'&&i===0, dash:[]});
-  }
-  for(i=0;i<n;i++)sat(pts[i][0],pts[i][1]);
-  label(cx, cy-ring-12,'8 of the mesh, neighbour lasers','center');
-}
-function drawMoon(){
-  var wide=W>900, b=wide?null:band();
-  var drop=wide?0:Math.min(52,b.h*0.34), rise=wide?0:Math.min(56,b.h*0.36);
-  var ex=wide?W*0.44:W*0.30, ey=wide?H*0.64:b.bot-drop;
-  var mx=wide?W*0.62:W*0.68, my=wide?H*0.42:b.top+rise;
-  var eR=wide?42:Math.max(7,Math.min(24,drop/2.1));
-  var mR=wide?30:Math.max(7,Math.min(20,rise/2.2));
-  disc(ex,ey,eR,'#8eb4c9','#1a2833');
-  disc(mx,my,mR,'#c5ccd2','#3a424a');
-  label(ex-eR-8,ey,'Earth','right');
-  label(mx,my+mR+16,'Moon','center');
-  var ring=eR*1.85, a0=t*0.5*speed;
-  var g1=[ex+Math.cos(a0)*ring, ey+Math.sin(a0)*ring*0.92];
-  var g2=[ex+Math.cos(a0+0.7)*ring, ey+Math.sin(a0+0.7)*ring*0.92];
-  orbit(ex,ey,ring,ring*0.92,0); sat(g1[0],g1[1]); sat(g2[0],g2[1]);
-  beam(g1[0],g1[1], g2[0],g2[1], pulseU(5400), {color:'#ffc27a', sel:sel==='mesh', dash:[]});
-  var elfoA=t*0.32*speed, exr=mR*2.6, eyr=mR*1.2;
-  orbit(mx,my,exr,eyr,-0.5);
-  var elf=[mx+Math.cos(elfoA)*exr*Math.cos(-0.5)-Math.sin(elfoA)*eyr*Math.sin(-0.5), my+Math.cos(elfoA)*exr*Math.sin(-0.5)+Math.sin(elfoA)*eyr*Math.cos(-0.5)];
-  sat(elf[0],elf[1]); if(wide)label(elf[0]+6,elf[1]-6,'ELFO');
-  var dir=mx>ex?1:-1;
-  var hx=mx+dir*(wide?mR*3.1:mR*2.3), hy=my, hr=mR*(wide?0.9:0.7), la=t*0.55*speed;
-  orbit(hx,hy,hr,hr*0.7,0);
-  var l2=[hx+Math.cos(la)*hr, hy+Math.sin(la)*hr*0.7];
-  sat(l2[0],l2[1]); if(wide)label(hx,hy-hr-10,'L2','center');
-  var near=[mx-dir*mR, my], far=[mx+dir*mR, my], pole=[mx, my+mR];
-  ctx.save(); ctx.strokeStyle='rgba(169,220,255,.45)'; ctx.setLineDash([2,4]);
-  ctx.beginPath(); ctx.moveTo(pole[0],pole[1]); ctx.lineTo(elf[0],elf[1]); ctx.stroke(); ctx.restore();
-  beam(near[0],near[1], ex,ey, pulseU(MOON), {color:'rgba(235,242,247,.85)', sel:sel==='direct', dash:[4,5]});
-  beam(elf[0],elf[1], ex,ey, pulseU(MOON), {color:'rgba(235,242,247,.85)', sel:sel==='trunk', dash:[4,5]});
-  beam(far[0],far[1], l2[0],l2[1], pulseU(L2), {color:'rgba(235,242,247,.85)', sel:sel==='l2', dash:[4,5]});
-  beam(l2[0],l2[1], ex,ey, pulseU(MOON+L2), {color:'rgba(235,242,247,.85)', sel:sel==='l2', dash:[4,5]});
-}
-function drawMars(conj){
-  var wide=W>900, b=wide?null:band();
-  var sx=wide?W*0.58:W*0.52, sy=wide?H*0.58:b.cy;
-  var rm=wide?200:Math.max(46,Math.min(W*0.24,(b.h/2)-22));
-  var re=wide?120:rm*0.62;
-  disc(sx,sy,wide?16:11,'#fff1d6','#ffb25a');
-  label(sx,sy-22,'Sun','center');
-  orbit(sx,sy,re,re*0.96,0);
-  orbit(sx,sy,rm,rm*0.96,0);
-  var te, tm;
-  if(conj){te=Math.PI; tm=0;}
-  else{te=t*0.12*speed; tm=t*0.064*speed+1.15;}
-  var earth=[sx+Math.cos(te)*re, sy+Math.sin(te)*re*0.96];
-  var mars=[sx+Math.cos(tm)*rm, sy+Math.sin(tm)*rm*0.96];
-  var or=wide?16:11, oa=t*0.9*speed;
-  orbit(mars[0],mars[1],or,or*0.8,0);
-  var relay=[mars[0]+Math.cos(oa)*or, mars[1]+Math.sin(oa)*or*0.8];
-  disc(earth[0],earth[1],wide?7:5,'#8eb4c9','#1a2833');
-  disc(mars[0],mars[1],wide?6:4,'#e7b08a','#8a4632');
-  sat(relay[0],relay[1]);
-  label(earth[0]+8,earth[1]-8,'Earth');
-  label(mars[0]+8,mars[1]-8,'Mars');
-  if(!conj){
-    var ang=Math.abs(Math.atan2(Math.sin(tm-te), Math.cos(tm-te)));
-    beam(earth[0],earth[1], relay[0],relay[1], pulseU(marsSep(ang)), {color:'#ffc27a', sel:true, dash:[]});
-    return ang;
-  }
-  var l4a=tm+Math.PI/3;
-  var l4=[sx+Math.cos(l4a)*rm, sy+Math.sin(l4a)*rm*0.96];
-  orbit(l4[0],l4[1],wide?22:14,wide?14:9,0);
-  var rs=[l4[0]+Math.cos(t*0.3*speed)* (wide?22:14), l4[1]+Math.sin(t*0.3*speed)*(wide?14:9)];
-  sat(rs[0],rs[1]); label(l4[0], l4[1]-20,'L4','center');
-  var c=conjRelay();
-  beam(mars[0],mars[1], rs[0],rs[1], pulseU(c.mars), {color:'#d9c2ff', sel:sel==='relay', dash:[]});
-  beam(rs[0],rs[1], earth[0],earth[1], pulseU(c.earth), {color:'#d9c2ff', sel:sel==='relay', dash:[]});
-  beam(earth[0],earth[1], mars[0],mars[1], 0.5, {color:'rgba(235,242,247,.7)', sel:sel==='direct', dash:[3,6], blocked:true});
-  return  Math.PI;
-}
-
-function draw(){
-  var before=$('.stage').getBoundingClientRect().top;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  var sky=ctx.createRadialGradient(W*0.7,H*0.2,0,W*0.6,H*0.4,Math.max(W,H));
-  sky.addColorStop(0,'#0c1218'); sky.addColorStop(1,'#050607');
-  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
-  var theta=0;
-  if(scene==='mesh'){
-    if(W>900)drawMesh(W*0.66,H*0.58,Math.min(W,H)*0.11);
-    else{var b=band(); drawMesh(W*0.5,b.cy+4,Math.max(16,Math.min(W*0.09,(b.h-36)/4.8)));}
-  }else if(scene==='moon'){
-    drawMoon();
-  }else{
-    theta=drawMars(scene==='conj');
-  }
-  if(W>900){
-    var vg=ctx.createLinearGradient(0,0,W*0.42,0);
-    vg.addColorStop(0,'rgba(5,6,7,.82)'); vg.addColorStop(1,'rgba(5,6,7,0)');
-    ctx.fillStyle=vg; ctx.fillRect(0,0,W*0.42,H);
-  }
-  paintReadout(theta||0);
-  var after=$('.stage').getBoundingClientRect().top;
-  if(!draw.fix&&Math.abs(after-before)>1){draw.fix=1; draw(); draw.fix=0;}
-}
-function loop(now){
-  if(!playing||document.hidden)return;
-  requestAnimationFrame(loop);
-  if(!loop.last){loop.last=now; return;}
-  var dt=Math.min(0.05,(now-loop.last)/1000); loop.last=now;
-  if(now-loop.drew<1000/30)return;
-  loop.drew=now;
-  t+=dt;
-  draw();
-}
-loop.drew=0; loop.last=0;
-function playIcon(){
-  $('#playp').setAttribute('d', playing?'M0 0H3.5V12H0ZM6.5 0H10V12H6.5Z':'M1 0L10 6L1 12Z');
-  $('#play').setAttribute('aria-label', playing?'Pause':'Play');
-}
-function setScene(id){
-  scene=id;
-  sel=LINKS[id][0].id;
+function setScene(id,animate){
+  var from=shownKm;
+  scene=id; sel=LINKS[id][0].id; rings=[];
+  document.body.className=document.body.className.replace(/\bsc-\w+/g,'').trim()+' sc-'+id;
   document.querySelectorAll('#scenes button').forEach(function(b){
-    var on=b.dataset.scene===id;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on?'true':'false');
+    var on=b.dataset.scene===id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false');
   });
-  buttons();
+  buttons(); layout();
+  if(animate&&!REDUCED){tw={t0:performance.now(), from:from}; requestAnimationFrame(twLoop);}
   draw();
 }
-$('#play').onclick=function(){playing=!playing; playIcon(); loop.last=0; if(playing)requestAnimationFrame(loop);};
-document.querySelectorAll('#scenes button').forEach(function(b){b.onclick=function(){setScene(b.dataset.scene)};});
-document.querySelectorAll('#speeds button').forEach(function(b){
-  b.onclick=function(){
-    speed=+b.dataset.s;
-    document.querySelectorAll('#speeds button').forEach(function(x){x.classList.toggle('on', x===b); x.setAttribute('aria-pressed', x===b?'true':'false');});
-  };
-});
-document.querySelector('#speeds button').classList.add('on');
+function setSpeed(s){
+  speed=s;
+  document.querySelectorAll('#speeds button').forEach(function(x){var on=+x.dataset.s===s; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on?'true':'false');});
+}
+$('#play').onclick=function(){clock.setPlaying(!clock.playing); if(!clock.playing)draw();};
+document.querySelectorAll('#scenes button').forEach(function(b){b.onclick=function(){if(b.dataset.scene!==scene)setScene(b.dataset.scene,true);};});
+document.querySelectorAll('#speeds button').forEach(function(b){b.onclick=function(){setSpeed(+b.dataset.s); draw();};});
+function isOpen(){return $('#method').classList.contains('open');}
 function openMethod(){document.body.classList.add('layer-open'); panels.open($('#method'),'#mclose');}
 function closeMethod(){panels.close($('#method')); document.body.classList.remove('layer-open'); draw();}
 $('#nav-method').onclick=openMethod;
 $('#mclose').onclick=closeMethod;
 $('#scrim').onclick=closeMethod;
-addEventListener('keydown',function(e){if(e.key==='Escape')closeMethod();});
-addEventListener('resize',function(){size(); draw();});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&playing){loop.last=0; requestAnimationFrame(loop);}});
-var q=new URLSearchParams((location.hash.split('?')[1]||''));
-if(q.has('paused')||REDUCED)playing=false;
+addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen())closeMethod();});
+addEventListener('resize',function(){size(); layout(); draw();});
+/* hash: #scene=mars&link=relay&paused, and the legacy #?scene=mars form */
+function parseHash(h){
+  h=String(h||'').replace(/^#/,'');
+  var i=h.indexOf('?'); if(i>=0)h=h.slice(i+1);
+  return new URLSearchParams(h);
+}
+var q=parseHash(location.hash);
 var sc=q.get('scene'); if(LINKS[sc])scene=sc;
-size(); setScene(scene); playIcon();
-if(q.get('link')){sel=q.get('link'); buttons();}
-if(playing)requestAnimationFrame(loop); else draw();
-window.__opt={draw:draw, scene:function(){return scene}, link:function(){return current()}};
+size(); setSpeed([1,2,4].indexOf(+q.get('speed'))>=0?+q.get('speed'):1);
+setScene(scene,false);
+if(q.get('link')&&LINKS[scene].some(function(L){return L.id===q.get('link')})){sel=q.get('link'); buttons(); layout(); draw();}
+playIcon();
+if(!(q.has('paused')||REDUCED))clock.setPlaying(true);
+window.__opt={draw:draw, scene:function(){return scene}, link:function(){return current()}, conj:conjRelay, conjDirect:conjDirect,
+  time:function(){return clock.t}, phases:function(){return JSON.parse(JSON.stringify(ph))}, pulse:function(){return pget(current().id)},
+  draws:function(){return draws}, parseHash:function(h){var p=parseHash(h),o={};p.forEach(function(v,k){o[k]=v});return o}, playing:function(){return clock.playing},
+  staticLayer:function(){return {w:off.width,h:off.height}}, density:density};
 })();
 </script>
 </body>
