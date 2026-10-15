@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Three slow projects — space data you can audit</title>
-<meta name="description" content="Three slow projects: public space data, made auditable by someone who is not a mission specialist.">
+<title>Four slow projects — space data you can audit</title>
+<meta name="description" content="Four slow projects: public space data, made auditable by someone who is not a mission specialist.">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="shared/space.css">
 <style>
@@ -15,7 +15,7 @@ main{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:150px 36
 h1{font-size:clamp(40px,7vw,92px);font-weight:200;letter-spacing:-.035em;line-height:1.02}
 h1 em{font-style:normal;color:var(--ice)}
 .lede{margin-top:22px;max-width:56ch;font-size:clamp(15px,1.6vw,18px);line-height:1.6;color:var(--mute)}
-.projects{list-style:none;margin-top:56px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.projects{list-style:none;margin-top:56px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{position:relative;display:flex;flex-direction:column;height:100%;min-height:300px;padding:26px 24px 22px;border-radius:var(--r);border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);text-decoration:none;color:inherit;transition:border-color .3s var(--ease),transform .5s var(--spring),background-color .3s}
 a.card:hover{border-color:var(--ice);background:rgba(169,220,255,.06);transform:translateY(-3px)}
 a.card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
@@ -38,7 +38,7 @@ a.card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
   <div><a class="ghlink js-gh" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>View on GitHub</span></a></div></div>
 </header>
 <main id="main">
-  <h1>Three slow<br>projects.<br><em>Every number sourced.</em></h1>
+  <h1>Four slow<br>projects.<br><em>Every number sourced.</em></h1>
   <p class="lede">Public data already exists for these. The work is to make a slice of it auditable by someone who is not a mission specialist, one region and one layer at a time.</p>
   <ul class="projects">
     <li><a class="card" href="moon-south-pole-atlas/web/index.html" aria-label="Moon south pole atlas: prototype. Open the atlas.">
@@ -59,6 +59,12 @@ a.card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
       <p class="q">Where on Mars is solar power an inconvenience, and where is it unsafe for a crew?</p>
       <p class="st">Six sites, one frozen Mars Climate Database v6.2 slice: noon sunlight through the year, plus one sol at the twelve stored local times. Opportunity's 2018 measured opacity stays in its own unit. Modelled values, not a verdict. No power system was sized.</p>
       <span class="go">Open the replay →</span></a></li>
+    <li><a class="card" href="optical-links/web/index.html" aria-label="Optical links: prototype. Open the illustration.">
+      <span class="pill on">Prototype</span>
+      <h2>Optical links</h2>
+      <p class="q">Where does a laser hop sit between Earth, the Moon and Mars, and how long is the light on that path?</p>
+      <p class="st">Four schematics: the measured Starlink mesh, an Earth–Moon path, an Earth–Mars path, and a Sun–Mars L4 relay for conjunction. Light time is distance over c. A rate is printed only from a published figure. Not a link budget.</p>
+      <span class="go">Open the illustration →</span></a></li>
   </ul>
 </main>
 <p class="foot2">No account, no tracking, no external requests: each page is static files and opens from disk. <a class="ghlink" style="min-height:44px" href="https://github.com/sighmon/space" target="_blank" rel="noopener noreferrer">sighmon/space on GitHub ↗</a></p>
