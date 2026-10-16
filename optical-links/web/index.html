@@ -82,6 +82,9 @@ body.sc-mars .dsoc{display:block}
 }
 @media (max-width:900px) and (max-height:700px){.viz{display:none}}
 @media (max-width:360px){.viz{display:none}}
+@media (max-width:900px) and (max-height:700px){body.sc-mars .dsoc{display:none}}
+@media (max-width:360px){body.sc-mars .dsoc{display:none}}
+@media (min-width:901px) and (max-width:1240px){.hero-copy p{display:none}}   /* mid widths: the scene sits under the copy, keep only the headline */
 </style>
 </head>
 <body>
@@ -204,6 +207,8 @@ function conjRelay(){
   return {earth:e, mars:m, sum:e+m, angleEarthL4:a};
 }
 function conjDirect(){var p=conjPos(); return dist(p.earth,p.mars)*AU;}
+/* fraction of the Mars→Earth straight line at which the light reaches the Sun (Sun at the origin) */
+function sunFrac(){var p=conjPos(); return dist(p.mars,[0,0])/dist(p.mars,p.earth);}
 function marsSepAt(te,tm){return dist(helio(1,te), helio(MARS_A,tm))*AU;}
 
 function fmtTime(s){
@@ -250,10 +255,10 @@ function readBand(){
 function layout(){
   band0=readBand();
   dsocW=$('#dsoc .track').getBoundingClientRect().width||0;
-  var wide=W>900, b=band0;
+  var wide=W>900, b=band0, X1=W-36-280-24;   /* wide: keep the scene left of the fixed readout (right:36px, 280px) */
   G={wide:wide};
   if(scene==='mesh'){
-    if(wide){G.cx=W*0.6; G.cy=H*0.58; G.R=Math.min(W,H)*0.11;}
+    if(wide){G.R=Math.min(Math.min(W,H)*0.11,((X1-W*0.2)/2-6)/2.15); G.cx=Math.min(W*0.6,X1-G.R*2.15-6); G.cy=H*0.58;}
     else{G.cx=W*0.5; G.cy=b.cy+4; G.R=Math.max(16,Math.min(W*0.09,(b.h-36)/4.8));}
     G.ring=G.R*2.15;
   }else if(scene==='moon'){
@@ -265,11 +270,13 @@ function layout(){
     G.ring=G.eR*1.85; G.exr=G.mR*2.6; G.eyr=G.mR*1.2;
     G.dir=G.mx>G.ex?1:-1;
     G.hx=G.mx+G.dir*(wide?G.mR*3.1:G.mR*2.3); G.hy=G.my; G.hr=G.mR*(wide?0.9:0.7);
+    if(wide){var dx=Math.min(0,X1-(G.hx+G.hr+6)); G.ex+=dx; G.mx+=dx; G.hx+=dx;}
   }else{
-    G.sx=wide?W*0.58:W*0.52; G.sy=wide?H*0.58:b.cy;
-    G.rm=wide?200:Math.max(46,Math.min(W*0.24,(b.h/2)-22));
-    G.re=wide?120:G.rm*0.62;
-    G.sun=wide?16:11; G.glare=scene==='conj'?G.sun*3.2:G.sun*2.2;
+    G.sy=wide?H*0.58:b.cy;
+    G.rm=wide?Math.min(200,(X1-44-W*0.2)/2):Math.max(46,Math.min(W*0.24,(b.h/2)-22));
+    G.sx=wide?Math.min(W*0.58,X1-44-G.rm):W*0.52;   /* 44 px: Mars label and relay loop */
+    G.re=wide?G.rm*0.6:G.rm*0.62;
+    G.sun=wide?16:11; G.glare=Math.min(scene==='conj'?G.sun*3.2:G.sun*2.2, G.re*0.8);
     G.or=wide?16:11; G.l4rx=wide?22:14; G.l4ry=wide?14:9;
     G.pd=wide?7:5; G.pm=wide?6:4;
   }
@@ -457,16 +464,17 @@ function drawBlocked(r){
   var h=dc<Rx?Math.sqrt(Rx*Rx-dc*dc):0, t1=tc-h, t2=tc+h, fade=Math.min(60,L*0.12);
   ctx.setLineDash(r.dash); ctx.lineWidth=r.sel?1.7:1;
   function seg(f,t,fromA,toA){
-    if(t<=f)return; var g=ctx.createLinearGradient(a[0]+ux*f,a[1]+uy*f,a[0]+ux*t,a[1]+uy*t);
+    var f0=f, t0=t; f=Math.max(0,f); t=Math.min(L,t); if(t<=f)return;   /* clamp to the Mars–Earth segment */
+    var lerp=function(x){return t0>f0?fromA+(toA-fromA)*(x-f0)/(t0-f0):fromA}; fromA=+lerp(f).toFixed(3); toA=+lerp(t).toFixed(3); var g=ctx.createLinearGradient(a[0]+ux*f,a[1]+uy*f,a[0]+ux*t,a[1]+uy*t);
     g.addColorStop(0,'rgba(235,242,247,'+fromA+')'); g.addColorStop(1,'rgba(235,242,247,'+toA+')');
     ctx.strokeStyle=g; ctx.beginPath(); ctx.moveTo(a[0]+ux*f,a[1]+uy*f); ctx.lineTo(a[0]+ux*t,a[1]+uy*t); ctx.stroke();
   }
-  var A=r.sel?.75:.4;
+  var A=r.sel?0.75:0.4;
   if(h>0){seg(0,t1-fade,A,A); seg(t1-fade,t1,A,0); seg(t2,t2+fade,0,A); seg(t2+fade,L,A,A);}
   else seg(0,L,A,A);
   ctx.setLineDash([]);
   if(r.sel&&h>0){  /* a packet that dies in the glare: no arrival ring */
-    var q=pget(r.id), u=q-Math.floor(q), d=u*L, al=d<t1-fade?1:d<t1?(t1-d)/fade:0;
+    var q=pget(r.id), u=q-Math.floor(q), sf=sunFrac(), d=u<sf?u/sf*tc:L, al=d<t1?1:d<tc?(tc-d)/Math.max(1,tc-t1):0;
     if(al>0)packet(a[0]+ux*d,a[1]+uy*d,10,al);
   }
 }
@@ -528,14 +536,14 @@ function paintReadout(R,e){
   var show=km; if(e<1&&tw&&tw.from)show=Math.exp(Math.log(tw.from)+(Math.log(km)-Math.log(tw.from))*e);  /* km→AU count-up */
   shownKm=km;
   var moved=setT('r-name',L.name)|setT('r-ends',L.ends)|setT('r-rate',L.rate)|setT('r-note',L.note);
-  setT('r-time',fmtTime(light(km)));
+  setT('r-time',fmtTime(light(show)));   /* light time follows the path length shown, also mid-tween */
   setT('r-km',fmtKm(show));
   var S=SCALE[scene], how=r.D<0.25?'too short to draw, beam shown lit':S.word;
-  if(r.blocked)how+=', broken by the Sun';
-  setT('ruler-k','Light: '+fmtTime(light(km))+' one way, '+how+'. Orbits '+speed+'×. Not to scale.');
+  if(r.blocked)setT('ruler-k','Light: '+fmtTime(light(km))+' one way, but the beam reaches the Sun after '+fmtTime(light(km)*sunFrac())+' and breaks. '+S.word[0].toUpperCase()+S.word.slice(1)+'. Orbits '+speed+'×. Not to scale.');
+  else setT('ruler-k','Light: '+fmtTime(light(km))+' one way, '+how+'. Orbits '+speed+'×. Not to scale.');
   setT('stamp','Not to scale. Light '+S.word+'.');
   var q=pget(r.id), u=r.mesh?(q*8-Math.floor(q*8)):(q-Math.floor(q));
-  if(r.D<0.25)u=1; if(r.blocked)u=Math.min(u,0.5);
+  if(r.D<0.25)u=1; if(r.blocked)u=Math.min(u,sunFrac());   /* the ruler stops where the light meets the Sun */
   if(Math.abs(u-lastFill)>0.002){lastFill=u; $('#ruler-fill').style.transform='scaleX('+u.toFixed(4)+')';}
   if(scene==='mars'){
     var au=km/AU, x=Math.max(0,Math.min(1,(au-0.36)/(2.68-0.36)))*Math.max(0,dsocW-2);
@@ -629,7 +637,7 @@ if(!(q.has('paused')||REDUCED))clock.setPlaying(true);
 window.__opt={draw:draw, scene:function(){return scene}, link:function(){return current()}, conj:conjRelay, conjDirect:conjDirect,
   time:function(){return clock.t}, phases:function(){return JSON.parse(JSON.stringify(ph))}, pulse:function(){return pget(current().id)},
   draws:function(){return draws}, parseHash:function(h){var p=parseHash(h),o={};p.forEach(function(v,k){o[k]=v});return o}, playing:function(){return clock.playing},
-  staticLayer:function(){return {w:off.width,h:off.height}}, density:density};
+  geom:function(){return scene==='conj'||scene==='mars'?{earth:Pe(CONJ.te),pd:G.pd}:null}, staticLayer:function(){return {w:off.width,h:off.height}}, density:density};
 })();
 </script>
 </body>
